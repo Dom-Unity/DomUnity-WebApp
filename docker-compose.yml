@@ -18,6 +18,24 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+  
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: domunity-backend
+    environment:
+      DATABASE_URL: postgresql://domunity:password@postgres:5432/domunity
+      JWT_SECRET: your-super-secret-jwt-key-change-in-production-min-32-chars
+      RUST_LOG: info,domunity_backend=debug
+      SERVER_HOST: 0.0.0.0
+      SERVER_PORT: 50051
+      FRONTEND_URL: http://localhost:5173
+    ports:
+      - "50051:50051"
+    depends_on:
+      postgres:
+        condition: service_healthy
 
 volumes:
   postgres_data:
