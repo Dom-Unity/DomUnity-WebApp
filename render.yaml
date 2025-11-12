@@ -21,10 +21,6 @@ services:
         generateValue: true
       - key: FRONTEND_URL
         value: https://domunity-frontend.onrender.com
-    # Render will call this endpoint for health checks
-    # The gRPC health service is available but HTTP health check is easier
-    # We'll use the root endpoint which should respond (even if empty)
-    healthCheckPath: /
     
   # Frontend Static Site (React + Vite)
   - type: web

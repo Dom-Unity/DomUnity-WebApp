@@ -90,6 +90,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .set_serving::<OfferServiceServer<OfferServiceImpl>>()
         .await;
 
+    tracing::info!("💚 gRPC health service available");
+
     // Start server with gRPC-Web support and health check
     Server::builder()
         .accept_http1(true) // Required for gRPC-Web
