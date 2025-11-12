@@ -1,0 +1,15 @@
+# Test files
+*_test.go
+integration_test.go
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Documentation
+README*.md
+
+# IDE
+.vscode
+.idea

@@ -1,0 +1,194 @@
+# DomUnity Render.com Configuration
+#
+# This file contains three backend options:
+# 1. Python (recommended for rapid development)
+# 2. Node.js (recommended for JavaScript ecosystem)
+# 3. Go (recommended for performance)
+#
+# INSTRUCTIONS:
+# - Uncomment ONE backend section below (Python, Node.js, or Go)
+# - The frontend and database sections are always active
+# - All services are configured for Frankfurt region (closest to Bulgaria)
+
+services:
+  # ========================================
+  # OPTION 1: Python Backend (RECOMMENDED)
+  # ========================================
+  # Uncomment the section below to use Python backend
+
+  - type: web
+    name: domunity-backend-python
+    runtime: docker
+    region: frankfurt # Closest to Bulgaria for low latency
+    plan: free
+    autoDeploy: true
+    dockerfilePath: ./backend-python/Dockerfile
+    dockerContext: ./backend-python
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: domunity-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: PORT
+        value: 50051
+      - key: HTTP_PORT
+        value: 8080
+    # Note: Render's fromService.property.host returns only "service-name-xxxx"
+    # not the full "service-name-xxxx.onrender.com". Append .onrender.com if needed.
+
+  # ========================================
+  # OPTION 2: Node.js Backend
+  # ========================================
+  # Uncomment the section below to use Node.js backend
+
+  # - type: web
+  #   name: domunity-backend-nodejs
+  #   runtime: docker
+  #   region: frankfurt  # Closest to Bulgaria for low latency
+  #   plan: free
+  #   autoDeploy: true
+  #   dockerfilePath: ./backend-nodejs/Dockerfile
+  #   dockerContext: ./backend-nodejs
+  #   healthCheckPath: /health
+  #   envVars:
+  #     - key: DATABASE_URL
+  #       fromDatabase:
+  #         name: domunity-db
+  #         property: connectionString
+  #     - key: JWT_SECRET
+  #       generateValue: true
+  #     - key: PORT
+  #       value: 50051
+  #     - key: HTTP_PORT
+  #       value: 8080
+  #     - key: NODE_ENV
+  #       value: production
+
+  # ========================================
+  # OPTION 3: Go Backend
+  # ========================================
+  # Uncomment the section below to use Go backend
+
+  # - type: web
+  #   name: domunity-backend-go
+  #   runtime: docker
+  #   region: frankfurt  # Closest to Bulgaria for low latency
+  #   plan: free
+  #   autoDeploy: true
+  #   dockerfilePath: ./backend-go/Dockerfile
+  #   dockerContext: ./backend-go
+  #   healthCheckPath: /health
+  #   envVars:
+  #     - key: DATABASE_URL
+  #       fromDatabase:
+  #         name: domunity-db
+  #         property: connectionString
+  #     - key: JWT_SECRET
+  #       generateValue: true
+  #     - key: PORT
+  #       value: 50051
+  #     - key: HTTP_PORT
+  #       value: 8080
+
+  # ========================================
+  # Frontend - React Application
+  # ========================================
+  - type: web
+    name: domunity-frontend
+    runtime: static
+    region: frankfurt # Closest to Bulgaria for low latency
+    autoDeploy: true
+    buildCommand: cd frontend && npm ci && npm run build
+    staticPublishPath: ./frontend/build
+    envVars:
+      # IMPORTANT: Update this based on which backend you chose above
+      # If using Python backend:
+      - key: REACT_APP_BACKEND_URL
+        fromService:
+          type: web
+          name: domunity-backend-python
+          property: host
+      # If using Node.js backend (comment out Python line above, uncomment below):
+      # - key: REACT_APP_BACKEND_URL
+      #   fromService:
+      #     type: web
+      #     name: domunity-backend-nodejs
+      #     property: host
+      # If using Go backend (comment out Python line above, uncomment below):
+      # - key: REACT_APP_BACKEND_URL
+      #   fromService:
+      #     type: web
+      #     name: domunity-backend-go
+      #     property: host
+
+# ========================================
+# Database - PostgreSQL
+# ========================================
+databases:
+  - name: domunity-db
+    databaseName: domunity
+    user: domunity_user
+    region: frankfurt # Same region as services for best performance
+    plan: free
+    # ipAllowList: []  # Empty = internal access only (more secure)
+    # Note: Free tier databases sleep after inactivity. First request may be slower.
+# ========================================
+# DEPLOYMENT NOTES
+# ========================================
+#
+# 1. BACKEND SELECTION:
+#    - Choose ONE backend by uncommenting its service definition
+#    - Make sure to update REACT_APP_BACKEND_URL in frontend envVars
+#    - Comment out the other two backend options
+#
+# 2. REGION SELECTION:
+#    - All services use 'frankfurt' region (closest to Bulgaria)
+#    - This minimizes latency for Bulgarian users
+#    - Can be changed to other regions if needed
+#
+# 3. DATABASE CONNECTION:
+#    - DATABASE_URL is automatically populated from domunity-db
+#    - Connection string format: postgresql://user:password@host:port/database
+#    - Each backend handles SSL connections appropriately
+#
+# 4. LOGGING:
+#    - All backends have extensive logging enabled
+#    - Check Render dashboard logs for troubleshooting
+#    - Logs show: database connections, gRPC calls, errors
+#
+# 5. fromService.property.host LIMITATION:
+#    - Returns "service-name-xxxx" NOT full URL
+#    - Full URL is "service-name-xxxx.onrender.com"
+#    - Backends handle this automatically
+#    - Frontend may need URL construction logic
+#
+# 6. ENVIRONMENT VARIABLES:
+#    - JWT_SECRET is auto-generated (secure random string)
+#    - Can be manually set in Render dashboard if needed
+#    - Never commit real secrets to repository
+#
+# 7. FREE TIER LIMITATIONS:
+#    - Services sleep after 15 minutes of inactivity
+#    - First request after sleep takes 30-60 seconds
+#    - Database sleeps after 90 days of no connections
+#    - 750 hours/month of runtime per service
+#
+# 8. PROTO FILES:
+#    - Proto file is in /proto/domunity.proto
+#    - Each backend generates code during Docker build
+#    - No manual proto generation needed for deployment
+#
+# 9. HEALTH CHECKS:
+#    - All backends implement HealthService
+#    - Use for monitoring service availability
+#    - Check database connection status
+#
+# 10. TROUBLESHOOTING:
+#     - Check Render logs for detailed error messages
+#     - Verify DATABASE_URL is set correctly
+#     - Ensure chosen backend is uncommented
+#     - Confirm frontend points to correct backend
+#     - Test database connectivity separately

@@ -1,0 +1,93 @@
+.site-footer {
+    background-color: #1a1a1a;
+    color: var(--white);
+    padding: 60px 0 0;
+}
+
+.site-footer__container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+.site-footer__inner {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 40px;
+    margin-bottom: 40px;
+}
+
+.site-footer__box h2 {
+    font-size: 18px;
+    margin-bottom: 20px;
+    color: var(--white);
+}
+
+.site-footer__box ul {
+    list-style: none;
+}
+
+.site-footer__box ul li {
+    margin-bottom: 10px;
+}
+
+.site-footer__box a {
+    color: #ccc;
+    text-decoration: none;
+    transition: color 0.3s;
+}
+
+.site-footer__box a:hover {
+    color: var(--secondary-color);
+}
+
+.site-footer__newsletter-popup form {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.email_input {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    border-radius: 5px;
+    font-size: 14px;
+}
+
+.submit_button {
+    padding: 12px 25px;
+    background-color: var(--primary-color);
+    color: var(--white);
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.submit_button:hover {
+    background-color: #1e4620;
+}
+
+.site-footer__socials {
+    display: flex;
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.site-footer__bottom {
+    border-top: 1px solid #333;
+    padding: 20px 0;
+    text-align: center;
+    color: #888;
+}
+
+@media (max-width: 768px) {
+    .site-footer__inner {
+        grid-template-columns: 1fr;
+    }
+
+    .site-footer__newsletter-popup form {
+        flex-direction: column;
+    }
+}
