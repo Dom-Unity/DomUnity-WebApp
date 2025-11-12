@@ -14,13 +14,16 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const useAuth = () => {
+// Hook exported separately to satisfy react-refresh
+const useAuthHook = () => {
     const context = useContext(AuthContext);
     if (!context) {
         throw new Error("useAuth must be used within AuthProvider");
     }
     return context;
 };
+
+export const useAuth = useAuthHook;
 
 interface AuthProviderProps {
     children: ReactNode;
@@ -67,8 +70,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                 setUser(response.user);
                 toast.success("Успешен вход!");
             }
-        } catch (error: any) {
-            toast.error(error.message || "Грешка при вход");
+        } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : "Грешка при вход";
+            toast.error(errorMessage);
             throw error;
         }
     };
@@ -95,8 +99,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                 setUser(response.user);
                 toast.success("Успешна регистрация!");
             }
-        } catch (error: any) {
-            toast.error(error.message || "Грешка при регистрация");
+        } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : "Грешка при регистрация";
+            toast.error(errorMessage);
             throw error;
         }
     };
