@@ -89,6 +89,10 @@ jobs:
         working-directory: ./frontend
         run: npm ci
       
+      - name: Generate protobuf files
+        working-directory: ./frontend
+        run: npm run generate-proto
+      
       - name: Lint
         working-directory: ./frontend
         run: npm run lint

@@ -8,7 +8,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         "../proto"
     };
 
-    let proto_files = vec![
+    let proto_files = [
         format!("{}/api/v1/auth.proto", proto_path),
         format!("{}/api/v1/contact.proto", proto_path),
         format!("{}/api/v1/offer.proto", proto_path),
