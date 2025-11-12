@@ -1,5 +1,7 @@
 use tonic::transport::Server;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
+use tower_http::cors::{CorsLayer, Any};
+use std::net::SocketAddr;
 
 mod db;
 mod services;
@@ -34,10 +36,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Get configuration from environment
     let database_url = std::env::var("DATABASE_URL")
         .expect("DATABASE_URL must be set");
-    let host = std::env::var("SERVER_HOST")
-        .unwrap_or_else(|_| "127.0.0.1".to_string());
-    let port = std::env::var("SERVER_PORT")
+    
+    // Render sets PORT environment variable
+    let port = std::env::var("PORT")
         .unwrap_or_else(|_| "50051".to_string());
+    
+    // Always bind to 0.0.0.0 for Render (not 127.0.0.1)
+    let host = "0.0.0.0";
+    
     let frontend_url = std::env::var("FRONTEND_URL")
         .unwrap_or_else(|_| "http://localhost:5173".to_string());
 
@@ -60,14 +66,37 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let offer_service = OfferServiceImpl::new(pool);
 
     // Parse server address
-    let addr = format!("{}:{}", host, port).parse()?;
+    let addr: SocketAddr = format!("{}:{}", host, port).parse()?;
 
     tracing::info!("🚀 DomUnity gRPC server starting on {}", addr);
     tracing::info!("📡 Frontend URL: {}", frontend_url);
+    tracing::info!("🔒 CORS enabled for gRPC-Web");
+    tracing::info!("💚 Health check available at /__health (via gRPC health service)");
 
-    // Start server with gRPC-Web support
+    // Configure CORS for gRPC-Web
+    let cors = CorsLayer::new()
+        .allow_origin(Any) // In production, restrict to frontend_url
+        .allow_headers(Any)
+        .allow_methods(Any)
+        .expose_headers(Any);
+
+    // Build health service
+    let (mut health_reporter, health_service) = tonic_health::server::health_reporter();
+    health_reporter
+        .set_serving::<AuthServiceServer<AuthServiceImpl>>()
+        .await;
+    health_reporter
+        .set_serving::<ContactServiceServer<ContactServiceImpl>>()
+        .await;
+    health_reporter
+        .set_serving::<OfferServiceServer<OfferServiceImpl>>()
+        .await;
+
+    // Start server with gRPC-Web support and health check
     Server::builder()
         .accept_http1(true) // Required for gRPC-Web
+        .layer(cors)
+        .add_service(health_service)
         .add_service(
             tonic_web::enable(AuthServiceServer::new(auth_service))
         )

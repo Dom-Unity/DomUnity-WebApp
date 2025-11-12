@@ -1,0 +1,51 @@
+# Render Blueprint for DomUnity-WebApp
+# Deploy with one click: Dashboard → Blueprints → New Blueprint → Select this repo
+
+services:
+  # Backend gRPC-Web Service (Rust + tonic)
+  - type: web
+    name: domunity-backend
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: .
+    plan: free
+    autoDeploy: true
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: domunity-db
+          property: connectionString
+      - key: RUST_LOG
+        value: info,domunity_backend=debug
+      - key: JWT_SECRET
+        generateValue: true
+      - key: FRONTEND_URL
+        value: https://domunity-frontend.onrender.com
+    # Render will call this endpoint for health checks
+    # The gRPC health service is available but HTTP health check is easier
+    # We'll use the root endpoint which should respond (even if empty)
+    healthCheckPath: /
+    
+  # Frontend Static Site (React + Vite)
+  - type: web
+    name: domunity-frontend
+    runtime: static
+    buildCommand: cd frontend && npm ci && npm run build
+    staticPublishPath: ./frontend/dist
+    plan: free
+    autoDeploy: true
+    envVars:
+      - key: VITE_API_URL
+        value: https://domunity-backend.onrender.com
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+
+# Database
+databases:
+  - name: domunity-db
+    databaseName: domunity
+    user: domunity_user
+    plan: free
+    ipAllowList: []  # Empty = internal access only (more secure)
