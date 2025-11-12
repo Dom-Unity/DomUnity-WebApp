@@ -46,9 +46,8 @@ function Offer() {
     return (
         <main className="offer-page">
             <div className="page-top">
-                <h1>Вземи оферта</h1>
+                <h1 id="page-title">Вземи оферта</h1>
             </div>
-
             <div className="offer-tabs">
                 <button
                     className={`tab ${activeTab === 'offer' ? 'active' : ''}`}
@@ -63,10 +62,9 @@ function Offer() {
                     Заяви презентация
                 </button>
             </div>
-
             <div className="offer-card">
                 {activeTab === 'offer' ? (
-                    <form className="form-side" onSubmit={handleOfferSubmit}>
+                    <form id="offer-form" className="form-side" onSubmit={handleOfferSubmit}>
                         <h2>Попълни формата</h2>
                         <div className="form-row">
                             <div className="form-group">

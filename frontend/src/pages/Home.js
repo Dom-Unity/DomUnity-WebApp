@@ -3,10 +3,11 @@ import './Home.css';
 
 function Home() {
     return (
-        <main className="home">
+        <main className="main">
             {/* Hero Section */}
-            <section className="hero-section">
-                <div className="hero-content">
+            <section className="hero-image-section">
+                <div className="hero-text">
+                    <img src="images/logo_image.png" alt="DomUnity Logo" className="hero-logo" />
                     <h1>Спокойствие за вашия дом,<br /> грижа от DomUnity</h1>
                     <p>Професионално управление на сгради и етажна собственост — прозрачност, ред и комфорт за всички живущи.</p>
                     <div className="hero-buttons">
@@ -17,7 +18,7 @@ function Home() {
             </section>
 
             {/* About Section */}
-            <section className="about" id="about">
+            <section className="about">
                 <div className="about-container">
                     <div className="about-content">
                         <h2>За нас</h2>
@@ -30,7 +31,7 @@ function Home() {
                         <a href="#services" className="btn primary">Вижте нашите услуги</a>
                     </div>
                     <div className="about-image">
-                        <div className="placeholder-image">🏢</div>
+                        <img src="images/about_building.png" alt="DomUnity управление на сгради" />
                     </div>
                 </div>
             </section>
@@ -40,25 +41,25 @@ function Home() {
                 <h2>Нашите услуги</h2>
                 <div className="services-grid">
                     <div className="service-card">
-                        <div className="service-icon">📋</div>
+                        <img src="images/service_admin.png" alt="Административно управление" />
                         <h3>Административно управление</h3>
                         <p>Водене на документация, организиране на общи събрания и комуникация с институции.</p>
                     </div>
 
                     <div className="service-card">
-                        <div className="service-icon">💰</div>
+                        <img src="images/service_finance.png" alt="Финансово обслужване" />
                         <h3>Финансово обслужване</h3>
                         <p>Събиране на месечни такси, изготвяне на отчети и прозрачност в бюджета на сградата.</p>
                     </div>
 
                     <div className="service-card">
-                        <div className="service-icon">🔧</div>
+                        <img src="images/service_maintenance.png" alt="Поддръжка" />
                         <h3>Техническа поддръжка</h3>
                         <p>Редовни проверки, организация на ремонти и поддръжка на общите части.</p>
                     </div>
 
                     <div className="service-card">
-                        <div className="service-icon">🧹</div>
+                        <img src="images/service_cleaning.png" alt="Почистване" />
                         <h3>Почистване и хигиена</h3>
                         <p>Професионално почистване на стълбища, входове и прилежащи площи.</p>
                     </div>
@@ -69,8 +70,11 @@ function Home() {
             <section className="advantages">
                 <div className="advantages-container">
                     <div className="advantages-left">
-                        <h2>Защо да изберете DomUnity?</h2>
-                        <p>Нашата мисия е да направим управлението на вашата етажна собственост лесно, прозрачно и ефективно.</p>
+                        <img src="images/advantages_building.png" alt="DomUnity Building" />
+                        <div className="advantages-overlay">
+                            <h2>Защо да изберете DomUnity?</h2>
+                            <p>Нашата мисия е да направим управлението на вашата етажна собственост лесно, прозрачно и ефективно.</p>
+                        </div>
                     </div>
 
                     <div className="advantages-right">
