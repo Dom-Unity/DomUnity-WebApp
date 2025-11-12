@@ -1,7 +1,7 @@
 import React from 'react';
 import './Footer.css';
 
-function Footer() {
+const Footer = () => {
     return (
         <footer className="site-footer">
             <div className="site-footer__container">
@@ -13,7 +13,6 @@ function Footer() {
                             <button className="submit_button" type="submit">Абониране</button>
                         </form>
                     </div>
-
                     <div className="site-footer__box">
                         <h2>Услуги</h2>
                         <ul>
@@ -24,7 +23,6 @@ function Footer() {
                             <li><a href="#faq">Въпроси и отговори</a></li>
                         </ul>
                     </div>
-
                     <div className="site-footer__box">
                         <h2>Информация</h2>
                         <ul>
@@ -35,19 +33,17 @@ function Footer() {
                             <li><a href="#privacy">Политика за поверителност</a></li>
                         </ul>
                     </div>
-
                     <div className="site-footer__box">
                         <h2>Контакти</h2>
                         <p>📞 <a href="tel:+359888440107">+359 88 844 0107</a></p>
-                        <p>✉️ <a href="mailto:info@domunity.bg">info@domunity.bg</a></p>
-                        <p>📍 гр. София, ж.к. Младост 1,<br />ул. Примерна №15</p>
-
+                        <p>✉️ <a href="mailto:bobovlahov@gmail.com">bobovlahov@gmail.com</a></p>
+                        <p>📍 <a href="https://www.google.com/maps/search/?api=1&query=гр.+София,+ж.к.+Овча+Купел+2,+бул.+Президент+Линкълн+1200" target="_blank">гр. София, ж.к. Овча Купел 2,<br />бул. Президент Линкълн 1200</a></p>
                         <div className="site-footer__socials">
-                            <a href="https://facebook.com" target="_blank" rel="noopener noreferrer">
-                                Facebook
+                            <a href="https://www.facebook.com/profile.php?id=61582683208565" target="_blank">
+                                <img src="images/facebook_logo.png" alt="Facebook" />
                             </a>
-                            <a href="https://instagram.com" target="_blank" rel="noopener noreferrer">
-                                Instagram
+                            <a href="https://www.instagram.com/dom_unity/" target="_blank">
+                                <img src="images/instagram_logo.png" alt="Instagram" />
                             </a>
                         </div>
                     </div>
@@ -58,6 +54,6 @@ function Footer() {
             </div>
         </footer>
     );
-}
+};
 
 export default Footer;
