@@ -99,7 +99,6 @@ services:
   - type: web
     name: domunity-frontend
     runtime: static
-    region: frankfurt # Closest to Bulgaria for low latency
     autoDeploy: true
     buildCommand: cd frontend && npm ci && npm run build
     staticPublishPath: ./frontend/build
