@@ -61,8 +61,8 @@ echo "PORT=${PORT:-8080}"\n\
 echo "RUST_LOG=${RUST_LOG:-info}"\n\
 echo "DATABASE_URL is set: $(test -n \"$DATABASE_URL\" && echo yes || echo no)"\n\
 ls -lh /app/server || echo "Binary not found!"\n\
-echo "Testing binary execution..."\n\
-./server --version 2>&1 || echo "Binary test failed with code $?"\n\
+echo "Checking dynamic libraries..."\n\
+ldd /app/server || echo "ldd failed"\n\
 echo "Executing server..."\n\
 exec ./server\n\
 ' > /app/start.sh && chmod +x /app/start.sh
