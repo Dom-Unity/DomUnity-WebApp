@@ -23,7 +23,7 @@ services:
     plan: free
     autoDeploy: true
     dockerfilePath: ./backend-python/Dockerfile
-    dockerContext: ./backend-python
+    dockerContext: ./
     healthCheckPath: /health
     envVars:
       - key: DATABASE_URL
@@ -100,7 +100,7 @@ services:
     name: domunity-frontend
     runtime: static
     autoDeploy: true
-    buildCommand: cd frontend && npm ci && npm run build
+    buildCommand: cd frontend && npm install && npm run build
     staticPublishPath: ./frontend/build
     envVars:
       # IMPORTANT: Update this based on which backend you chose above
