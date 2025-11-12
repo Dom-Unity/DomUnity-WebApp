@@ -2,7 +2,9 @@ use chrono::NaiveDate;
 use sqlx::PgPool;
 use tonic::{Request, Response, Status};
 
-use crate::db::models::{OfferRequest as OfferRequestModel, PresentationRequest as PresentationRequestModel};
+use crate::db::models::{
+    OfferRequest as OfferRequestModel, PresentationRequest as PresentationRequestModel,
+};
 use crate::proto::offer_service_server::OfferService;
 use crate::proto::*;
 use crate::utils::validation;
@@ -34,7 +36,9 @@ impl OfferService for OfferServiceImpl {
         }
 
         if req.property_count < 1 {
-            return Err(Status::invalid_argument("Property count must be at least 1"));
+            return Err(Status::invalid_argument(
+                "Property count must be at least 1",
+            ));
         }
 
         if req.address.trim().is_empty() {
@@ -42,7 +46,9 @@ impl OfferService for OfferServiceImpl {
         }
 
         if !req.agreed_to_privacy {
-            return Err(Status::invalid_argument("You must agree to the privacy policy"));
+            return Err(Status::invalid_argument(
+                "You must agree to the privacy policy",
+            ));
         }
 
         // Insert offer request
@@ -79,7 +85,8 @@ impl OfferService for OfferServiceImpl {
 
         Ok(Response::new(OfferResponse {
             success: true,
-            message: "Вашата заявка за оферта е получена! Ще се свържем с вас в най-скоро време.".to_string(),
+            message: "Вашата заявка за оферта е получена! Ще се свържем с вас в най-скоро време."
+                .to_string(),
             request_id: offer.id.to_string(),
         }))
     }
@@ -99,7 +106,9 @@ impl OfferService for OfferServiceImpl {
         }
 
         if !req.agreed_to_privacy {
-            return Err(Status::invalid_argument("You must agree to the privacy policy"));
+            return Err(Status::invalid_argument(
+                "You must agree to the privacy policy",
+            ));
         }
 
         // Parse and validate date
@@ -109,7 +118,9 @@ impl OfferService for OfferServiceImpl {
         // Check if date is in the future
         let today = chrono::Utc::now().naive_utc().date();
         if presentation_date < today {
-            return Err(Status::invalid_argument("Presentation date must be in the future"));
+            return Err(Status::invalid_argument(
+                "Presentation date must be in the future",
+            ));
         }
 
         // Insert presentation request

@@ -7,19 +7,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     } else {
         "../proto"
     };
-    
+
     let proto_files = vec![
         format!("{}/api/v1/auth.proto", proto_path),
         format!("{}/api/v1/contact.proto", proto_path),
         format!("{}/api/v1/offer.proto", proto_path),
     ];
-    
+
     tonic_build::configure()
         .build_server(true)
         .build_client(false)
         .file_descriptor_set_path(
-            std::path::PathBuf::from(std::env::var("OUT_DIR").unwrap())
-                .join("api_descriptor.bin")
+            std::path::PathBuf::from(std::env::var("OUT_DIR").unwrap()).join("api_descriptor.bin"),
         )
         .compile(
             &proto_files.iter().map(|s| s.as_str()).collect::<Vec<_>>(),

@@ -4,7 +4,7 @@ use tonic::Status;
 /// Validate email format
 pub fn validate_email(email: &str) -> Result<(), Status> {
     let email_regex = Regex::new(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$").unwrap();
-    
+
     if email_regex.is_match(email) {
         Ok(())
     } else {
@@ -17,33 +17,41 @@ pub fn validate_phone(phone: &str) -> Result<(), Status> {
     if phone.trim().is_empty() {
         return Err(Status::invalid_argument("Phone number cannot be empty"));
     }
-    
+
     // Remove spaces and common separators
     let cleaned = phone.replace(&[' ', '-', '(', ')', '+'][..], "");
-    
+
     if cleaned.len() < 9 || cleaned.len() > 15 {
-        return Err(Status::invalid_argument("Phone number must be between 9 and 15 digits"));
+        return Err(Status::invalid_argument(
+            "Phone number must be between 9 and 15 digits",
+        ));
     }
-    
+
     if !cleaned.chars().all(|c| c.is_ascii_digit()) {
-        return Err(Status::invalid_argument("Phone number can only contain digits"));
+        return Err(Status::invalid_argument(
+            "Phone number can only contain digits",
+        ));
     }
-    
+
     Ok(())
 }
 
 /// Validate name (minimum 5 characters as per requirements)
 pub fn validate_name(name: &str) -> Result<(), Status> {
     let trimmed = name.trim();
-    
+
     if trimmed.len() < 5 {
-        return Err(Status::invalid_argument("Name must be at least 5 characters"));
+        return Err(Status::invalid_argument(
+            "Name must be at least 5 characters",
+        ));
     }
-    
+
     if trimmed.len() > 255 {
-        return Err(Status::invalid_argument("Name must be less than 255 characters"));
+        return Err(Status::invalid_argument(
+            "Name must be less than 255 characters",
+        ));
     }
-    
+
     Ok(())
 }
 

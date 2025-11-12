@@ -34,7 +34,9 @@ impl ContactService for ContactServiceImpl {
         }
 
         if req.message.len() > 5000 {
-            return Err(Status::invalid_argument("Message is too long (max 5000 characters)"));
+            return Err(Status::invalid_argument(
+                "Message is too long (max 5000 characters)",
+            ));
         }
 
         // Insert contact submission
