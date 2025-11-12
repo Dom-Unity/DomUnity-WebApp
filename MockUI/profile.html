@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DomUnity - Моят профил</title>
+    <link rel="stylesheet" href="header.css" />
+    <link rel="stylesheet" href="footer.css" />
+    <link rel="stylesheet" href="profile.css" />
+    <link rel="icon" href="images/icon_image.png" type="image/png" />
+</head>
+
+<body>
+    <div id="header"></div>
+
+    <main class="profile-container">
+        <section class="profile-header">
+            <div class="user-info">
+                <img src="images/profile.png" alt="Потребител" class="user-avatar" />
+                <div>
+                    <h2>Здравей, Иван Иванов</h2>
+                    <p>Твоят профил в DomUnity</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="dashboard">
+            <h3>Обща информация</h3>
+            <div class="info-grid">
+            <div class="info-card"><i class="icon home"></i><div><h4>Младост 3, бл. 325</h4><p>Сграда</p></div></div>
+            <div class="info-card"><i class="icon door"></i><div><h4>Б</h4><p>Вход</p></div></div>
+            <div class="info-card"><i class="icon apartment"></i><div><h4>№ 25</h4><p>Апартамент</p></div></div>
+            <div class="info-card"><i class="icon building"></i><div><h4>24</h4><p>Апартаменти</p></div></div>
+            <div class="info-card"><i class="icon people"></i><div><h4>38</h4><p>Живущи</p></div></div>
+            <div class="info-card"><i class="icon manager"></i><div><h4>Петър Петров</h4><p>Акаунт мениджър</p></div></div>
+            <div class="info-card"><i class="icon wallet"></i><div><h4>0 лв.</h4><p>Моят баланс</p></div></div>
+            <div class="info-card"><i class="icon key"></i><div><h4>12356787</h4><p>Клиентски номер</p></div></div>
+            <div class="info-card"><i class="icon document"></i><div><h4>03.12.2023 г.</h4><p>Договор до</p></div></div>
+            </div>
+        </section>
+
+        <section class="financial-report">
+            <h3>Финансов отчет</h3>
+            <div class="report-table-container">
+                <table class="report-table">
+                    <thead>
+                    <tr>
+                        <th>Обект №</th>
+                        <th>Вид</th>
+                        <th>Етаж</th>
+                        <th>Клиент</th>
+                        <th>Живущи</th>
+                        <th>ГТП асансьор</th>
+                        <th>Ел. енергия асансьор</th>
+                        <th>Ел. енергия общи части</th>
+                        <th>Поддръжка асансьор</th>
+                        <th>Такса управление</th>
+                        <th>Фонд ремонти</th>
+                        <th>Задължение</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td>1</td><td>Апартамент</td><td>1</td><td>Иван Иванов</td><td>3</td>
+                        <td>0.00</td><td>0.00</td><td>0.26</td><td>0.00</td><td>8.50</td><td>6.00</td><td>14.76</td>
+                    </tr>
+                    <tr>
+                        <td>2</td><td>Апартамент</td><td>2</td><td>Петър Петров</td><td>2</td>
+                        <td>0.00</td><td>0.00</td><td>0.30</td><td>0.00</td><td>8.50</td><td>5.50</td><td>14.30</td>
+                    </tr>
+                    <tr>
+                        <td>3</td><td>Апартамент</td><td>3</td><td>Георги Георгиев</td><td>4</td>
+                        <td>0.00</td><td>0.00</td><td>0.40</td><td>0.00</td><td>8.50</td><td>6.50</td><td>15.40</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="events-section">
+            <h3>Събития и известия</h3>
+            <ul class="events-list">
+            <li>
+                <span class="event-date">05.11.2025</span>
+                <p>Планирана профилактика на асансьора от 10:00 до 13:00 ч.</p>
+            </li>
+            <li>
+                <span class="event-date">02.11.2025</span>
+                <p>Общо събрание на вход Б – от 19:00 ч. във входното фоайе.</p>
+            </li>
+            <li>
+                <span class="event-date">28.10.2025</span>
+                <p>Изпратено напомняне за месечна такса за поддръжка.</p>
+            </li>
+            </ul>
+        </section>
+    </main>
+
+    <div id="footer"></div>
+
+    <script>
+        fetch("header.html")
+            .then(res => res.text())
+            .then(data => (document.getElementById("header").innerHTML = data));
+
+        fetch("footer.html")
+            .then(res => res.text())
+            .then(data => (document.getElementById("footer").innerHTML = data));
+    </script>
+</body>
+</html>

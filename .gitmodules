@@ -1,0 +1,4 @@
+[submodule "BorkoUI"]
+	path = MockUI
+	url = https://github.com/Dom-Unity/UI
+	branch = main
