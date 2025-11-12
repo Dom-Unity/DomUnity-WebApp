@@ -55,14 +55,16 @@ COPY --from=builder /app/migrations ./migrations
 
 # Create a startup script to handle errors better
 RUN echo '#!/bin/sh\n\
-set -e\n\
+set -ex\n\
 echo "Starting DomUnity backend..."\n\
 echo "PORT=${PORT:-8080}"\n\
 echo "RUST_LOG=${RUST_LOG:-info}"\n\
 echo "DATABASE_URL is set: $(test -n \"$DATABASE_URL\" && echo yes || echo no)"\n\
 ls -lh /app/server || echo "Binary not found!"\n\
+echo "Testing binary execution..."\n\
+./server --version 2>&1 || echo "Binary test failed with code $?"\n\
 echo "Executing server..."\n\
-exec stdbuf -oL -eL ./server\n\
+exec ./server\n\
 ' > /app/start.sh && chmod +x /app/start.sh
 
 # Change ownership to non-root user
