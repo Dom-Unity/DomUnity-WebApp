@@ -60,7 +60,7 @@ impl AuthService for AuthServiceImpl {
 
         // Validate input
         validation::validate_email(&req.email)?;
-        
+
         if !password::is_strong_password(&req.password) {
             return Err(Status::invalid_argument(
                 "Password must contain uppercase, lowercase, number, and be at least 8 characters",
@@ -127,11 +127,12 @@ impl AuthService for AuthServiceImpl {
             .map_err(|_| Status::internal("Invalid user ID in token"))?;
 
         // Verify user still exists
-        let user_exists = sqlx::query_scalar::<_, bool>("SELECT EXISTS(SELECT 1 FROM users WHERE id = $1)")
-            .bind(user_id)
-            .fetch_one(&self.pool)
-            .await
-            .map_err(|e| Status::internal(format!("Database error: {}", e)))?;
+        let user_exists =
+            sqlx::query_scalar::<_, bool>("SELECT EXISTS(SELECT 1 FROM users WHERE id = $1)")
+                .bind(user_id)
+                .fetch_one(&self.pool)
+                .await
+                .map_err(|e| Status::internal(format!("Database error: {}", e)))?;
 
         if !user_exists {
             return Err(Status::unauthenticated("User not found"));

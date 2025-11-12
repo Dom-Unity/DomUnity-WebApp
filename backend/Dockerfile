@@ -14,7 +14,7 @@ RUN apt-get update && apt-get install -y \
 COPY proto ./proto
 
 # Copy Cargo manifests and build.rs
-COPY backend/Cargo.toml backend/Cargo.lock backend/build.rs ./
+COPY backend/Cargo.toml backend/build.rs ./
 
 # Create a dummy main.rs to cache dependencies
 RUN mkdir -p src && \

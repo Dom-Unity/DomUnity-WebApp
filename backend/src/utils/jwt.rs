@@ -13,11 +13,13 @@ pub struct Claims {
 
 /// Generate a JWT token for a user
 pub fn generate_token(user_id: &Uuid, expires_in_secs: i64) -> Result<String, Status> {
-    let secret = std::env::var("JWT_SECRET")
-        .map_err(|_| Status::internal("JWT_SECRET not configured"))?;
+    let secret =
+        std::env::var("JWT_SECRET").map_err(|_| Status::internal("JWT_SECRET not configured"))?;
 
     if secret.len() < 32 {
-        return Err(Status::internal("JWT_SECRET must be at least 32 characters"));
+        return Err(Status::internal(
+            "JWT_SECRET must be at least 32 characters",
+        ));
     }
 
     let now = Utc::now();
@@ -39,8 +41,8 @@ pub fn generate_token(user_id: &Uuid, expires_in_secs: i64) -> Result<String, St
 
 /// Validate a JWT token and extract claims
 pub fn validate_token(token: &str) -> Result<Claims, Status> {
-    let secret = std::env::var("JWT_SECRET")
-        .map_err(|_| Status::internal("JWT_SECRET not configured"))?;
+    let secret =
+        std::env::var("JWT_SECRET").map_err(|_| Status::internal("JWT_SECRET not configured"))?;
 
     decode::<Claims>(
         token,
@@ -64,7 +66,6 @@ pub fn get_user_id_from_request<T>(request: &Request<T>) -> Result<Uuid, Status>
         .ok_or_else(|| Status::unauthenticated("Invalid authorization header format"))?;
 
     let claims = validate_token(token)?;
-    
-    Uuid::parse_str(&claims.sub)
-        .map_err(|_| Status::internal("Invalid user ID in token"))
+
+    Uuid::parse_str(&claims.sub).map_err(|_| Status::internal("Invalid user ID in token"))
 }
