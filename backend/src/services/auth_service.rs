@@ -67,13 +67,13 @@ impl AuthService for AuthServiceImpl {
             ));
         }
 
-        if let Some(ref name) = Some(&req.full_name) {
+        if let Some(name) = Some(&req.full_name) {
             if !name.is_empty() {
                 validation::validate_name(name)?;
             }
         }
 
-        if let Some(ref phone) = Some(&req.phone) {
+        if let Some(phone) = Some(&req.phone) {
             if !phone.is_empty() {
                 validation::validate_phone(phone)?;
             }

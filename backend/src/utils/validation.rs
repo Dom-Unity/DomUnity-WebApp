@@ -1,3 +1,6 @@
+// Allow large error types since tonic::Status is a third-party type we can't control
+#![allow(clippy::result_large_err)]
+
 use regex::Regex;
 use tonic::Status;
 
