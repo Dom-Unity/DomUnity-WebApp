@@ -1,3 +1,6 @@
+// Allow large error types since tonic::Status is a third-party type we can't control
+#![allow(clippy::result_large_err)]
+
 use bcrypt::{hash, verify, DEFAULT_COST};
 use regex::Regex;
 use tonic::Status;

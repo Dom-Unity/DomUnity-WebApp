@@ -48,7 +48,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     tracing::info!("Connecting to database...");
     tracing::debug!(
         "Database URL (masked): {}",
-        database_url.split('@').last().unwrap_or("unknown")
+        database_url.split('@').next_back().unwrap_or("unknown")
     );
     let pool = db::create_pool(&database_url).await?;
 
