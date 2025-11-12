@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { authClient } from "../api/client";
 import type { User } from "../gen/api/v1/auth_pb";
