@@ -51,6 +51,15 @@ COPY --from=builder /app/target/release/server /app/server
 # Copy migrations
 COPY --from=builder /app/migrations ./migrations
 
+# Create a startup script to handle errors better
+RUN echo '#!/bin/sh\n\
+set -e\n\
+echo "Starting DomUnity backend..."\n\
+echo "PORT=${PORT:-8080}"\n\
+echo "RUST_LOG=${RUST_LOG:-info}"\n\
+exec ./server\n\
+' > /app/start.sh && chmod +x /app/start.sh
+
 # Change ownership to non-root user
 RUN chown -R appuser:appuser /app
 
@@ -64,5 +73,5 @@ ENV RUST_LOG=info
 # Expose port (Render will override with $PORT)
 EXPOSE 8080
 
-# Run the server
-CMD ["./server"]
+# Run the server via startup script
+CMD ["/app/start.sh"]
