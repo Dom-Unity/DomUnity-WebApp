@@ -202,13 +202,28 @@ jobs:
               with:
                   node-version: "20"
 
+            - name: Install protobuf tools
+              run: |
+                  sudo apt-get update
+                  sudo apt-get install -y protobuf-compiler
+                  # Download protoc-gen-grpc-web for Linux
+                  curl -L -o /usr/local/bin/protoc-gen-grpc-web https://github.com/grpc/grpc-web/releases/download/2.0.2/protoc-gen-grpc-web-2.0.2-linux-x86_64
+                  sudo chmod +x /usr/local/bin/protoc-gen-grpc-web
+                  # Download protoc-gen-js
+                  curl -L -o /tmp/protobuf-js.tar.gz https://github.com/protocolbuffers/protobuf-javascript/releases/download/v4.0.0/protobuf-javascript-4.0.0-linux-x86_64.tar.gz
+                  if [ ! -s /tmp/protobuf-js.tar.gz ]; then echo "protoc-gen-js download failed"; exit 1; fi
+                  tar -xzf /tmp/protobuf-js.tar.gz -C /tmp
+                  if [ ! -f /tmp/bin/protoc-gen-js ]; then echo "protoc-gen-js extraction failed"; exit 1; fi
+                  sudo cp /tmp/bin/protoc-gen-js /usr/local/bin/
+                  sudo chmod +x /usr/local/bin/protoc-gen-js
+
             - name: Install dependencies
               working-directory: frontend
               run: npm install
 
             - name: Build proto dependencies
               working-directory: frontend
-              run: npm run generate-proto
+              run: protoc --proto_path ../proto --plugin=protoc-gen-js=/usr/local/bin/protoc-gen-js --plugin=protoc-gen-grpc-web=/usr/local/bin/protoc-gen-grpc-web --js_out=import_style=commonjs:./src/proto --grpc-web_out=import_style=commonjs,mode=grpcwebtext:./src/proto ../proto/domunity.proto
 
             - name: Build frontend
               working-directory: frontend

@@ -37,12 +37,12 @@ const Footer = () => {
                         <h2>Контакти</h2>
                         <p>📞 <a href="tel:+359888440107">+359 88 844 0107</a></p>
                         <p>✉️ <a href="mailto:bobovlahov@gmail.com">bobovlahov@gmail.com</a></p>
-                        <p>📍 <a href="https://www.google.com/maps/search/?api=1&query=гр.+София,+ж.к.+Овча+Купел+2,+бул.+Президент+Линкълн+1200" target="_blank">гр. София, ж.к. Овча Купел 2,<br />бул. Президент Линкълн 1200</a></p>
+                        <p>📍 <a href="https://www.google.com/maps/search/?api=1&query=гр.+София,+ж.к.+Овча+Купел+2,+бул.+Президент+Линкълн+1200" target="_blank" rel="noreferrer">гр. София, ж.к. Овча Купел 2,<br />бул. Президент Линкълн 1200</a></p>
                         <div className="site-footer__socials">
-                            <a href="https://www.facebook.com/profile.php?id=61582683208565" target="_blank">
+                            <a href="https://www.facebook.com/profile.php?id=61582683208565" target="_blank" rel="noreferrer">
                                 <img src="/images/facebook_logo.png" alt="Facebook" />
                             </a>
-                            <a href="https://www.instagram.com/dom_unity/" target="_blank">
+                            <a href="https://www.instagram.com/dom_unity/" target="_blank" rel="noreferrer">
                                 <img src="/images/instagram_logo.png" alt="Instagram" />
                             </a>
                         </div>

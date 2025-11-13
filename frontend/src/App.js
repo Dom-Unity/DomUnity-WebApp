@@ -11,7 +11,6 @@ import Signup from './pages/Signup';
 import Profile from './pages/Profile';
 import Contacts from './pages/Contacts';
 import Offer from './pages/Offer';
-import api from './services/grpcService';
 
 function App() {
     return (

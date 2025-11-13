@@ -431,6 +431,8 @@ if (process.env.NODE_ENV === 'production') {
 
 }
 
-export default {
+const grpcService = {
     clients
 };
+
+export default grpcService;
