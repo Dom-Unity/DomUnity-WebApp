@@ -161,13 +161,9 @@ If you prefer using gRPC in the browser (grpc-web), generate JS client stubs and
 # from `frontend/` directory
 # Two options to generate client code are provided in `frontend/package.json`:
 
-# 1) `pbjs` (protobufjs) – generates a static JS module useful for runtime-only parsing/encoding
+# `pbjs` (protobufjs) – generates a static JS module useful for runtime-only parsing/encoding
 #    (you already have a `generate-proto` script that runs `pbjs`). Example:
 npm run generate-proto
-
-# 2) `protoc` + `protoc-gen-grpc-web` – generates grpc-web client stubs that the browser can call
-#    (recommended if you want full grpc-web support). Use the `generate-proto-grpcweb` script:
-npm run generate-proto-grpcweb
 ```
 
 3. The command outputs JS files into `src/proto/`. The app tries to load these generated files at runtime; after generation, the `grpcService` wrapper will use grpc-web automatically.
