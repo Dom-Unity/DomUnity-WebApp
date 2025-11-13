@@ -2,9 +2,7 @@ let useGrpc = false;
 let clients = {};
 
 try {
-    const proto = require('../proto/domunity_pb.js');
-    const services = require('../proto/domunity_grpc_web_pb.js');
-    const { grpc } = require('grpc-web');
+    const services = require('../proto/domunity_pb.js');
 
     const host = process.env.REACT_APP_GRPC_HOST || '';
 
