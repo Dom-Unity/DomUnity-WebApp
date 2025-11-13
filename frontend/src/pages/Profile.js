@@ -1,9 +1,13 @@
 import React from 'react';
 import './Profile.css';
+import api from '../services/grpcService';
 
 const Profile = () => {
-    // Mock data - in production, fetch from backend
-    const user = {
+    const [user, setUser] = React.useState(null);
+    const [events, setEvents] = React.useState([]);
+
+    // Mock fallback data
+    const mockUser = {
         name: 'Иван Иванов',
         building: 'Младост 3, бл. 325',
         entrance: 'Б',
@@ -16,11 +20,51 @@ const Profile = () => {
         contractEnd: '03.12.2023 г.'
     };
 
-    const events = [
+    const mockEvents = [
         { date: '05.11.2025', description: 'Планирана профилактика на асансьора от 10:00 до 13:00 ч.' },
         { date: '02.11.2025', description: 'Общо събрание на вход Б – от 19:00 ч. във входното фоайе.' },
         { date: '28.10.2025', description: 'Изпратено напомняне за месечна такса за поддръжка.' }
     ];
+
+    React.useEffect(() => {
+        let mounted = true;
+        // Try to fetch profile (example uses empty id to return current user if backend supports it)
+        api.getProfile('').then(res => {
+            if (!mounted) return;
+            if (res.ok && res.data) {
+                // map backend shape to UI-friendly object if needed
+                const data = res.data;
+                const profile = data.user || data;
+                setUser({
+                    name: profile.full_name || profile.name || mockUser.name,
+                    building: (data.building && data.building.address) || mockUser.building,
+                    entrance: (data.apartment && data.apartment.entrance) || mockUser.entrance,
+                    apartment: (data.apartment && `№ ${data.apartment.number}`) || mockUser.apartment,
+                    totalApartments: (data.building && data.building.total_apartments) || mockUser.totalApartments,
+                    totalResidents: (data.building && data.building.total_residents) || mockUser.totalResidents,
+                    accountManager: data.account_manager || mockUser.accountManager,
+                    balance: data.balance || mockUser.balance,
+                    clientNumber: data.client_number || mockUser.clientNumber,
+                    contractEnd: data.contract_end_date || mockUser.contractEnd,
+                });
+                if (data.events) setEvents(data.events);
+                else setEvents(mockEvents);
+                return;
+            }
+            setUser(mockUser);
+            setEvents(mockEvents);
+        }).catch(err => {
+            console.warn('Profile fetch failed, using mock', err);
+            if (mounted) {
+                setUser(mockUser);
+                setEvents(mockEvents);
+            }
+        });
+
+        return () => { mounted = false; };
+    }, []);
+
+    if (!user) return <main className="profile-container">Зареждане...</main>;
 
     return (
         <main className="profile-container">

@@ -118,6 +118,64 @@ contact_requests (id, name, email, phone, message, request_type, created_at)
 - **bcrypt 5.1.1**: Password hashing
 - **jsonwebtoken 9.0.2**: JWT tokens
 
+## 🔗 Frontend ↔ Backend Integration
+
+The React frontend ships with a lightweight HTTP client that mirrors the gRPC service surface. In environments where grpc-web is not configured, the frontend calls REST endpoints. The supported endpoints (expected on the backend) are:
+
+- `GET /api/health` — health check
+- `POST /api/auth/login` — login (body: `{ email, password }`)
+- `POST /api/auth/register` — registration
+- `POST /api/auth/refresh` — refresh token
+- `POST /api/auth/forgot` — forgot password
+- `GET /api/user/profile` — get profile (query `user_id`)
+- `PUT /api/user/profile` — update profile
+- `GET /api/building/:id` — get building
+- `GET /api/building/:id/apartments` — list apartments
+- `GET /api/financial/report` — financial report (query params)
+- `GET /api/financial/payments` — payment history
+- `GET /api/events` — list events (query params `building_id`, `limit`)
+- `POST /api/events` — create event
+- `POST /api/contact` — send contact form
+- `POST /api/offer` — request an offer
+- `POST /api/presentation` — request a presentation
+
+To point the frontend at your backend, set the environment variable `REACT_APP_API_URL` before running the app. Example:
+
+```bash
+# Windows Git Bash / bash
+export REACT_APP_API_URL="https://api.example.com"
+npm start
+```
+
+If you deploy the backend on the same origin as the frontend, leave `REACT_APP_API_URL` unset and the client will use relative paths.
+
+## Setting Up grpc-web (optional)
+
+If you prefer using gRPC in the browser (grpc-web), generate JS client stubs and run a grpc-web proxy (Envoy or the backend's built-in proxy).
+
+1. Install `protoc` and `protoc-gen-grpc-web` on your machine (see https://github.com/grpc/grpc-web for downloads).
+
+2. Generate the JS/TS client stubs from the `proto/domunity.proto` file:
+
+```bash
+# from `frontend/` directory
+# Two options to generate client code are provided in `frontend/package.json`:
+
+# 1) `pbjs` (protobufjs) – generates a static JS module useful for runtime-only parsing/encoding
+#    (you already have a `generate-proto` script that runs `pbjs`). Example:
+npm run generate-proto
+
+# 2) `protoc` + `protoc-gen-grpc-web` – generates grpc-web client stubs that the browser can call
+#    (recommended if you want full grpc-web support). Use the `generate-proto-grpcweb` script:
+npm run generate-proto-grpcweb
+```
+
+3. The command outputs JS files into `src/proto/`. The app tries to load these generated files at runtime; after generation, the `grpcService` wrapper will use grpc-web automatically.
+
+4. Configure your backend (or Envoy) to accept grpc-web requests and forward them to the gRPC server. Set `REACT_APP_GRPC_HOST` to the grpc-web endpoint (e.g. `https://api.example.com`).
+
+Note: grpc-web requires an HTTP/1.1 compatible proxy such as Envoy or a backend that supports grpc-web.
+
 ### Database
 - **PostgreSQL 15**: Relational database on Render.com free tier
 

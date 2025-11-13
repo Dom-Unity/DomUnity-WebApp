@@ -11,8 +11,13 @@ import Signup from './pages/Signup';
 import Profile from './pages/Profile';
 import Contacts from './pages/Contacts';
 import Offer from './pages/Offer';
+import api from './services/grpcService';
 
 function App() {
+    // quick health-check on mount
+    React.useEffect(() => {
+        api.healthCheck().then(r => console.log('API health:', r)).catch(err => console.warn('Health check failed', err));
+    }, []);
     return (
         <Router>
             <div className="App">
