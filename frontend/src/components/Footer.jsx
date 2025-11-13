@@ -40,10 +40,10 @@ const Footer = () => {
                         <p>📍 <a href="https://www.google.com/maps/search/?api=1&query=гр.+София,+ж.к.+Овча+Купел+2,+бул.+Президент+Линкълн+1200" target="_blank">гр. София, ж.к. Овча Купел 2,<br />бул. Президент Линкълн 1200</a></p>
                         <div className="site-footer__socials">
                             <a href="https://www.facebook.com/profile.php?id=61582683208565" target="_blank">
-                                <img src="images/facebook_logo.png" alt="Facebook" />
+                                <img src="/images/facebook_logo.png" alt="Facebook" />
                             </a>
                             <a href="https://www.instagram.com/dom_unity/" target="_blank">
-                                <img src="images/instagram_logo.png" alt="Instagram" />
+                                <img src="/images/instagram_logo.png" alt="Instagram" />
                             </a>
                         </div>
                     </div>
