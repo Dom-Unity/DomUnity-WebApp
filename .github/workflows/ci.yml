@@ -2,9 +2,9 @@ name: CI - Backend Tests and Docker Build
 
 on:
     pull_request:
-        branches: [main, develop]
+        branches: [main, develop, feature/render.com/initial-work]
     push:
-        branches: [main, develop]
+        branches: [main, develop, feature/render.com/initial-work]
 
 jobs:
     # ==================================================
