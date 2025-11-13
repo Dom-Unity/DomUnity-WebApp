@@ -269,6 +269,10 @@ jobs:
               working-directory: frontend
               run: npm install
 
+            - name: Build proto dependencies
+              working-directory: frontend
+              run: npm run generate-proto
+
             - name: Build frontend
               working-directory: frontend
               run: npm run build
