@@ -41,6 +41,7 @@ Each backend implementation has its own test suite:
   ```bash
   cd backend-nodejs
   npm install
+  npm run generate-proto
   npm test
   ```
 
