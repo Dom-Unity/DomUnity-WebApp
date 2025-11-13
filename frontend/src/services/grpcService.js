@@ -1,5 +1,3 @@
-import api from './api';
-
 let useGrpc = false;
 let clients = {};
 
@@ -24,8 +22,6 @@ try {
 
 // Example health check using grpc-web if available
 export async function healthCheck() {
-    if (!useGrpc) return api.healthCheck();
-
     return new Promise((resolve, reject) => {
         const req = new (require('../proto/domunity_pb.js').HealthCheckRequest)();
         clients.HealthService.check(req, {}, (err, resp) => {
@@ -37,8 +33,6 @@ export async function healthCheck() {
 }
 
 export async function getProfile(user_id) {
-    if (!useGrpc) return api.getProfile(user_id);
-
     return new Promise((resolve, reject) => {
         const req = new (require('../proto/domunity_pb.js').GetProfileRequest)();
         req.setUserId(user_id || '');
@@ -60,8 +54,6 @@ export async function getProfile(user_id) {
 }
 
 export async function listEvents(building_id, limit = 10) {
-    if (!useGrpc) return api.listEvents(building_id, limit);
-
     return new Promise((resolve, reject) => {
         const req = new (require('../proto/domunity_pb.js').ListEventsRequest)();
         req.setBuildingId(building_id || '');
@@ -75,8 +67,6 @@ export async function listEvents(building_id, limit = 10) {
 }
 
 export async function login(email, password) {
-    if (!useGrpc) return api.login(email, password);
-
     return new Promise((resolve, reject) => {
         const req = new (require('../proto/domunity_pb.js').LoginRequest)();
         req.setEmail(email);
