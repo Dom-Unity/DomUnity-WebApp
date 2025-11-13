@@ -1,14 +1,9 @@
-// gRPC-Web service wrapper. If generated stubs are available (src/proto), this will
-// use grpc-web to call the backend. Otherwise it falls back to the HTTP `api.js` client.
-
 import api from './api';
 
 let useGrpc = false;
 let clients = {};
 
 try {
-    // Attempt to import generated stubs (these will exist after running `npm run generate-proto`)
-    // eslint-disable-next-line global-require, import/no-dynamic-require
     const proto = require('../proto/domunity_pb.js');
     const services = require('../proto/domunity_grpc_web_pb.js');
     const { grpc } = require('grpc-web');
