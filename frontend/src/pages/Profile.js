@@ -1,67 +1,39 @@
 import React from 'react';
 import './Profile.css';
-import api from '../services/grpcService';
+import * as service from '../services/grpcService';
+
+console.log(service);
 
 const Profile = () => {
     const [user, setUser] = React.useState(null);
     const [events, setEvents] = React.useState([]);
 
-    // Mock fallback data
-    const mockUser = {
-        name: 'Иван Иванов',
-        building: 'Младост 3, бл. 325',
-        entrance: 'Б',
-        apartment: '№ 25',
-        totalApartments: 24,
-        totalResidents: 38,
-        accountManager: 'Петър Петров',
-        balance: 0,
-        clientNumber: '12356787',
-        contractEnd: '03.12.2023 г.'
-    };
-
-    const mockEvents = [
-        { date: '05.11.2025', description: 'Планирана профилактика на асансьора от 10:00 до 13:00 ч.' },
-        { date: '02.11.2025', description: 'Общо събрание на вход Б – от 19:00 ч. във входното фоайе.' },
-        { date: '28.10.2025', description: 'Изпратено напомняне за месечна такса за поддръжка.' }
-    ];
-
     React.useEffect(() => {
-        let mounted = true;
         // Try to fetch profile (example uses empty id to return current user if backend supports it)
-        api.getProfile('').then(res => {
-            if (!mounted) return;
-            if (res.ok && res.data) {
+        service.default.clients.UserService.getProfile({ id: '' }).then(res => {
+            if (res) {
                 // map backend shape to UI-friendly object if needed
-                const data = res.data;
-                const profile = data.user || data;
+                const profile = res.user || res;
                 setUser({
-                    name: profile.full_name || profile.name || mockUser.name,
-                    building: (data.building && data.building.address) || mockUser.building,
-                    entrance: (data.apartment && data.apartment.entrance) || mockUser.entrance,
-                    apartment: (data.apartment && `№ ${data.apartment.number}`) || mockUser.apartment,
-                    totalApartments: (data.building && data.building.total_apartments) || mockUser.totalApartments,
-                    totalResidents: (data.building && data.building.total_residents) || mockUser.totalResidents,
-                    accountManager: data.account_manager || mockUser.accountManager,
-                    balance: data.balance || mockUser.balance,
-                    clientNumber: data.client_number || mockUser.clientNumber,
-                    contractEnd: data.contract_end_date || mockUser.contractEnd,
+                    name: profile.full_name || profile.name,
+                    building: (profile.building && profile.building.address),
+                    entrance: (profile.apartment && profile.apartment.entrance),
+                    apartment: (profile.apartment && `№ ${profile.apartment.number}`),
+                    totalApartments: (profile.building && profile.building.total_apartments),
+                    totalResidents: (profile.building && profile.building.total_residents),
+                    accountManager: profile.account_manager,
+                    balance: profile.balance,
+                    clientNumber: profile.client_number,
+                    contractEnd: profile.contract_end_date,
                 });
-                if (data.events) setEvents(data.events);
-                else setEvents(mockEvents);
+                if (profile.events) setEvents(profile.events);
                 return;
             }
-            setUser(mockUser);
-            setEvents(mockEvents);
         }).catch(err => {
             console.warn('Profile fetch failed, using mock', err);
-            if (mounted) {
-                setUser(mockUser);
-                setEvents(mockEvents);
-            }
         });
 
-        return () => { mounted = false; };
+        return () => { };
     }, []);
 
     if (!user) return <main className="profile-container">Зареждане...</main>;
