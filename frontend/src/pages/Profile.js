@@ -3,6 +3,7 @@ import './Profile.css';
 import * as service from '../services/grpcService';
 
 console.log(service);
+console.log(process.env.NODE_ENV);
 
 const Profile = () => {
     const [user, setUser] = React.useState(null);
