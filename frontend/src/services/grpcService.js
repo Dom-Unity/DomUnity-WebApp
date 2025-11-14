@@ -1,11 +1,12 @@
 import * as services from '../proto/domunity_grpc_web_pb';
 
 let clients = {};
+console.log(process.env.NODE_ENV);
 if (process.env.NODE_ENV === 'production') {
 
     const host = process.env.REACT_APP_BACKEND_URL ?
         `https://${process.env.REACT_APP_BACKEND_URL}.onrender.com` : 'http://localhost:50051';
-
+    console.log(host);
     clients = {
         HealthService: new services.HealthServiceClient(host, null, null),
         UserService: new services.UserServiceClient(host, null, null),

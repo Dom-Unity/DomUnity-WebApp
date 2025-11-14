@@ -18,7 +18,8 @@
         "build": "react-scripts build",
         "test": "react-scripts test",
         "eject": "react-scripts eject",
-        "generate-proto": "protoc --proto_path ../proto --plugin=protoc-gen-js=\"../frontend/tools/protobuf-javascript-4.0.0-win64/bin/protoc-gen-js.exe\" --plugin=protoc-gen-grpc-web=\"../frontend/tools/protoc-gen-grpc-web.exe\" --js_out=import_style=commonjs:./src/proto --grpc-web_out=import_style=commonjs,mode=grpcwebtext:./src/proto ../proto/domunity.proto"
+        "generate-proto": "protoc --proto_path ../proto --plugin=protoc-gen-js=\"../frontend/tools/protobuf-javascript-4.0.0-win64/bin/protoc-gen-js.exe\" --plugin=protoc-gen-grpc-web=\"../frontend/tools/protoc-gen-grpc-web.exe\" --js_out=import_style=commonjs:./src/proto --grpc-web_out=import_style=commonjs,mode=grpcwebtext:./src/proto ../proto/domunity.proto",
+        "generate-proto-mac": "protoc --proto_path ../proto --plugin=protoc-gen-js=\"../frontend/tools/protobuf-javascript-4.0.0-osx-x86_64/bin/protoc-gen-js\" --plugin=protoc-gen-grpc-web=\"../frontend/tools/protoc-gen-grpc-web-2.0.2-darwin-x86_64\" --js_out=import_style=commonjs:./src/proto --grpc-web_out=import_style=commonjs,mode=grpcwebtext:./src/proto ../proto/domunity.proto"
     },
     "eslintConfig": {
         "extends": [
