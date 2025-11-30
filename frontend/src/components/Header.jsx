@@ -64,7 +64,7 @@ function Header() {
                         )}
                     </div>
 
-                    <a href="#about">За нас</a>
+                    <Link to="/residents">Admin</Link>
                 </nav>
 
                 <div className="header__right">
