@@ -6,7 +6,6 @@
     color: #1e3d1e;
 }
 
-
 .ap-section {
     background: #ffffffd9;
     border: 3px solid #88ae8d;
@@ -337,7 +336,7 @@
     border-radius: 14px;
     border: 3px solid #2f5233;
     padding: 26px 28px;
-    width: 360px;
+    width: 380px;
     max-width: 95%;
     box-shadow: 0 10px 25px rgba(47, 82, 51, 0.4);
     position: relative;
@@ -354,36 +353,6 @@
     color: #4f6f50;
 }
 
-.payment-methods {
-    text-align: left;
-    margin: 14px 0 18px;
-}
-
-.payment-methods label {
-    display: block;
-    font-size: 0.9rem;
-    margin-bottom: 4px;
-    cursor: pointer;
-}
-
-.payment-methods input {
-    margin-right: 6px;
-}
-
-.confirm-btn {
-    padding: 9px 20px;
-    border-radius: 8px;
-    border: 2px solid #2f5233;
-    background: #2f5233;
-    color: #eaffea;
-    font-weight: bold;
-    cursor: pointer;
-}
-
-.confirm-btn:hover {
-    background: #1e3d1e;
-}
-
 .close-btn {
     position: absolute;
     top: 8px;
@@ -393,4 +362,275 @@
     font-size: 22px;
     cursor: pointer;
     color: #2f5233;
+}
+
+/* NEW PAYMENT UI */
+.payment-methods {
+    text-align: left;
+    margin: 16px 0 0;
+}
+
+.payment-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 14px;
+}
+
+.payment-tab {
+    padding: 6px 10px;
+    border-radius: 999px;
+    border: 2px solid #2f5233;
+    background: #ffffff;
+    color: #2f5233;
+    font-size: 0.85rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.payment-tab:hover {
+    background: #eaf7ea;
+}
+
+.payment-tab.active {
+    background: #2f5233;
+    color: #eaffea;
+}
+
+.payment-content {
+    font-size: 0.9rem;
+}
+
+.card-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.card-form-row {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.card-form-row label {
+    font-size: 0.8rem;
+    color: #2f5233;
+}
+
+.card-form-row input {
+    width: 100%;
+    padding: 8px 10px;
+    border-radius: 8px;
+    border: 2px solid #88ae8d;
+    background: #f8fff8;
+    font-size: 0.9rem;
+    outline: none;
+}
+
+.card-form-row input:focus {
+    border-color: #2f5233;
+}
+
+.card-form-row-inline {
+    flex-direction: row;
+    gap: 10px;
+}
+
+.card-form-row-inline > div {
+    flex: 1;
+}
+
+/* основен бутон за карта */
+.confirm-btn {
+    padding: 9px 20px;
+    border-radius: 8px;
+    border: 2px solid #2f5233;
+    background: #2f5233;
+    color: #eaffea;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.confirm-btn:hover {
+    background: #1e3d1e;
+}
+
+.confirm-btn.main {
+    margin-top: 6px;
+    width: 100%;
+}
+
+/* Google / Apple Pay бутони */
+.wallet-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 10px;
+}
+
+.wallet-btn {
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 2px solid #2f5233;
+    background: #ffffff;
+    font-weight: bold;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.wallet-btn:hover {
+    background: #f0faf0;
+}
+
+/*.wallet-btn.google {
+    по желание – специфични цветове за Google Pay 
+}
+
+.wallet-btn.apple {
+    /* по желание – специфични цветове за Apple Pay 
+}*/
+
+
+.bank-info,
+.cash-info {
+    font-size: 0.9rem;
+}
+
+.bank-info p,
+.cash-info p {
+    margin-bottom: 6px;
+}
+
+
+@media (max-width: 900px) {
+    .apartment-page {
+        margin: 30px auto 40px;
+        padding: 0 14px 40px;
+    }
+
+    .ap-section {
+        padding: 20px 18px;
+    }
+
+    .ap-section-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .ap-filters {
+        width: 100%;
+        flex-direction: column;
+    }
+
+    .ap-filters input,
+    .ap-filters select {
+        width: 100%;
+    }
+
+    /* никакъв хоризонтален скрол */
+    .ap-table-wrapper {
+        overflow-x: visible;
+    }
+
+    /* превръщаме таблицата в вертикални карти */
+    .ap-table {
+        border: 0;
+        min-width: 0;
+        width: 100%;
+    }
+
+    .ap-table thead {
+        display: none;
+    }
+
+    .ap-table tbody {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .ap-table tr {
+        display: block;
+        background: #f8fff8;
+        border-radius: 12px;
+        border: 1px solid #cde7cf;
+        padding: 8px 10px;
+        text-align: left;
+        box-shadow: 0 4px 10px rgba(47, 82, 51, 0.08);
+    }
+
+    .ap-table tr.paid-row {
+        background: #eaffea;
+    }
+
+    .ap-table td {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 8px;
+        padding: 6px 2px;
+        border-bottom: none;
+        font-size: 0.85rem;
+    }
+
+    .ap-table td:last-child {
+        margin-top: 4px;
+    }
+
+    /* етикети пред стойностите – без да пипаме JSX */
+    .ap-table td::before {
+        font-weight: bold;
+        color: #2f5233;
+        content: "";
+    }
+
+    .ap-table tr td:nth-child(1)::before { content: "Месец"; }
+    .ap-table tr td:nth-child(2)::before { content: "Такса поддръжка"; }
+    .ap-table tr td:nth-child(3)::before { content: "Ремонт"; }
+    .ap-table tr td:nth-child(4)::before { content: "Фонд „Ремонт“"; }
+    .ap-table tr td:nth-child(5)::before { content: "Доп. разходи"; }
+    .ap-table tr td:nth-child(6)::before { content: "Общо"; }
+    .ap-table tr td:nth-child(7)::before { content: "Статус"; }
+    .ap-table tr td:nth-child(8)::before { content: "Действие"; }
+
+    .pay-btn {
+        padding: 6px 10px;
+    }
+}
+
+/* Телефони */
+@media (max-width: 600px) {
+    .ap-header h1 {
+        font-size: 1.5rem;
+    }
+
+    .ap-section h2 {
+        font-size: 1.3rem;
+    }
+
+    .ap-dashboard-card .value {
+        font-size: 1.1rem;
+    }
+
+    .ap-modal-content {
+        width: 100%;
+        max-width: 100%;
+        height: auto;
+        border-radius: 0;
+        border-left: none;
+        border-right: none;
+    }
+
+    .card-form-row-inline {
+        flex-direction: column;
+    }
+
+    .confirm-btn.main {
+        width: 100%;
+    }
 }

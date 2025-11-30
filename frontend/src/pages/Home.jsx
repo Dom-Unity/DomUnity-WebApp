@@ -24,10 +24,10 @@ function Home() {
                         </p>
 
                         <div className="hero-buttons">
-                            <Link to="/offer" className="btn primary">
+                            <Link to="/offer" className="btn secondary">
                                 Вземи оферта
                             </Link>
-                            <Link to="/login" className="btn secondary">
+                            <Link to="/login" className="btn primary">
                                 Вход за клиенти
                             </Link>
                         </div>

@@ -12,6 +12,8 @@ import Contacts from './pages/Contacts';
 import Offer from './pages/Offer';
 import Entrance from './pages/Entrance';   
 import Apartment from './pages/Apartment';   
+import EditProfile from './pages/EditProfile';
+import AdminResidents from "./pages/AdminResidents";
 
 
 import api from './services/grpcService';
@@ -36,6 +38,8 @@ function App() {
                     <Route path="/offer" element={<Offer />} />
                     <Route path="/entrance" element={<Entrance />} />  
                     <Route path="/apartment" element={<Apartment />} />
+                    <Route path="/editprofile" element={<EditProfile />} />
+                    <Route path="/residents" element={<AdminResidents />} />
                 </Routes>
 
                 <Footer />

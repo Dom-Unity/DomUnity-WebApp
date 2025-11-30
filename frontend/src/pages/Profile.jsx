@@ -67,7 +67,7 @@ const Profile = () => {
                 </div>
 
                 <div className="profile-hero-right">
-                <Link to="/profile/edit" className="btn-profile-edit">
+                <Link to="/EditProfile" className="btn-profile-edit">
                     Редактирай профил
                 </Link>
                 <p className="profile-email">{user.email}</p>
