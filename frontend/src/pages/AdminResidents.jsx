@@ -14,6 +14,7 @@ const AdminResidents = () => {
     const [entranceFilter, setEntranceFilter] = useState("all");
     const [onlyDebtors, setOnlyDebtors] = useState(false);
 
+    // eslint-disable-next-line no-unused-vars
     const [selectedResident, setSelectedResident] = useState(null);
     const [editForm, setEditForm] = useState(null);
     const [isEditing, setIsEditing] = useState(false);
@@ -47,6 +48,7 @@ const AdminResidents = () => {
     }, [navigate]);
 
     // Get unique buildings for filter dropdown
+    // eslint-disable-next-line no-unused-vars
     const buildings = useMemo(() => {
         const unique = [...new Set(residents.map(r => r.building).filter(b => b))];
         return unique;
