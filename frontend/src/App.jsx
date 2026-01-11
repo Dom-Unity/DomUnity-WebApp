@@ -7,6 +7,7 @@ import Footer from './components/Footer';
 
 import Home from './pages/Home';
 import Login from './pages/Login';
+import Signup from './pages/Signup';
 import Profile from './pages/Profile';
 import Contacts from './pages/Contacts';
 import Offer from './pages/Offer';
@@ -17,7 +18,7 @@ import EditProfile from './pages/EditProfile';
 import AdminResidents from "./pages/AdminResidents";
 
 
-import api from './services/grpcService';
+import api from './services/apiService';
 
 function App() {
     React.useEffect(() => {
@@ -34,6 +35,7 @@ function App() {
                 <Routes>
                     <Route path="/" element={<Home />} />
                     <Route path="/login" element={<Login />} />
+                    <Route path="/signup" element={<Signup />} />
                     <Route path="/profile" element={<Profile />} />
                     <Route path="/contacts" element={<Contacts />} />
                     <Route path="/offer" element={<Offer />} />

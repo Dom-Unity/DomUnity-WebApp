@@ -1,21 +1,55 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "./EditProfile.css";
+import { getProfile, isAuthenticated } from '../services/apiService';
 
 const EditProfile = () => {
     const navigate = useNavigate();
+    const [loading, setLoading] = useState(true);
 
     const [preview, setPreview] = useState("/images/profile.png");
     const [selectedFile, setSelectedFile] = useState(null);
 
-    const user = {
-        name: "Иван Иванов",
-        email: "ivan.ivanov@example.com",
-        building: "Младост 3, бл. 325",
-        entrance: "Б",
-        apartment: "25",
-        clientNumber: "12356787",
-    };
+    const [user, setUser] = useState({
+        name: "",
+        email: "",
+        building: "",
+        entrance: "",
+        apartment: "",
+        clientNumber: "",
+    });
+
+    // Fetch user profile on mount
+    useEffect(() => {
+        if (!isAuthenticated()) {
+            navigate('/login');
+            return;
+        }
+
+        const fetchProfile = async () => {
+            try {
+                const data = await getProfile();
+                if (data.error) {
+                    navigate('/login');
+                    return;
+                }
+                setUser({
+                    name: data.user?.full_name || '',
+                    email: data.user?.email || '',
+                    building: data.building?.address || '',
+                    entrance: data.building?.entrance || '',
+                    apartment: data.apartment?.number?.toString() || '',
+                    clientNumber: data.client_number || '',
+                });
+            } catch (err) {
+                console.error('Failed to fetch profile:', err);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchProfile();
+    }, [navigate]);
 
     const handleFileChange = (e) => {
         const file = e.target.files[0];
@@ -43,6 +77,10 @@ const EditProfile = () => {
 
         navigate("/profile");
     };
+
+    if (loading) {
+        return <main className="edit-profile-page"><p style={{ textAlign: 'center', padding: '2rem' }}>Зареждане...</p></main>;
+    }
 
     return (
         <main className="edit-profile-page">
