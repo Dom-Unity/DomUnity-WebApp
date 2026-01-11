@@ -1,57 +1,91 @@
-import React from 'react';
-import './Footer.css';
+import React from "react";
+import "./Footer.css";
 
 const Footer = () => {
     return (
-        <footer className="site-footer">
-            <div className="site-footer__container">
-                <div className="site-footer__inner">
-                    <div className="site-footer__box site-footer__newsletter-popup">
-                        <h2>Абонирай се, за да следиш последните новини, свързани с управление на сгради!</h2>
-                        <form>
-                            <input className="email_input" type="email" placeholder="Вашият e-mail *" required />
-                            <button className="submit_button" type="submit">Абониране</button>
-                        </form>
-                    </div>
-                    <div className="site-footer__box">
-                        <h2>Услуги</h2>
+        <footer className="footer">
+
+            <div className="footer__container">
+
+                {/* NEWSLETTER */}
+                <div className="footer__newsletter">
+                    <h2>Абонирай се за актуални новини и полезни съвети</h2>
+
+                    <form className="footer__newsletter-form">
+                        <input
+                            type="email"
+                            placeholder="Вашият e-mail *"
+                            required
+                        />
+                        <button type="submit">Абониране</button>
+                    </form>
+                </div>
+
+                {/* MAIN GRID */}
+                <div className="footer__grid">
+
+                    <div className="footer__column">
+                        <h3>Услуги</h3>
                         <ul>
-                            <li><a href="#services">Професионален домоуправител</a></li>
-                            <li><a href="#services">За кого е услугата</a></li>
-                            <li><a href="#services">Допълнителни услуги</a></li>
-                            <li><a href="#profile">Клиентски портал</a></li>
-                            <li><a href="#faq">Въпроси и отговори</a></li>
+                            <li><a href="#">Професионален домоуправител</a></li>
+                            <li><a href="#">За кого е услугата</a></li>
+                            <li><a href="#">Допълнителни услуги</a></li>
+                            <li><a href="#">Клиентски портал</a></li>
+                            <li><a href="#">Въпроси и отговори</a></li>
                         </ul>
                     </div>
-                    <div className="site-footer__box">
-                        <h2>Информация</h2>
+
+                    <div className="footer__column">
+                        <h3>Информация</h3>
                         <ul>
-                            <li><a href="#about">За DomUnity</a></li>
-                            <li><a href="#history">Нашата история</a></li>
-                            <li><a href="#team">Нашият екип</a></li>
-                            <li><a href="#terms">Общи условия</a></li>
-                            <li><a href="#privacy">Политика за поверителност</a></li>
+                            <li><a href="#">За DomUnity</a></li>
+                            <li><a href="#">Нашата история</a></li>
+                            <li><a href="#">Нашият екип</a></li>
+                            <li><a href="#">Общи условия</a></li>
+                            <li><a href="#">Политика за поверителност</a></li>
                         </ul>
                     </div>
-                    <div className="site-footer__box">
-                        <h2>Контакти</h2>
-                        <p>📞 <a href="tel:+359888440107">+359 88 844 0107</a></p>
-                        <p>✉️ <a href="mailto:bobovlahov@gmail.com">bobovlahov@gmail.com</a></p>
-                        <p>📍 <a href="https://www.google.com/maps/search/?api=1&query=гр.+София,+ж.к.+Овча+Купел+2,+бул.+Президент+Линкълн+1200" target="_blank" rel="noreferrer">гр. София, ж.к. Овча Купел 2,<br />бул. Президент Линкълн 1200</a></p>
-                        <div className="site-footer__socials">
-                            <a href="https://www.facebook.com/profile.php?id=61582683208565" target="_blank" rel="noreferrer">
+
+                    <div className="footer__column">
+                        <h3>Контакти</h3>
+                        <ul>
+                            <li><a href="tel:+359888440107">+359 88 844 0107</a></li>
+                            <li><a href="mailto:bobovlahov@gmail.com">bobovlahov@gmail.com</a></li>
+                            <li>
+                                гр. София, ж.к. Овча Купел 2<br />
+                                бул. Президент Линкълн 1200
+                            </li>
+                        </ul>
+
+                        {/* SOCIAL ICONS — ADDED HERE */}
+                        <div className="footer__socials">
+                            <a
+                                href="https://www.facebook.com/profile.php?id=61582683208565"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                            >
                                 <img src="/images/facebook_logo.png" alt="Facebook" />
                             </a>
-                            <a href="https://www.instagram.com/dom_unity/" target="_blank" rel="noreferrer">
+
+                            <a
+                                href="https://www.instagram.com/dom_unity/"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                            >
                                 <img src="/images/instagram_logo.png" alt="Instagram" />
                             </a>
                         </div>
                     </div>
+
                 </div>
+
             </div>
-            <div className="site-footer__bottom">
-                <p>© 2025 DomUnity. All rights reserved.</p>
+
+            {/* BOTTOM BAR */}
+            <div className="footer__bottom">
+                <p>© 2025 DomUnity. Всички права запазени.</p>
             </div>
+
         </footer>
     );
 };
