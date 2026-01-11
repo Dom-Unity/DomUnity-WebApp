@@ -16,38 +16,69 @@ function Contacts() {
         });
     };
 
-    const handleSubmit = async (e) => {
+    const handleSubmit = (e) => {
         e.preventDefault();
-        // TODO: Implement gRPC call to backend
-        console.log('Contact form submission:', formData);
-        alert('Съобщението е изпратено успешно!');
+        alert("Съобщението е изпратено успешно!");
         setFormData({ name: '', phone: '', email: '', message: '' });
     };
 
     return (
         <main className="contact-page">
+
+            <div className="contact-title-block">
+                <h1>Свържете се с нас</h1>
+                <p>Наш екип ще отговори на вашето запитване до 24 часа.</p>
+            </div>
+
             <div className="contact-card">
+
+                {/* LEFT SIDE */}
                 <div className="contact-info">
-                    <h2>Свържете се с нас</h2>
+                    <h2>Контактна информация</h2>
 
-                    <div className="info-row">
-                        <h3>Телефон</h3>
-                        <p>359 888 440 107<br />359 888 440 107</p>
+                    <div className="info-row no-icon">
+                        <div>
+                            <h3>Телефон</h3>
+                            <p>
+                                <a href="tel:+359888440107" className="contact-link">
+                                    +359 88 844 0107
+                                </a>
+                            </p>
+                        </div>
                     </div>
 
-                    <div className="info-row">
-                        <h3>E-mail</h3>
-                        <p>info@domunity.bg</p>
+                    <div className="info-row no-icon">
+                        <div>
+                            <h3>E-mail</h3>
+                            <p>
+                                <a href="mailto:info@domunity.bg" className="contact-link">
+                                    info@domunity.bg
+                                </a>
+                            </p>
+                        </div>
                     </div>
 
-                    <div className="info-row">
-                        <h3>Адрес</h3>
-                        <p>гр. София,<br />ж.к. Младост 1,<br />ул. Примерна №15</p>
+                    <div className="info-row no-icon">
+                        <div>
+                            <h3>Адрес</h3>
+                            <p>
+                                <a
+                                    href="https://www.google.com/maps/search/?api=1&query=гр.+София,+ж.к.+Овча+Купел+2,+бул.+Президент+Линкълн+1200"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="contact-link"
+                                >
+                                    гр. София,
+                                    ж.к. Овча Купел 2,
+                                    бул. Президент Линкълн 1200
+                                </a>
+                            </p>
+                        </div>
                     </div>
                 </div>
 
                 <form className="contact-form" onSubmit={handleSubmit}>
-                    <h3>Изпратете запитване</h3>
+                    <h2>Изпратете запитване</h2>
 
                     <div className="form-group">
                         <label>Име *</label>
@@ -88,14 +119,17 @@ function Contacts() {
                             name="message"
                             value={formData.message}
                             onChange={handleChange}
-                            required
                             rows="5"
+                            required
                         ></textarea>
                     </div>
 
-                    <button type="submit" className="submit-btn">Изпрати</button>
+                    <button type="submit" className="submit-btn">
+                        Изпрати
+                    </button>
                 </form>
             </div>
+
         </main>
     );
 }
