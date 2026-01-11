@@ -1,42 +1,88 @@
-import React from "react";
-import { Link } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import "./Profile.css";
+import { getProfile, isAuthenticated, logout } from '../services/apiService';
 
 const Profile = () => {
+    const navigate = useNavigate();
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
 
-    const user = {
-        name: "Иван Иванов",
-        email: "ivan.ivanov@example.com",
-        building: "Младост 3, бл. 325",
-        entrance: "Б",
-        apartment: "25",
-        clientNumber: "12356787",
-        residents: 3,
-        balance: 0,
-        lastPayment: "12.03.2025",
-        lastPaymentAmount: "30.00 лв.",
+    // Dynamic user data from API
+    const [user, setUser] = useState(null);
+    const [financialSummary, setFinancialSummary] = useState(null);
+    const [events, setEvents] = useState([]);
+    const [payments, setPayments] = useState([]);
+
+    // Check authentication on mount
+    useEffect(() => {
+        if (!isAuthenticated()) {
+            navigate('/login');
+            return;
+        }
+
+        const fetchProfileData = async () => {
+            try {
+                const data = await getProfile();
+                if (data.error) {
+                    if (data.error === 'Unauthorized') {
+                        logout();
+                        navigate('/login');
+                        return;
+                    }
+                    setError(data.error);
+                    return;
+                }
+
+                // Build user object from API response
+                const userData = {
+                    name: data.user?.full_name || 'Потребител',
+                    email: data.user?.email || '',
+                    building: data.building?.address || '',
+                    entrance: data.building?.entrance || '',
+                    apartment: data.apartment?.number?.toString() || '',
+                    clientNumber: data.client_number || '',
+                    residents: data.apartment?.residents || 0,
+                    balance: data.balance || 0,
+                    lastPayment: data.last_payment?.date || '',
+                    lastPaymentAmount: data.last_payment?.amount || '',
+                };
+                setUser(userData);
+
+                // Set financial summary
+                if (data.financial_summary) {
+                    setFinancialSummary({
+                        currentMonthDebt: data.financial_summary.current_month_debt || '0.00 лв.',
+                        overdueAmount: data.financial_summary.overdue_amount || '0.00 лв.',
+                        yearlyTotal: data.financial_summary.yearly_total || '0.00 лв.',
+                    });
+                }
+
+                // Set events
+                if (data.events && Array.isArray(data.events)) {
+                    setEvents(data.events);
+                }
+
+                // Set payments for the finance table
+                if (data.payments && Array.isArray(data.payments)) {
+                    setPayments(data.payments);
+                }
+
+            } catch (err) {
+                console.error('Profile fetch failed:', err);
+                setError('Грешка при зареждане на профила');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchProfileData();
+    }, [navigate]);
+
+    const handleLogout = () => {
+        logout();
+        navigate('/login');
     };
-
-    const financialSummary = {
-        currentMonthDebt: "30.00 лв.",
-        overdueAmount: "40.00 лв.",
-        yearlyTotal: "100.00 лв.",
-    };
-
-    const events = [
-        {
-            date: "05.11.2025",
-            text: "Планирана профилактика на асансьора от 10:00 до 13:00 ч.",
-        },
-        {
-            date: "02.11.2025",
-            text: "Общо събрание на вход Б – от 19:00 ч. във входното фоайе.",
-        },
-        {
-            date: "28.10.2025",
-            text: "Изпратено напомняне за месечна такса за поддръжка.",
-        },
-    ];
 
     const quickLinks = [
         { to: "/entrance", label: "Моят вход", desc: "Статус на всички апартаменти" },
@@ -45,32 +91,52 @@ const Profile = () => {
         { to: "/offer", label: "Нова оферта", desc: "Заяви управление на друга сграда" },
     ];
 
+    if (loading) {
+        return <main className="profile-layout"><p style={{ textAlign: 'center', padding: '2rem' }}>Зареждане...</p></main>;
+    }
+
+    if (error) {
+        return (
+            <main className="profile-layout">
+                <p style={{ color: 'red', textAlign: 'center', padding: '2rem' }}>{error}</p>
+            </main>
+        );
+    }
+
+    // Show loading if user data not yet available
+    if (!user) {
+        return <main className="profile-layout"><p style={{ textAlign: 'center', padding: '2rem' }}>Зареждане на данни...</p></main>;
+    }
+
     return (
         <main className="profile-layout">
             <section className="profile-hero">
                 <div className="profile-hero-left">
-                <img
-                    src="/images/profile.png"
-                    alt="Профил"
-                    className="profile-avatar"
-                />
-                <div className="profile-hero-text">
-                    <h1>Здравей, {user.name}</h1>
-                    <p>Тук можеш да следиш всичко, свързано с твоя дом и етажна собственост.</p>
-                    <div className="profile-tags">
-                    <span className="tag">Сграда: {user.building}</span>
-                    <span className="tag">Вход {user.entrance}</span>
-                    <span className="tag">Ап. {user.apartment}</span>
-                    <span className="tag">Клиент № {user.clientNumber}</span>
+                    <img
+                        src="/images/profile.png"
+                        alt="Профил"
+                        className="profile-avatar"
+                    />
+                    <div className="profile-hero-text">
+                        <h1>Здравей, {user.name}</h1>
+                        <p>Тук можеш да следиш всичко, свързано с твоя дом и етажна собственост.</p>
+                        <div className="profile-tags">
+                            <span className="tag">Сграда: {user.building}</span>
+                            <span className="tag">Вход {user.entrance}</span>
+                            <span className="tag">Ап. {user.apartment}</span>
+                            <span className="tag">Клиент № {user.clientNumber}</span>
+                        </div>
                     </div>
-                </div>
                 </div>
 
                 <div className="profile-hero-right">
-                <Link to="/EditProfile" className="btn-profile-edit">
-                    Редактирай профил
-                </Link>
-                <p className="profile-email">{user.email}</p>
+                    <Link to="/EditProfile" className="btn-profile-edit">
+                        Редактирай профил
+                    </Link>
+                    <button onClick={handleLogout} className="btn-profile-edit" style={{ marginLeft: '10px', background: '#dc3545', borderColor: '#dc3545' }}>
+                        Изход
+                    </button>
+                    <p className="profile-email">{user.email}</p>
                 </div>
             </section>
 
@@ -79,38 +145,38 @@ const Profile = () => {
                     <div className="card card-stats">
                         <h2>Обобщена информация</h2>
                         <div className="stats-grid">
-                        <div className="stat-item">
-                            <span className="stat-label">Баланс</span>
-                            <span className="stat-value">{user.balance} лв.</span>
-                        </div>
-                        <div className="stat-item">
-                            <span className="stat-label">Живущи</span>
-                            <span className="stat-value">{user.residents}</span>
-                        </div>
-                        <div className="stat-item">
-                            <span className="stat-label">Текущо задължение</span>
-                            <span className="stat-value">
-                            {financialSummary.currentMonthDebt}
-                            </span>
-                        </div>
-                        <div className="stat-item">
-                            <span className="stat-label">Просрочени суми</span>
-                            <span className="stat-value warning">
-                            {financialSummary.overdueAmount}
-                            </span>
-                        </div>
-                        <div className="stat-item">
-                            <span className="stat-label">Общо за годината</span>
-                            <span className="stat-value">
-                            {financialSummary.yearlyTotal}
-                            </span>
-                        </div>
-                        <div className="stat-item">
-                            <span className="stat-label">Последно плащане</span>
-                            <span className="stat-value">
-                            {user.lastPayment} ({user.lastPaymentAmount})
-                            </span>
-                        </div>
+                            <div className="stat-item">
+                                <span className="stat-label">Баланс</span>
+                                <span className="stat-value">{user.balance} лв.</span>
+                            </div>
+                            <div className="stat-item">
+                                <span className="stat-label">Живущи</span>
+                                <span className="stat-value">{user.residents}</span>
+                            </div>
+                            <div className="stat-item">
+                                <span className="stat-label">Текущо задължение</span>
+                                <span className="stat-value">
+                                    {financialSummary?.currentMonthDebt || '0.00 лв.'}
+                                </span>
+                            </div>
+                            <div className="stat-item">
+                                <span className="stat-label">Просрочени суми</span>
+                                <span className="stat-value warning">
+                                    {financialSummary?.overdueAmount || '0.00 лв.'}
+                                </span>
+                            </div>
+                            <div className="stat-item">
+                                <span className="stat-label">Общо за годината</span>
+                                <span className="stat-value">
+                                    {financialSummary?.yearlyTotal || '0.00 лв.'}
+                                </span>
+                            </div>
+                            <div className="stat-item">
+                                <span className="stat-label">Последно плащане</span>
+                                <span className="stat-value">
+                                    {user.lastPayment ? `${user.lastPayment} (${user.lastPaymentAmount})` : 'Няма данни'}
+                                </span>
+                            </div>
                         </div>
                     </div>
 
@@ -155,16 +221,21 @@ const Profile = () => {
                                 <span>Сума</span>
                                 <span>Статус</span>
                             </div>
-                            <div className="finance-row">
-                                <span>Ноември 2025</span>
-                                <span>30.00 лв.</span>
-                                <span className="status pending">Очаква плащане</span>
-                            </div>
-                            <div className="finance-row">
-                                <span>Октомври 2025</span>
-                                <span>40.00 лв.</span>
-                                <span className="status paid">Платено</span>
-                            </div>
+                            {payments.length > 0 ? (
+                                payments.slice(0, 3).map((payment, index) => (
+                                    <div className="finance-row" key={index}>
+                                        <span>{payment.period}</span>
+                                        <span>{payment.amount}</span>
+                                        <span className={`status ${payment.status}`}>
+                                            {payment.status === 'paid' ? 'Платено' : payment.status === 'pending' ? 'Очаква плащане' : 'Просрочено'}
+                                        </span>
+                                    </div>
+                                ))
+                            ) : (
+                                <div className="finance-row">
+                                    <span colSpan="3" style={{ textAlign: 'center' }}>Няма налични плащания</span>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -173,26 +244,26 @@ const Profile = () => {
                     <div className="card card-actions">
                         <h2>Бързи действия</h2>
                         <ul className="quick-actions-list">
-                        {quickLinks.map((item) => (
-                            <li key={item.to}>
-                            <Link to={item.to}>
-                                <span className="qa-title">{item.label}</span>
-                                <span className="qa-desc">{item.desc}</span>
-                            </Link>
-                            </li>
-                        ))}
+                            {quickLinks.map((item) => (
+                                <li key={item.to}>
+                                    <Link to={item.to}>
+                                        <span className="qa-title">{item.label}</span>
+                                        <span className="qa-desc">{item.desc}</span>
+                                    </Link>
+                                </li>
+                            ))}
                         </ul>
                     </div>
 
                     <div className="card card-events">
                         <h2>Събития и известия</h2>
                         <ul className="events-list">
-                        {events.map((e, i) => (
-                            <li key={i}>
-                            <span className="event-date">{e.date}</span>
-                            <p>{e.text}</p>
-                            </li>
-                        ))}
+                            {events.map((e, i) => (
+                                <li key={i}>
+                                    <span className="event-date">{e.date}</span>
+                                    <p>{e.text}</p>
+                                </li>
+                            ))}
                         </ul>
                     </div>
                 </div>

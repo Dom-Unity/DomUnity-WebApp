@@ -1,65 +1,69 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import "./Apartment.css";
+import { getApartmentDetails, isAuthenticated } from '../services/apiService';
 
 const Apartment = () => {
-    const apartmentInfo = {
-        building: "Младост 3, бл. 325",
-        entrance: "Б",
-        number: "25",
-        residents: 3,
+    const navigate = useNavigate();
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
+
+    const [apartmentInfo, setApartmentInfo] = useState({
+        building: "",
+        entrance: "",
+        number: "",
+        residents: 0,
         balance: 0.0,
-        clientNumber: "12356787",
-    };
+        clientNumber: "",
+    });
 
-    const [payments, setPayments] = useState([
-        {
-            month: "Януари",
-            year: 2025,
-            fee: 25.0,
-            repair: 10.0,
-            fund: 5.0,
-            extra: 0.0,
-            status: "overdue",
-        },
-        {
-            month: "Февруари",
-            year: 2025,
-            fee: 25.0,
-            repair: 0.0,
-            fund: 5.0,
-            extra: 0.0,
-            status: "pending",
-        },
-        {
-            month: "Март",
-            year: 2025,
-            fee: 25.0,
-            repair: 0.0,
-            fund: 5.0,
-            extra: 0.0,
-            status: "paid",
-            paidAt: "12.03.2025",
-        },
-    ]);
+    const [payments, setPayments] = useState([]);
+    const [history, setHistory] = useState([]);
+    const [maintenance, setMaintenance] = useState([]);
 
-    const [history, setHistory] = useState([
-        "Март 2025 — Платено на 12.03.2025 г.",
-    ]);
+    // Fetch apartment data on mount
+    useEffect(() => {
+        if (!isAuthenticated()) {
+            navigate('/login');
+            return;
+        }
 
-    const [maintenance] = useState([
-        {
-            date: "05.02.2025",
-            description: "Почистване и дезинфекция на входа",
-            cost: "20.00 лв.",
-            status: "completed",
-        },
-        {
-            date: "18.03.2025",
-            description: "Профилактика на асансьора",
-            cost: "60.00 лв.",
-            status: "planned",
-        },
-    ]);
+        const fetchApartment = async () => {
+            try {
+                const data = await getApartmentDetails();
+                if (data.error) {
+                    if (data.error === 'No apartment found for user') {
+                        setError('Нямате свързан апартамент');
+                    } else {
+                        setError(data.error);
+                    }
+                    return;
+                }
+
+                if (data.apartmentInfo) {
+                    setApartmentInfo(data.apartmentInfo);
+                }
+                if (data.payments) {
+                    setPayments(data.payments);
+                    // Build history from paid payments
+                    const paidHistory = data.payments
+                        .filter(p => p.status === 'paid' && p.paidAt)
+                        .map(p => `${p.month} ${p.year} — Платено на ${p.paidAt}`);
+                    setHistory(paidHistory.length > 0 ? paidHistory : ['Няма регистрирани плащания']);
+                }
+                if (data.maintenance) {
+                    setMaintenance(data.maintenance);
+                }
+            } catch (err) {
+                console.error('Failed to fetch apartment:', err);
+                setError('Грешка при зареждане на данните');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchApartment();
+    }, [navigate]);
 
     const [statusFilter, setStatusFilter] = useState("all");
     const [search, setSearch] = useState("");
@@ -184,6 +188,18 @@ const Apartment = () => {
             return true;
         });
     }, [payments, statusFilter, search]);
+
+    if (loading) {
+        return <main className="apartment-page"><p style={{ textAlign: 'center', padding: '2rem' }}>Зареждане...</p></main>;
+    }
+
+    if (error) {
+        return (
+            <main className="apartment-page">
+                <p style={{ color: 'red', textAlign: 'center', padding: '2rem' }}>{error}</p>
+            </main>
+        );
+    }
 
     return (
         <main className="apartment-page">

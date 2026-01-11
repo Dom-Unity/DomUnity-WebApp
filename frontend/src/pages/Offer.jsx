@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import "./Offer.css";
+import { requestOffer, requestPresentation } from '../services/apiService';
 
 function Offer() {
     const [activeTab, setActiveTab] = useState("offer");
@@ -34,22 +35,58 @@ function Offer() {
         setPresentationData({ ...presentationData, [name]: type === "checkbox" ? checked : value });
     };
 
-    const handleOfferSubmit = (e) => {
+    const [loading, setLoading] = useState(false);
+    const [success, setSuccess] = useState('');
+    const [error, setError] = useState('');
+
+    const handleOfferSubmit = async (e) => {
         e.preventDefault();
         if (!offerData.agree) {
-            alert("Трябва да приемете политиката за поверителност.");
+            setError("Трябва да приемете политиката за поверителност.");
             return;
         }
-        alert("Офертата е изпратена успешно!");
+        setLoading(true);
+        setSuccess('');
+        setError('');
+
+        try {
+            const result = await requestOffer(offerData);
+            if (result.success) {
+                setSuccess('Офертата е изпратена успешно!');
+                setOfferData({ phone: '', email: '', city: 'София', numProperties: 1, address: '', additionalInfo: '', agree: false });
+            } else {
+                setError(result.message || 'Грешка при изпращане.');
+            }
+        } catch (err) {
+            setError('Грешка при изпращане. Опитайте по-късно.');
+        } finally {
+            setLoading(false);
+        }
     };
 
-    const handlePresentationSubmit = (e) => {
+    const handlePresentationSubmit = async (e) => {
         e.preventDefault();
         if (!presentationData.agree) {
-            alert("Трябва да приемете политиката за поверителност.");
+            setError("Трябва да приемете политиката за поверителност.");
             return;
         }
-        alert("Заявката е изпратена успешно!");
+        setLoading(true);
+        setSuccess('');
+        setError('');
+
+        try {
+            const result = await requestPresentation(presentationData);
+            if (result.success) {
+                setSuccess('Заявката за презентация е изпратена успешно!');
+                setPresentationData({ date: '', buildingType: 'Ново строителство', phone: '', email: '', address: '', additionalInfo: '', agree: false });
+            } else {
+                setError(result.message || 'Грешка при изпращане.');
+            }
+        } catch (err) {
+            setError('Грешка при изпращане. Опитайте по-късно.');
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -79,6 +116,8 @@ function Offer() {
             </div>
 
             <div className="offer-card">
+                {success && <div style={{ color: 'green', marginBottom: '1rem', textAlign: 'center', padding: '10px', background: '#e8f5e9', borderRadius: '8px' }}>{success}</div>}
+                {error && <div style={{ color: 'red', marginBottom: '1rem', textAlign: 'center', padding: '10px', background: '#ffebee', borderRadius: '8px' }}>{error}</div>}
                 {activeTab === "offer" ? (
                     <form onSubmit={handleOfferSubmit} className="form-side">
 

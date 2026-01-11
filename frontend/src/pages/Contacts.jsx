@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import './Contacts.css';
+import { sendContactForm } from '../services/apiService';
 
 function Contacts() {
     const [formData, setFormData] = useState({
@@ -8,6 +9,9 @@ function Contacts() {
         email: '',
         message: ''
     });
+    const [loading, setLoading] = useState(false);
+    const [success, setSuccess] = useState('');
+    const [error, setError] = useState('');
 
     const handleChange = (e) => {
         setFormData({
@@ -16,10 +20,32 @@ function Contacts() {
         });
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        alert("Съобщението е изпратено успешно!");
-        setFormData({ name: '', phone: '', email: '', message: '' });
+        setLoading(true);
+        setSuccess('');
+        setError('');
+
+        try {
+            const result = await sendContactForm(
+                formData.name,
+                formData.phone,
+                formData.email,
+                formData.message
+            );
+
+            if (result.success) {
+                setSuccess('Съобщението е изпратено успешно!');
+                setFormData({ name: '', phone: '', email: '', message: '' });
+            } else {
+                setError(result.message || 'Грешка при изпращане. Моля, опитайте отново.');
+            }
+        } catch (err) {
+            console.error('Contact form error:', err);
+            setError('Грешка при изпращане. Моля, опитайте отново по-късно.');
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -80,6 +106,9 @@ function Contacts() {
                 <form className="contact-form" onSubmit={handleSubmit}>
                     <h2>Изпратете запитване</h2>
 
+                    {success && <div style={{ color: 'green', marginBottom: '1rem' }}>{success}</div>}
+                    {error && <div style={{ color: 'red', marginBottom: '1rem' }}>{error}</div>}
+
                     <div className="form-group">
                         <label>Име *</label>
                         <input
@@ -88,6 +117,7 @@ function Contacts() {
                             value={formData.name}
                             onChange={handleChange}
                             required
+                            disabled={loading}
                         />
                     </div>
 
@@ -99,6 +129,7 @@ function Contacts() {
                             value={formData.phone}
                             onChange={handleChange}
                             required
+                            disabled={loading}
                         />
                     </div>
 
@@ -110,6 +141,7 @@ function Contacts() {
                             value={formData.email}
                             onChange={handleChange}
                             required
+                            disabled={loading}
                         />
                     </div>
 
@@ -121,11 +153,12 @@ function Contacts() {
                             onChange={handleChange}
                             rows="5"
                             required
+                            disabled={loading}
                         ></textarea>
                     </div>
 
-                    <button type="submit" className="submit-btn">
-                        Изпрати
+                    <button type="submit" className="submit-btn" disabled={loading}>
+                        {loading ? 'Изпращане...' : 'Изпрати'}
                     </button>
                 </form>
             </div>

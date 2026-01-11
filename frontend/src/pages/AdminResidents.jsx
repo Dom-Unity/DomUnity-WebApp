@@ -1,53 +1,13 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import "./AdminResidents.css";
-
-const initialResidents = [
-    {
-        id: 1,
-        name: "Иван Иванов",
-        email: "ivan.ivanov@example.com",
-        building: "Младост 3, бл. 325",
-        entrance: "Б",
-        apartment: "25",
-        clientNumber: "12356787",
-        residentsCount: 3,
-        balance: 0,
-        totalDebt: 70,
-        role: "Потребител",
-        isActive: true,
-    },
-    {
-        id: 2,
-        name: "Мария Георгиева",
-        email: "m.georgieva@example.com",
-        building: "Младост 3, бл. 325",
-        entrance: "Б",
-        apartment: "26",
-        clientNumber: "98765432",
-        residentsCount: 2,
-        balance: -10,
-        totalDebt: 15,
-        role: "Потребител",
-        isActive: true,
-    },
-    {
-        id: 3,
-        name: "Петър Петров",
-        email: "petar.petrov@example.com",
-        building: "Младост 3, бл. 325",
-        entrance: "Б",
-        apartment: "27",
-        clientNumber: "55555555",
-        residentsCount: 4,
-        balance: 0,
-        totalDebt: 45,
-        role: "Потребител",
-        isActive: false,
-    },
-];
+import { getAdminResidents, isAuthenticated } from '../services/apiService';
 
 const AdminResidents = () => {
-    const [residents, setResidents] = useState(initialResidents);
+    const navigate = useNavigate();
+    const [residents, setResidents] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
 
     const [search, setSearch] = useState("");
     const [buildingFilter, setBuildingFilter] = useState("all");
@@ -57,6 +17,40 @@ const AdminResidents = () => {
     const [selectedResident, setSelectedResident] = useState(null);
     const [editForm, setEditForm] = useState(null);
     const [isEditing, setIsEditing] = useState(false);
+
+    // Fetch residents on mount
+    useEffect(() => {
+        if (!isAuthenticated()) {
+            navigate('/login');
+            return;
+        }
+
+        const fetchResidents = async () => {
+            try {
+                const data = await getAdminResidents();
+                if (data.error) {
+                    setError(data.error);
+                    return;
+                }
+                if (data.residents) {
+                    setResidents(data.residents);
+                }
+            } catch (err) {
+                console.error('Failed to fetch residents:', err);
+                setError('Грешка при зареждане на данните');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchResidents();
+    }, [navigate]);
+
+    // Get unique buildings for filter dropdown
+    const buildings = useMemo(() => {
+        const unique = [...new Set(residents.map(r => r.building).filter(b => b))];
+        return unique;
+    }, [residents]);
 
     // отваряне на форма за редакция
     const openEdit = (resident) => {
@@ -79,10 +73,10 @@ const AdminResidents = () => {
                 type === "checkbox"
                     ? checked
                     : name === "residentsCount" ||
-                      name === "balance" ||
-                      name === "totalDebt"
-                    ? Number(value)
-                    : value,
+                        name === "balance" ||
+                        name === "totalDebt"
+                        ? Number(value)
+                        : value,
         }));
     };
 
@@ -164,7 +158,19 @@ const AdminResidents = () => {
 
     const totalUsers = residents.length;
     const activeUsers = residents.filter((r) => r.isActive).length;
-    const totalDebtSum = residents.reduce((sum, r) => sum + r.totalDebt, 0);
+    const totalDebtSum = residents.reduce((sum, r) => sum + (r.totalDebt || 0), 0);
+
+    if (loading) {
+        return <main className="admin-page"><p style={{ textAlign: 'center', padding: '2rem' }}>Зареждане...</p></main>;
+    }
+
+    if (error) {
+        return (
+            <main className="admin-page">
+                <p style={{ color: 'red', textAlign: 'center', padding: '2rem' }}>{error}</p>
+            </main>
+        );
+    }
 
     return (
         <main className="admin-page">
