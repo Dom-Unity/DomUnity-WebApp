@@ -27,22 +27,22 @@ const Footer = () => {
                     <div className="footer__column">
                         <h3>Услуги</h3>
                         <ul>
-                            <li><a href="#">Професионален домоуправител</a></li>
-                            <li><a href="#">За кого е услугата</a></li>
-                            <li><a href="#">Допълнителни услуги</a></li>
-                            <li><a href="#">Клиентски портал</a></li>
-                            <li><a href="#">Въпроси и отговори</a></li>
+                            <li><span className="footer-link">Професионален домоуправител</span></li>
+                            <li><span className="footer-link">За кого е услугата</span></li>
+                            <li><span className="footer-link">Допълнителни услуги</span></li>
+                            <li><span className="footer-link">Клиентски портал</span></li>
+                            <li><span className="footer-link">Въпроси и отговори</span></li>
                         </ul>
                     </div>
 
                     <div className="footer__column">
                         <h3>Информация</h3>
                         <ul>
-                            <li><a href="#">За DomUnity</a></li>
-                            <li><a href="#">Нашата история</a></li>
-                            <li><a href="#">Нашият екип</a></li>
-                            <li><a href="#">Общи условия</a></li>
-                            <li><a href="#">Политика за поверителност</a></li>
+                            <li><span className="footer-link">За DomUnity</span></li>
+                            <li><span className="footer-link">Нашата история</span></li>
+                            <li><span className="footer-link">Нашият екип</span></li>
+                            <li><span className="footer-link">Общи условия</span></li>
+                            <li><span className="footer-link">Политика за поверителност</span></li>
                         </ul>
                     </div>
 

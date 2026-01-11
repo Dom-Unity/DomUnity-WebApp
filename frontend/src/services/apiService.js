@@ -69,7 +69,7 @@ const apiRequest = async (endpoint, options = {}) => {
 
 // Auth API
 export const login = async (email, password) => {
-    const { response, data } = await apiRequest('/api/auth/login', {
+    const { data } = await apiRequest('/api/auth/login', {
         method: 'POST',
         body: JSON.stringify({ email, password }),
     });
@@ -83,7 +83,7 @@ export const login = async (email, password) => {
 };
 
 export const register = async (email, password, fullName, phone) => {
-    const { response, data } = await apiRequest('/api/auth/register', {
+    const { data } = await apiRequest('/api/auth/register', {
         method: 'POST',
         body: JSON.stringify({
             email,
@@ -100,7 +100,7 @@ export const refreshToken = async () => {
     const refresh = getRefreshToken();
     if (!refresh) return { success: false };
 
-    const { response, data } = await apiRequest('/api/auth/refresh', {
+    const { data } = await apiRequest('/api/auth/refresh', {
         method: 'POST',
         body: JSON.stringify({ refresh_token: refresh }),
     });
@@ -118,7 +118,7 @@ export const logout = () => {
 
 // User API
 export const getProfile = async () => {
-    const { response, data } = await apiRequest('/api/user/profile', {
+    const { data } = await apiRequest('/api/user/profile', {
         method: 'GET',
     });
 
@@ -127,7 +127,7 @@ export const getProfile = async () => {
 
 // Contact API
 export const sendContactForm = async (name, phone, email, message) => {
-    const { response, data } = await apiRequest('/api/contact/form', {
+    const { data } = await apiRequest('/api/contact/form', {
         method: 'POST',
         body: JSON.stringify({ name, phone, email, message }),
     });
@@ -136,7 +136,7 @@ export const sendContactForm = async (name, phone, email, message) => {
 };
 
 export const requestOffer = async (offerData) => {
-    const { response, data } = await apiRequest('/api/contact/offer', {
+    const { data } = await apiRequest('/api/contact/offer', {
         method: 'POST',
         body: JSON.stringify({
             phone: offerData.phone,
@@ -152,7 +152,7 @@ export const requestOffer = async (offerData) => {
 };
 
 export const requestPresentation = async (presentationData) => {
-    const { response, data } = await apiRequest('/api/contact/presentation', {
+    const { data } = await apiRequest('/api/contact/presentation', {
         method: 'POST',
         body: JSON.stringify({
             date: presentationData.date,
@@ -181,7 +181,7 @@ export const healthCheck = async () => {
 
 // Admin API
 export const getAdminResidents = async () => {
-    const { response, data } = await apiRequest('/api/admin/residents', {
+    const { data } = await apiRequest('/api/admin/residents', {
         method: 'GET',
     });
     return data;
@@ -189,7 +189,7 @@ export const getAdminResidents = async () => {
 
 // Apartment API
 export const getApartmentDetails = async () => {
-    const { response, data } = await apiRequest('/api/user/apartment', {
+    const { data } = await apiRequest('/api/user/apartment', {
         method: 'GET',
     });
     return data;
@@ -197,14 +197,14 @@ export const getApartmentDetails = async () => {
 
 // Building API
 export const getBuildingApartments = async (buildingId = 1) => {
-    const { response, data } = await apiRequest(`/api/building/${buildingId}/apartments`, {
+    const { data } = await apiRequest(`/api/building/${buildingId}/apartments`, {
         method: 'GET',
     });
     return data;
 };
 
 export const getMaintenanceRecords = async (buildingId = 1) => {
-    const { response, data } = await apiRequest(`/api/building/${buildingId}/maintenance`, {
+    const { data } = await apiRequest(`/api/building/${buildingId}/maintenance`, {
         method: 'GET',
     });
     return data;

@@ -35,6 +35,7 @@ function Offer() {
         setPresentationData({ ...presentationData, [name]: type === "checkbox" ? checked : value });
     };
 
+    // eslint-disable-next-line no-unused-vars
     const [loading, setLoading] = useState(false);
     const [success, setSuccess] = useState('');
     const [error, setError] = useState('');
