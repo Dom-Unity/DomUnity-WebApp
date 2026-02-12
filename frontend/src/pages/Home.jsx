@@ -1,160 +1,227 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import "./Home.css";
 
 function Home() {
     return (
-        <main className="main">
-            {/* HERO SECTION */}
-            <section className="hero-image-section">
-                <div className="hero-text">
-                    <img
-                        src="/images/logo_image.png"
-                        alt="DomUnity Logo"
-                        className="hero-logo"
-                    />
-                    <h1>
-                        Спокойствие за вашия дом,<br /> грижа от DomUnity
-                    </h1>
-                    <p>
-                        Професионално управление на сгради и етажна собственост —
-                        прозрачност, ред и комфорт за всички живущи.
-                    </p>
-
-                    <div className="hero-buttons">
-                        <a href="#services" className="btn primary">
-                            Вижте нашите услуги
-                        </a>
-                        <a href="#contact" className="btn secondary">
-                            Научете повече
-                        </a>
-                    </div>
-                </div>
-            </section>
-
-            {/* ABOUT SECTION */}
-            <section className="about">
-                <div className="about-container">
-                    <div className="about-content">
-                        <h2>За нас</h2>
-                        <p>
-                            <strong>DomUnity</strong> е екип от професионални
-                            домоуправители, които вярват, че поддържането на
-                            вашия дом трябва да бъде спокойно и прозрачно.
-                            Ние се грижим за административните, финансовите и
-                            техническите аспекти на всяка сграда, така че вие да
-                            се наслаждавате на уюта си без грижи.
-                        </p>
-
-                        <a href="#services" className="btn primary">
-                            Вижте нашите услуги
-                        </a>
-                    </div>
-
-                    <div className="about-image">
+        <main className="main home-main">
+            <section className="hero">
+                <div className="hero-inner">
+                    <div className="hero-text">
                         <img
-                            src="/images/about_building.png"
-                            alt="DomUnity управление на сгради"
+                            src="/images/logo_image.png"
+                            alt="DomUnity Logo"
+                            className="hero-logo"
                         />
-                    </div>
-                </div>
-            </section>
-
-            {/* SERVICES SECTION */}
-            <section className="services" id="services">
-                <h2>Нашите услуги</h2>
-
-                <div className="services-grid">
-                    <div className="service-card">
-                        <img src="/images/service_admin.png" alt="Административно управление" />
-                        <h3>Административно управление</h3>
+                        <h1>
+                            Професионално управление на<br />
+                            сгради и етажна собственост
+                        </h1>
                         <p>
-                            Водене на документация, организиране на общи събрания
-                            и комуникация с институции.
+                            DomUnity поема грижата за вашия вход – административно,
+                            финансово и техническо управление с пълна прозрачност за
+                            всеки живущ.
                         </p>
-                    </div>
 
-                    <div className="service-card">
-                        <img src="/images/service_finance.png" alt="Финансово обслужване" />
-                        <h3>Финансово обслужване</h3>
-                        <p>
-                            Събиране на месечни такси, изготвяне на отчети и
-                            прозрачност в бюджета на сградата.
-                        </p>
-                    </div>
-
-                    <div className="service-card">
-                        <img src="/images/service_maintenance.png" alt="Поддръжка" />
-                        <h3>Техническа поддръжка</h3>
-                        <p>
-                            Редовни проверки, организация на ремонти и поддръжка
-                            на общите части.
-                        </p>
-                    </div>
-
-                    <div className="service-card">
-                        <img src="/images/service_cleaning.png" alt="Почистване" />
-                        <h3>Почистване и хигиена</h3>
-                        <p>
-                            Професионално почистване на стълбища, входове и
-                            прилежащи площи.
-                        </p>
-                    </div>
-                </div>
-            </section>
-
-            {/* ADVANTAGES SECTION */}
-            <section className="advantages">
-                <div className="advantages-container">
-                    <div className="advantages-left">
-                        <img
-                            src="/images/advantages_building.png"
-                            alt="DomUnity Building"
-                        />
-
-                        <div className="advantages-overlay">
-                            <h2>Защо да изберете DomUnity?</h2>
-                            <p>
-                                Нашата мисия е да направим управлението на вашата
-                                етажна собственост лесно, прозрачно и ефективно.
-                            </p>
+                        <div className="hero-buttons">
+                            <Link to="/offer" className="btn secondary">
+                                Вземи оферта
+                            </Link>
+                            <Link to="/login" className="btn primary">
+                                Вход за клиенти
+                            </Link>
                         </div>
-                    </div>
 
-                    <div className="advantages-right">
-                        <div className="advantages-box">
-                            <div className="advantages-content">
-                                <ul className="advantages-list">
-                                    <li>
-                                        <span className="icon">✔</span>
-                                        Професионализъм и опит в управлението
-                                    </li>
-                                    <li>
-                                        <span className="icon">✔</span>
-                                        Прозрачност във всеки финансов отчет
-                                    </li>
-                                    <li>
-                                        <span className="icon">✔</span>
-                                        24/7 комуникация и поддръжка
-                                    </li>
-                                    <li>
-                                        <span className="icon">✔</span>
-                                        Индивидуален подход към всяка сграда
-                                    </li>
-                                    <li>
-                                        <span className="icon">✔</span>
-                                        Надеждни партньори за ремонти и поддръжка
-                                    </li>
-                                </ul>
+                        <div className="hero-highlights">
+                            <div className="hero-highlight">
+                                <span className="value">24/7</span>
+                                <span className="label">комуникация и сигнали</span>
+                            </div>
+                            <div className="hero-highlight">
+                                <span className="value">100%</span>
+                                <span className="label">прозрачност на разходите</span>
+                            </div>
+                            <div className="hero-highlight">
+                                <span className="value">1 платформа</span>
+                                <span className="label">за домоуправител и живущи</span>
                             </div>
                         </div>
                     </div>
                 </div>
             </section>
 
-            {/* EXTRA SECTION */}
-            <section>
-                <div className="table">
-                    <h1>tabli4ki</h1>
+            <section className="section about" id="about">
+                <div className="section-header">
+                    <h2>За кого е DomUnity?</h2>
+                    <p>
+                        Подходящо решение както за вече организирани етажни
+                        собствености, така и за нови сгради, които тепърва
+                        избират професионален домоуправител.
+                    </p>
+                </div>
+
+                <div className="about-grid">
+                    <div className="about-card">
+                        <h3>За собственици и живущи</h3>
+                        <p>
+                            Достъп до актуален баланс, история на плащанията и
+                            всички разходи по сградата на едно място – без
+                            хартиени бележки и спорове.
+                        </p>
+                        <ul>
+                            <li>Личен профил за всеки апартамент</li>
+                            <li>Преглед на начисления и плащания</li>
+                            <li>Известия при просрочия и нови такси</li>
+                        </ul>
+                    </div>
+
+                    <div className="about-card">
+                        <h3>За управители на сгради</h3>
+                        <p>
+                            Професионална система за управление на няколко входа,
+                            сгради и комплекси – с автоматизирани отчети и
+                            централизирана комуникация.
+                        </p>
+                        <ul>
+                            <li>Финансови отчети по вход и сграда</li>
+                            <li>История на ремонти и поддръжка</li>
+                            <li>Преглед на задължения по апартамент</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <section className="section services" id="services">
+                <div className="section-header">
+                    <h2>Какво поемаме вместо вас</h2>
+                    <p>
+                        Пълно обслужване на етажната собственост – от документацията
+                        до ежедневната поддръжка и комуникацията с живущите.
+                    </p>
+                </div>
+
+                <div className="services-grid">
+                    <div className="service-card">
+                        <img
+                            src="/images/service_admin.png"
+                            alt="Административно управление"
+                        />
+                        <h3>Административно управление</h3>
+                        <p>
+                            Организация на общи събрания, протоколи, регистри,
+                            договори и кореспонденция с институции.
+                        </p>
+                    </div>
+
+                    <div className="service-card">
+                        <img
+                            src="/images/service_finance.png"
+                            alt="Финансово обслужване"
+                        />
+                        <h3>Финансово обслужване</h3>
+                        <p>
+                            Събиране на такси, разпределяне на разходи, месечни
+                            и годишни отчети с пълна видимост за собствениците.
+                        </p>
+                    </div>
+
+                    <div className="service-card">
+                        <img
+                            src="/images/service_maintenance.png"
+                            alt="Техническа поддръжка"
+                        />
+                        <h3>Техническа поддръжка</h3>
+                        <p>
+                            Организация на ремонти, профилактика на асансьори,
+                            осветление и общи части, поддръжка на инсталации.
+                        </p>
+                    </div>
+
+                    <div className="service-card">
+                        <img
+                            src="/images/service_cleaning.png"
+                            alt="Почистване и хигиена"
+                        />
+                        <h3>Почистване и хигиена</h3>
+                        <p>
+                            Професионално почистване на входове, стълбища и
+                            прилежащи площи по фиксиран график.
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            <section className="section how-it-works">
+                <div className="section-header">
+                    <h2>Как работи DomUnity</h2>
+                    <p>Три ясни стъпки към подредена и спокойна сграда.</p>
+                </div>
+
+                <div className="steps-grid">
+                    <div className="step-card">
+                        <span className="step-number">1</span>
+                        <h3>Заявка за оферта</h3>
+                        <p>
+                            Изпращате ни информация за сградата – брой входове,
+                            апартаменти и специфики. Получавате персонално
+                            предложение.
+                        </p>
+                    </div>
+                    <div className="step-card">
+                        <span className="step-number">2</span>
+                        <h3>Подписване на договор</h3>
+                        <p>
+                            Уточняваме услугите, графиците и начините на
+                            комуникация. Всеки собственик получава профил в
+                            DomUnity.
+                        </p>
+                    </div>
+                    <div className="step-card">
+                        <span className="step-number">3</span>
+                        <h3>Ежедневно управление</h3>
+                        <p>
+                            Ние поемаме административните, финансовите и
+                            техническите задачи, а вие следите всичко онлайн.
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            <section className="section advantages">
+                <div className="advantages-inner">
+                    <div className="advantages-text">
+                        <h2>Защо да изберете DomUnity?</h2>
+                        <p>
+                            Комбинираме професионален домоуправител с модерен
+                            софтуер, така че всяка такса, ремонт и решение да
+                            бъдат проследими и ясни за всички.
+                        </p>
+
+                        <ul className="advantages-list">
+                            <li>Прозрачни отчети за всяка сграда и вход</li>
+                            <li>Онлайн достъп до информация 24/7</li>
+                            <li>Ясни правила и регламентирани процеси</li>
+                            <li>Отговорен партньор за дългосрочно управление</li>
+                        </ul>
+                    </div>
+
+                    <div className="advantages-side">
+                        <div className="advantages-box">
+                            <h3>Готови ли сте за подредена етажна собственост?</h3>
+                            <p>
+                                Свържете се с нас за среща или изпратете запитване
+                                за конкретна оферта за вашата сграда.
+                            </p>
+                            <div className="adv-buttons">
+                                <Link to="/offer" className="btn primary">
+                                    Заяви оферта
+                                </Link>
+                                <Link to="/contacts" className="btn secondary">
+                                    Контакти
+                                </Link>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </section>
         </main>
