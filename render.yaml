@@ -132,7 +132,9 @@ databases:
     user: domunity_user
     region: frankfurt # Same region as services for best performance
     plan: free
-    ipAllowList: ["0.0.0.0/0"] # [] = internal access only (more secure)
+    ipAllowList:
+      - source: 0.0.0.0/0
+        description: "Allow all connections (publicly accessible)"
     # Note: Free tier databases sleep after inactivity. First request may be slower.
 # ========================================
 # DEPLOYMENT NOTES
