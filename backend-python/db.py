@@ -78,8 +78,19 @@ class Database:
                     password_hash VARCHAR(255) NOT NULL,
                     full_name VARCHAR(255),
                     phone VARCHAR(50),
+                    role VARCHAR(50) DEFAULT 'user',
+                    is_active BOOLEAN DEFAULT true,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
+            """)
+            
+            # Add role and is_active columns if they don't exist (for existing tables)
+            cursor.execute("""
+                DO $$ BEGIN
+                    ALTER TABLE users ADD COLUMN IF NOT EXISTS role VARCHAR(50) DEFAULT 'user';
+                    ALTER TABLE users ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT true;
+                EXCEPTION WHEN others THEN NULL;
+                END $$;
             """)
             
             # Buildings table
@@ -165,6 +176,35 @@ class Database:
                 )
             """)
             
+            # Payments table
+            logger.info("Creating payments table...")
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS payments (
+                    id SERIAL PRIMARY KEY,
+                    user_id INTEGER REFERENCES users(id),
+                    apartment_id INTEGER REFERENCES apartments(id),
+                    amount DECIMAL(10, 2) NOT NULL,
+                    period VARCHAR(50) NOT NULL,
+                    status VARCHAR(20) DEFAULT 'pending',
+                    paid_date DATE,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+            
+            # Maintenance records table
+            logger.info("Creating maintenance_records table...")
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS maintenance_records (
+                    id SERIAL PRIMARY KEY,
+                    building_id INTEGER REFERENCES buildings(id),
+                    date DATE NOT NULL,
+                    description TEXT,
+                    cost DECIMAL(10, 2) DEFAULT 0,
+                    status VARCHAR(20) DEFAULT 'planned',
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+            
             self.conn.commit()
             logger.info("✓ Database schema initialized successfully")
             
@@ -187,6 +227,7 @@ class Database:
             
             if result['count'] == 0:
                 logger.info("Inserting sample data...")
+                import bcrypt
                 
                 # Insert sample building
                 cursor.execute("""
@@ -196,21 +237,91 @@ class Database:
                 """)
                 building_id = cursor.fetchone()['id']
                 
-                # Insert sample apartments
-                for i in range(1, 4):
+                # Insert sample test users with different roles
+                users_data = [
+                    ('ivan.ivanov@example.com', 'Иван Иванов', '+359 888 123 456', 'user', True),
+                    ('m.georgieva@example.com', 'Мария Георгиева', '+359 888 234 567', 'user', True),
+                    ('petar.petrov@example.com', 'Петър Петров', '+359 888 345 678', 'user', False),
+                    ('admin@domunity.bg', 'Админ ДомУнити', '+359 888 000 000', 'admin', True),
+                ]
+                
+                user_ids = []
+                for email, name, phone, role, is_active in users_data:
+                    password_hash = bcrypt.hashpw('test123'.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
                     cursor.execute("""
-                        INSERT INTO apartments (building_id, number, floor, type, residents)
-                        VALUES (%s, %s, %s, 'Апартамент', %s)
+                        INSERT INTO users (email, password_hash, full_name, phone, role, is_active)
+                        VALUES (%s, %s, %s, %s, %s, %s)
                         RETURNING id
-                    """, (building_id, i, i, 2 + i))
+                    """, (email, password_hash, name, phone, role, is_active))
+                    user_ids.append(cursor.fetchone()['id'])
+                
+                # Insert apartments and link to users
+                apartments_data = [
+                    (25, 5, 3, user_ids[0]),  # Иван Иванов
+                    (26, 5, 2, user_ids[1]),  # Мария Георгиева
+                    (27, 5, 4, user_ids[2]),  # Петър Петров
+                    (22, 4, 2, None),
+                    (23, 4, 3, None),
+                    (24, 4, 2, None),
+                ]
+                
+                apartment_ids = []
+                for number, floor, residents, uid in apartments_data:
+                    cursor.execute("""
+                        INSERT INTO apartments (building_id, number, floor, type, residents, user_id)
+                        VALUES (%s, %s, %s, 'Апартамент', %s, %s)
+                        RETURNING id
+                    """, (building_id, number, floor, residents, uid))
+                    apartment_ids.append(cursor.fetchone()['id'])
+                
+                # Insert user profiles
+                profiles_data = [
+                    (user_ids[0], 'Мария Петрова', 0.00, '12356787'),
+                    (user_ids[1], 'Мария Петрова', -10.00, '98765432'),
+                    (user_ids[2], 'Мария Петрова', 0.00, '55555555'),
+                ]
+                for uid, manager, balance, client_num in profiles_data:
+                    cursor.execute("""
+                        INSERT INTO user_profiles (user_id, account_manager, balance, client_number, contract_end_date)
+                        VALUES (%s, %s, %s, %s, '2026-12-31')
+                    """, (uid, manager, balance, client_num))
+                
+                # Insert sample payments for multiple users
+                payments_data = [
+                    # User 1 (Ivan) - some paid, some pending
+                    (user_ids[0], apartment_ids[0], 30.00, 'Ноември 2025', 'pending', None),
+                    (user_ids[0], apartment_ids[0], 40.00, 'Октомври 2025', 'paid', '2025-10-15'),
+                    (user_ids[0], apartment_ids[0], 30.00, 'Септември 2025', 'paid', '2025-09-12'),
+                    # User 2 (Maria) - some pending
+                    (user_ids[1], apartment_ids[1], 25.00, 'Ноември 2025', 'pending', None),
+                    (user_ids[1], apartment_ids[1], 25.00, 'Октомври 2025', 'paid', '2025-10-20'),
+                    # User 3 (Petar) - overdue
+                    (user_ids[2], apartment_ids[2], 35.00, 'Ноември 2025', 'overdue', None),
+                    (user_ids[2], apartment_ids[2], 35.00, 'Октомври 2025', 'overdue', None),
+                ]
+                for uid, apt_id, amount, period, status, paid_date in payments_data:
+                    cursor.execute("""
+                        INSERT INTO payments (user_id, apartment_id, amount, period, status, paid_date)
+                        VALUES (%s, %s, %s, %s, %s, %s)
+                    """, (uid, apt_id, amount, period, status, paid_date))
                 
                 # Insert sample events
                 cursor.execute("""
                     INSERT INTO events (building_id, date, title, description)
                     VALUES 
                         (%s, '2025-11-05', 'Планирана профилактика', 'Планирана профилактика на асансьора от 10:00 до 13:00 ч.'),
-                        (%s, '2025-11-02', 'Общо събрание', 'Общо събрание на вход Б – от 19:00 ч. във входното фоайе.')
-                """, (building_id, building_id))
+                        (%s, '2025-11-02', 'Общо събрание', 'Общо събрание на вход Б – от 19:00 ч. във входното фоайе.'),
+                        (%s, '2025-10-28', 'Напомняне за такса', 'Изпратено напомняне за месечна такса за поддръжка.')
+                """, (building_id, building_id, building_id))
+                
+                # Insert sample maintenance records
+                cursor.execute("""
+                    INSERT INTO maintenance_records (building_id, date, description, cost, status)
+                    VALUES 
+                        (%s, '2025-02-05', 'Почистване и дезинфекция на входа', 20.00, 'completed'),
+                        (%s, '2025-03-18', 'Профилактика на асансьора', 60.00, 'planned'),
+                        (%s, '2025-01-15', 'Смяна на осветление в стълбището', 35.00, 'completed')
+                """, (building_id, building_id, building_id))
                 
                 self.conn.commit()
                 logger.info("✓ Sample data inserted successfully")
