@@ -1,0 +1,469 @@
+.admin-page {
+    max-width: 1200px;
+    margin: 40px auto 60px;
+    padding: 0 20px;
+    font-family: "Verdana", Geneva, Tahoma, sans-serif;
+    color: #1e3d1e;
+}
+
+.admin-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.admin-header h1 {
+    font-size: 1.8rem;
+    color: #1e3d1e;
+}
+
+.admin-subtitle {
+    margin-top: 4px;
+    font-size: 0.95rem;
+    color: #4f6f50;
+}
+
+.admin-add-btn {
+    padding: 10px 18px;
+    border-radius: 999px;
+    border: 2px solid #2f5233;
+    background: #2f5233;
+    color: #d6f5d0;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.admin-add-btn:hover {
+    background: #1e3d1e;
+}
+
+/* Sections */
+.admin-section {
+    background: #ffffffd9;
+    border-radius: 16px;
+    border: 2px solid #88ae8d;
+    box-shadow: 0 6px 16px rgba(47, 82, 51, 0.12);
+    padding: 18px 20px;
+    margin-bottom: 20px;
+}
+
+/* Stats */
+.admin-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 14px;
+    background: linear-gradient(135deg, #c8f5ce 0%, #ffffff 65%);
+}
+
+.admin-stat-card {
+    background: #f8fff8;
+    border-radius: 12px;
+    border: 2px solid #88ae8d;
+    padding: 12px 14px;
+}
+
+.admin-stat-card .label {
+    display: block;
+    font-size: 0.85rem;
+    color: #4f6f50;
+    margin-bottom: 4px;
+}
+
+.admin-stat-card .value {
+    font-size: 1.3rem;
+    font-weight: bold;
+    color: #2f5233;
+}
+
+/* Filters */
+.admin-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    align-items: flex-end;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    min-width: 180px;
+}
+
+.filter-group label {
+    font-size: 0.85rem;
+    color: #2f5233;
+    margin-bottom: 4px;
+}
+
+.filter-group input,
+.filter-group select {
+    padding: 8px 10px;
+    border-radius: 8px;
+    border: 2px solid #88ae8d;
+    background: #f8fff8;
+    outline: none;
+    font-size: 0.9rem;
+}
+
+.filter-group input:focus,
+.filter-group select:focus {
+    border-color: #2f5233;
+}
+
+.checkbox-group {
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+}
+
+.filter-group.checkbox-group {
+    flex-direction: row;
+    align-items: center;
+}
+
+.filter-group.checkbox-group label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+
+}
+
+.filter-group.checkbox-group input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+}
+
+.admin-table-wrapper {
+    overflow-x: auto;
+}
+
+.admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 900px;
+    font-size: 0.9rem;
+}
+
+.admin-table th,
+.admin-table td {
+    padding: 10px 8px;
+    border-bottom: 1px solid #cde7cf;
+    text-align: center;
+}
+
+.admin-table th {
+    background: #d6f5d0;
+    color: #2f5233;
+    font-weight: bold;
+}
+
+.admin-table tr:nth-child(even) {
+    background: #f8fff8;
+}
+
+.admin-table .no-data {
+    text-align: center;
+    padding: 16px 0;
+}
+
+/* Status pill */
+.status-pill {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: bold;
+}
+
+.status-pill.active {
+    background: #d9f8dd;
+    color: #2f5233;
+}
+
+.status-pill.inactive {
+    background: #ffd4d4;
+    color: #8b1a1a;
+}
+
+/* Table actions */
+.table-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.small-btn {
+    padding: 4px 8px;
+    border-radius: 8px;
+    border: 2px solid #2f5233;
+    background: #2f5233;
+    color: #d6f5d0;
+    font-size: 0.8rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.small-btn:hover {
+    background: #1e3d1e;
+}
+
+.small-btn.secondary {
+    background: #ffffff;
+    color: #2f5233;
+}
+
+.small-btn.secondary:hover {
+    background: #eaf7ea;
+}
+
+/* Modal */
+.admin-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(47, 82, 51, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1200;
+}
+
+.admin-modal-content {
+    background: #ffffff;
+    border-radius: 16px;
+    border: 3px solid #2f5233;
+    padding: 24px 26px 20px;
+    width: 640px;
+    max-width: 95%;
+    box-shadow: 0 10px 28px rgba(47, 82, 51, 0.4);
+    position: relative;
+}
+
+.admin-modal-content h2 {
+    margin-bottom: 12px;
+    color: #2f5233;
+}
+
+.admin-close-btn {
+    position: absolute;
+    top: 8px;
+    right: 10px;
+    border: none;
+    background: transparent;
+    font-size: 24px;
+    cursor: pointer;
+    color: #2f5233;
+}
+
+/* Edit form */
+.admin-edit-form {
+    margin-top: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.form-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.form-group {
+    flex: 1;
+    min-width: 180px;
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group.small {
+    max-width: 160px;
+}
+
+.form-group label {
+    font-size: 0.85rem;
+    margin-bottom: 3px;
+    color: #2f5233;
+}
+
+.form-group input,
+.form-group select {
+    padding: 8px 10px;
+    border-radius: 8px;
+    border: 2px solid #88ae8d;
+    background: #f8fff8;
+    outline: none;
+    font-size: 0.9rem;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    border-color: #2f5233;
+}
+
+.form-group.checkbox-group {
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Modal buttons */
+.modal-actions {
+    margin-top: 12px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.cancel-btn,
+.save-btn {
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: 2px solid #2f5233;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
+.cancel-btn {
+    background: #ffffff;
+    color: #2f5233;
+}
+
+.cancel-btn:hover {
+    background: #eaf7ea;
+}
+
+.save-btn {
+    background: #2f5233;
+    color: #d6f5d0;
+}
+
+.save-btn:hover {
+    background: #1e3d1e;
+}
+
+
+@media (max-width: 900px) {
+    .admin-page {
+        margin: 20px auto 40px;
+        padding: 0 12px;
+    }
+
+    .admin-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .admin-header h1 {
+        font-size: 1.4rem;
+    }
+
+    .admin-add-btn {
+        align-self: stretch;
+        width: 100%;
+        text-align: center;
+    }
+
+    .admin-stats {
+        grid-template-columns: 1fr;
+    }
+
+    .admin-filters {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .filter-group {
+        min-width: 100%;
+    }
+
+    .filter-group input,
+    .filter-group select {
+        width: 100%;
+    }
+
+    .filter-group.checkbox-group {
+        flex-direction: row;
+        align-items: center;
+        justify-content: flex-start;
+    }
+
+    .filter-group.checkbox-group label {
+        margin-bottom: 0;
+    }
+
+    .admin-table-wrapper {
+        overflow-x: visible;
+    }
+
+    .admin-table {
+        border: 0;
+        min-width: 0;
+    }
+
+    .admin-table thead {
+        display: none;
+    }
+
+    .admin-table tbody {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .admin-table tr {
+        display: block;
+        background: #f8fff8;
+        border-radius: 12px;
+        border: 1px solid #cde7cf;
+        padding: 8px 10px;
+        text-align: left;
+        box-shadow: 0 4px 10px rgba(47, 82, 51, 0.08);
+    }
+
+    .admin-table td {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 8px;
+        padding: 6px 2px;
+        border-bottom: none;
+        font-size: 0.85rem;
+    }
+
+    .admin-table td:last-child {
+        margin-top: 4px;
+    }
+
+    .admin-table td::before {
+        font-weight: bold;
+        color: #2f5233;
+        content: "";
+    }
+
+    .admin-table tr td:nth-child(1)::before { content: "Име"; }
+    .admin-table tr td:nth-child(2)::before { content: "Имейл"; }
+    .admin-table tr td:nth-child(3)::before { content: "Сграда"; }
+    .admin-table tr td:nth-child(4)::before { content: "Вход"; }
+    .admin-table tr td:nth-child(5)::before { content: "Ап."; }
+    .admin-table tr td:nth-child(6)::before { content: "Кл. №"; }
+    .admin-table tr td:nth-child(7)::before { content: "Живущи"; }
+    .admin-table tr td:nth-child(8)::before { content: "Баланс"; }
+    .admin-table tr td:nth-child(9)::before { content: "Задължение"; }
+    .admin-table tr td:nth-child(10)::before { content: "Статус"; }
+    .admin-table tr td:nth-child(11)::before { content: "Действия"; }
+
+
+    .table-actions {
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: 6px;
+    }
+}
+

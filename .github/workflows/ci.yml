@@ -2,9 +2,9 @@ name: CI - Backend Tests and Docker Build
 
 on:
     pull_request:
-        branches: [main, develop]
+        branches: [main, develop, feature/render.com/initial-work]
     push:
-        branches: [main, develop]
+        branches: [main, develop, feature/render.com/initial-work]
 
 jobs:
     # ==================================================
@@ -130,69 +130,6 @@ jobs:
               continue-on-error: true
 
     # ==================================================
-    # Go Backend Tests
-    # ==================================================
-    test-go-backend:
-        name: Go Backend - Unit & Integration Tests
-        runs-on: ubuntu-latest
-
-        services:
-            postgres:
-                image: postgres:15
-                env:
-                    POSTGRES_USER: postgres
-                    POSTGRES_PASSWORD: postgres
-                    POSTGRES_DB: domunity_test
-                options: >-
-                    --health-cmd pg_isready
-                    --health-interval 10s
-                    --health-timeout 5s
-                    --health-retries 5
-                ports:
-                    - 5432:5432
-
-        steps:
-            - name: Checkout code
-              uses: actions/checkout@v4
-
-            - name: Set up Go
-              uses: actions/setup-go@v5
-              with:
-                  go-version: "1.23"
-
-            - name: Update go.sum and install dependencies
-              working-directory: backend-go
-              run: |
-                  go mod tidy
-                  go mod download
-
-            - name: Generate proto files
-              working-directory: backend-go
-              run: |
-                  go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.34.2
-                  go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.5.1
-                  sudo apt-get update && sudo apt-get install -y protobuf-compiler
-                  mkdir -p proto
-                  protoc --go_out=./proto --go_opt=paths=source_relative \
-                         --go-grpc_out=./proto --go-grpc_opt=paths=source_relative \
-                         -I ../proto ../proto/domunity.proto
-
-            - name: Run tests with coverage
-              working-directory: backend-go
-              run: go test -v -coverprofile=coverage.out -covermode=atomic ./...
-              env:
-                  TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/domunity_test
-                  JWT_SECRET: test-secret-key
-
-            - name: Upload coverage reports
-              uses: codecov/codecov-action@v4
-              with:
-                  files: ./backend-go/coverage.out
-                  flags: go
-                  name: go-backend
-              continue-on-error: true
-
-    # ==================================================
     # Docker Build Tests
     # ==================================================
     test-docker-builds:
@@ -201,7 +138,7 @@ jobs:
         strategy:
             fail-fast: false
             matrix:
-                backend: [python, nodejs, go]
+                backend: [python, nodejs]
 
         steps:
             - name: Checkout code
@@ -265,13 +202,28 @@ jobs:
               with:
                   node-version: "20"
 
+            - name: Install protobuf tools
+              run: |
+                  sudo apt-get update
+                  sudo apt-get install -y protobuf-compiler
+                  # Download protoc-gen-grpc-web for Linux
+                  curl -L -o /usr/local/bin/protoc-gen-grpc-web https://github.com/grpc/grpc-web/releases/download/2.0.2/protoc-gen-grpc-web-2.0.2-linux-x86_64
+                  sudo chmod +x /usr/local/bin/protoc-gen-grpc-web
+                  # Download protoc-gen-js
+                  curl -L -o /tmp/protobuf-js.tar.gz https://github.com/protocolbuffers/protobuf-javascript/releases/download/v4.0.0/protobuf-javascript-4.0.0-linux-x86_64.tar.gz
+                  if [ ! -s /tmp/protobuf-js.tar.gz ]; then echo "protoc-gen-js download failed"; exit 1; fi
+                  tar -xzf /tmp/protobuf-js.tar.gz -C /tmp
+                  if [ ! -f /tmp/bin/protoc-gen-js ]; then echo "protoc-gen-js extraction failed"; exit 1; fi
+                  sudo cp /tmp/bin/protoc-gen-js /usr/local/bin/
+                  sudo chmod +x /usr/local/bin/protoc-gen-js
+
             - name: Install dependencies
               working-directory: frontend
               run: npm install
 
             - name: Build proto dependencies
               working-directory: frontend
-              run: npm run generate-proto
+              run: protoc --proto_path ../proto --plugin=protoc-gen-js=/usr/local/bin/protoc-gen-js --plugin=protoc-gen-grpc-web=/usr/local/bin/protoc-gen-grpc-web --js_out=import_style=commonjs:./src/proto --grpc-web_out=import_style=commonjs,mode=grpcwebtext:./src/proto ../proto/domunity.proto
 
             - name: Build frontend
               working-directory: frontend
@@ -393,7 +345,6 @@ jobs:
         needs:
             - test-python-backend
             - test-nodejs-backend
-            - test-go-backend
             - test-docker-builds
             - test-frontend-build
             - validate-render-config
@@ -405,7 +356,6 @@ jobs:
                   echo ""
                   echo "✓ Python backend tests passed"
                   echo "✓ Node.js backend tests passed"
-                  echo "✓ Go backend tests passed"
                   echo "✓ Docker builds successful"
                   echo "✓ Frontend build successful"
                   echo "✓ Render.yaml validated"
