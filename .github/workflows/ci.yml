@@ -130,6 +130,53 @@ jobs:
               continue-on-error: true
 
     # ==================================================
+    # Go Backend Tests
+    # ==================================================
+    test-go-backend:
+        name: Go Backend - Unit Tests & Build
+        runs-on: ubuntu-latest
+
+        services:
+            postgres:
+                image: postgres:15
+                env:
+                    POSTGRES_USER: postgres
+                    POSTGRES_PASSWORD: postgres
+                    POSTGRES_DB: domunity_test
+                options: >-
+                    --health-cmd pg_isready
+                    --health-interval 10s
+                    --health-timeout 5s
+                    --health-retries 5
+                ports:
+                    - 5432:5432
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Set up Go
+              uses: actions/setup-go@v5
+              with:
+                  go-version: "1.21"
+                  cache-dependency-path: backend-go/go.sum
+
+            - name: Install dependencies
+              working-directory: backend-go
+              run: go mod download
+
+            - name: Build
+              working-directory: backend-go
+              run: go build -v ./...
+
+            - name: Run tests
+              working-directory: backend-go
+              run: go test -v ./...
+              env:
+                  DATABASE_URL: postgresql://postgres:postgres@localhost:5432/domunity_test
+                  JWT_SECRET: test-secret-key
+
+    # ==================================================
     # Docker Build Tests
     # ==================================================
     test-docker-builds:
@@ -138,7 +185,7 @@ jobs:
         strategy:
             fail-fast: false
             matrix:
-                backend: [python, nodejs]
+                backend: [python, nodejs, go]
 
         steps:
             - name: Checkout code
@@ -345,6 +392,7 @@ jobs:
         needs:
             - test-python-backend
             - test-nodejs-backend
+            - test-go-backend
             - test-docker-builds
             - test-frontend-build
             - validate-render-config
@@ -354,8 +402,9 @@ jobs:
               run: |
                   echo "🎉 All CI checks passed successfully!"
                   echo ""
-                  echo "✓ Python backend tests passed"
+                   echo "✓ Python backend tests passed"
                   echo "✓ Node.js backend tests passed"
+                  echo "✓ Go backend tests passed"
                   echo "✓ Docker builds successful"
                   echo "✓ Frontend build successful"
                   echo "✓ Render.yaml validated"
