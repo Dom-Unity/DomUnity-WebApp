@@ -1,111 +1,196 @@
+/* Auth.css - Shared styles for Login and Signup pages */
+
 .auth-container {
-    min-height: calc(100vh - 200px);
+    flex: 1;
     display: flex;
     justify-content: center;
     align-items: center;
-    padding: 40px 20px;
-    background-color: var(--bg-light);
+    padding: 80px 20px;
+    background: url("../images/background_image.png") center/cover fixed;
+    position: relative;
+    animation: fadeInBg 0.6s ease;
+    min-height: 100vh;
+}
+
+.auth-container::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: rgba(255, 255, 255, 0.55);
+    backdrop-filter: blur(6px);
+    z-index: 0;
+}
+
+@keyframes fadeInBg {
+    from { opacity: 0; }
+    to { opacity: 1; }
 }
 
 .auth-box {
-    background-color: var(--white);
-    padding: 50px;
-    border-radius: 10px;
-    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
-    max-width: 500px;
+    position: relative;
+    z-index: 1;
     width: 100%;
+    max-width: 420px;
+    background: rgba(255, 255, 255, 0.82);
+    padding: 40px 50px;
+    border-radius: 18px;
+    border: 5px solid #2f5233;
+    box-shadow: 0 12px 30px rgba(47, 82, 51, 0.45);
+    animation: fadeIn 0.4s ease;
+}
+
+@keyframes fadeIn {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
 }
 
 .auth-box .logo-text {
-    color: var(--primary-color);
-    font-size: 32px;
-    font-weight: bold;
     text-align: center;
-    display: block;
-    margin-bottom: 20px;
+    font-size: 2rem;
+    color: #2f5233;
+    font-weight: bold;
+    margin-bottom: 10px;
 }
 
 .auth-box h2 {
-    font-size: 28px;
     text-align: center;
-    margin-bottom: 10px;
-    color: var(--text-dark);
+    font-size: 1.5rem;
+    color: #2f5233;
+    font-weight: bold;
+    margin-bottom: 5px;
 }
 
-.subtitle {
+.auth-box .subtitle {
     text-align: center;
-    color: var(--text-light);
-    margin-bottom: 30px;
+    color: #4f6f50;
+    margin-bottom: 25px;
 }
 
-.input-group {
-    margin-bottom: 20px;
+.auth-box .input-group {
+    margin-bottom: 18px;
 }
 
-.input-group label {
+.auth-box .input-group label {
     display: block;
-    margin-bottom: 8px;
-    color: var(--text-dark);
-    font-weight: 500;
+    margin-bottom: 6px;
+    font-weight: bold;
+    color: #2f5233;
 }
 
-.input-group input {
+.auth-box .input-group input {
     width: 100%;
-    padding: 12px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    font-size: 16px;
-    transition: border-color 0.3s;
+    padding: 13px 15px;
+    font-size: 1rem;
+    border-radius: 10px;
+    border: 2px solid #88ae8d;
+    background: #ffffff;
+    transition: border-color 0.25s ease, box-shadow 0.25s ease;
 }
 
-.input-group input:focus {
-    outline: none;
-    border-color: var(--primary-color);
+.auth-box .input-group input:focus {
+    outline: none !important;
+    border-color: #2f5233;
+    box-shadow: 0 0 8px rgba(47, 82, 51, 0.45);
 }
 
-.input-group small {
+.auth-box .input-group input:disabled {
+    background: #f0f0f0;
+    cursor: not-allowed;
+}
+
+.auth-box .input-group small {
     display: block;
-    margin-top: 5px;
-    color: var(--text-light);
-    font-size: 14px;
+    margin-top: 4px;
+    color: #666;
+    font-size: 0.85rem;
 }
 
-.forgot-password {
+.auth-box .forgot-password {
     display: block;
     text-align: right;
     margin-bottom: 20px;
-    color: var(--text-light);
-    font-size: 14px;
+    color: #2f5233;
     text-decoration: none;
+    font-size: 0.9rem;
 }
 
-.forgot-password:hover {
-    color: var(--primary-color);
+.auth-box .forgot-password:hover {
+    text-decoration: underline;
 }
 
-.full-width {
-    width: 100%;
-    margin-bottom: 15px;
-}
-
-.no-account,
-.has-account {
-    text-align: center;
-    margin: 20px 0 15px;
-    color: var(--text-light);
-}
-
-.error-message {
-    background-color: #ffebee;
-    color: #c62828;
+.auth-box .error-message {
+    background: #ffe0e0;
+    color: #c00;
     padding: 12px;
-    border-radius: 5px;
-    margin-bottom: 20px;
+    border-radius: 8px;
+    margin-bottom: 18px;
     text-align: center;
+    border: 1px solid #fcc;
 }
 
-@media (max-width: 768px) {
+.auth-box .success-message {
+    background: #e0ffe0;
+    color: #080;
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 18px;
+    text-align: center;
+    border: 1px solid #cfc;
+}
+
+/* Buttons */
+.auth-box .btn {
+    display: block;
+    width: 100%;
+    padding: 14px;
+    border-radius: 10px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.25s ease, transform 0.25s ease;
+    text-align: center;
+    text-decoration: none;
+    border: 2px solid #2f5233;
+    margin-bottom: 10px;
+}
+
+.auth-box .btn.primary {
+    background: #2f5233;
+    color: #d6f5d0;
+}
+
+.auth-box .btn.primary:hover:not(:disabled) {
+    background: #1e3d1e;
+    transform: scale(1.02);
+}
+
+.auth-box .btn.primary:disabled {
+    background: #88ae8d;
+    cursor: not-allowed;
+}
+
+.auth-box .btn.secondary {
+    background: transparent;
+    color: #2f5233;
+}
+
+.auth-box .btn.secondary:hover {
+    background: rgba(47, 82, 51, 0.1);
+}
+
+.auth-box .btn.full-width {
+    width: 100%;
+}
+
+.auth-box .no-account,
+.auth-box .has-account {
+    text-align: center;
+    margin: 15px 0 10px;
+    color: #666;
+}
+
+@media (max-width: 600px) {
     .auth-box {
-        padding: 30px 20px;
+        padding: 30px 25px;
     }
 }
