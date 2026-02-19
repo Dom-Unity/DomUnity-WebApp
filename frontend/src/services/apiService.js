@@ -5,11 +5,11 @@
 
 // Determine API URL based on environment
 const getApiUrl = () => {
+    const host = process.env.REACT_APP_BACKEND_URL;
     if (process.env.NODE_ENV === 'production') {
-        const host = process.env.REACT_APP_BACKEND_URL;
         return host ? `https://${host}.onrender.com` : 'http://localhost:8080';
     }
-    return 'http://localhost:8080';
+    return host ? 'http://localhost:8080' : 'https://domunity-backend-python.onrender.com';
 };
 
 const API_URL = getApiUrl();
