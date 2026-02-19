@@ -597,8 +597,9 @@ class APIHandler(BaseHTTPRequestHandler):
         self.send_response(status_code)
         self.send_header('Content-Type', 'application/json')
         self.send_header('Access-Control-Allow-Origin', '*')
-        self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
-        self.send_header('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+        self.send_header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+        self.send_header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With')
+        self.send_header('Access-Control-Max-Age', '3600')
         self.end_headers()
         self.wfile.write(json.dumps(data).encode())
     
@@ -624,10 +625,12 @@ class APIHandler(BaseHTTPRequestHandler):
     
     def do_OPTIONS(self):
         """Handle CORS preflight requests"""
+        logger.info(f"API: Received OPTIONS request for {self.path}")
         self.send_response(200)
         self.send_header('Access-Control-Allow-Origin', '*')
         self.send_header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
-        self.send_header('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+        self.send_header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With')
+        self.send_header('Access-Control-Max-Age', '3600')
         self.end_headers()
     
     def do_GET(self):
@@ -1257,8 +1260,8 @@ def serve():
     logger.info("\nEnvironment Configuration:")
     logger.info(f"  DATABASE_URL: {'SET' if os.getenv('DATABASE_URL') else 'NOT SET'}")
     logger.info(f"  JWT_SECRET: {'SET' if os.getenv('JWT_SECRET') else 'USING DEFAULT'}")
-    logger.info(f"  GRPC_PORT: {os.getenv('PORT', '50051')}")
-    logger.info(f"  HTTP_PORT: {os.getenv('HTTP_PORT', '8080')}")
+    logger.info(f"  GRPC_PORT: {os.getenv('GRPC_PORT', '50051')}")
+    logger.info(f"  HTTP_PORT: {os.getenv('PORT', '8080')}")
     logger.info("=" * 80)
     
     # Initialize database FIRST (needed for both HTTP API and gRPC)
@@ -1299,14 +1302,14 @@ def serve():
     reflection.enable_server_reflection(SERVICE_NAMES, server)
     
     # Start server
-    port = os.getenv('PORT', '50051')
-    server.add_insecure_port(f'0.0.0.0:{port}')
+    grpc_port = os.getenv('GRPC_PORT', '50051')
+    server.add_insecure_port(f'0.0.0.0:{grpc_port}')
     server.start()
     
     logger.info("=" * 80)
     logger.info(f"✓ SERVERS STARTED SUCCESSFULLY")
     logger.info("=" * 80)
-    logger.info(f"\ngRPC Server: 0.0.0.0:{port}")
+    logger.info(f"\ngRPC Server: 0.0.0.0:{grpc_port}")
     logger.info(f"HTTP REST API: 0.0.0.0:{http_port}/api/*")
     logger.info(f"Health Check: 0.0.0.0:{http_port}/health")
     logger.info("\nRegistered gRPC Services:")
