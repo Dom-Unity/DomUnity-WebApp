@@ -53,7 +53,7 @@ function Login() {
                 </div>
 
                 <h2 className="login-title">Вход в DomUnity</h2>
-                <p className="login-subtitle">Добре дошли отново</p>
+                <p className="login-subtitle">Добре дошли отново!</p>
 
                 {error && <div style={{ color: 'red', marginBottom: '1rem', textAlign: 'center' }}>{error}</div>}
 
@@ -86,16 +86,16 @@ function Login() {
                     </div>
 
                     <div className="login-links">
-                        <a href="#forgot">Забравена парола?</a>
+                        <Link to="/forgottenpassword" style={{ color: '#2f5233', fontWeight: 'bold' }}>Забравена парола?</Link>
                     </div>
 
                     <button type="submit" className="btn-login" disabled={loading}>
                         {loading ? 'Зареждане...' : 'Влез'}
                     </button>
 
-                    <div style={{ textAlign: 'center', marginTop: '15px' }}>
+                    <div className="signup-links">
                         <span>Нямате акаунт? </span>
-                        <Link to="/signup" style={{ color: '#2f5233', fontWeight: 'bold' }}>Регистрация</Link>
+                        <Link to="/signup">Регистрация</Link>
                     </div>
 
                 </form>

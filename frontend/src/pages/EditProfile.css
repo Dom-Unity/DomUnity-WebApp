@@ -185,6 +185,95 @@
     border: 1px solid #e2f0e2;
 }
 
+/* NEW: CHANGE PASSWORD BOX (under left/right) */
+
+.password-card {
+    margin-top: 24px;
+    background: linear-gradient(180deg, #def5e1 0%, #ffffff 80%);
+    border-radius: 16px;
+    padding: 20px 22px;
+    box-shadow: 0 8px 20px rgba(47, 82, 51, 0.08);
+}
+
+.password-title {
+    font-size: 1.2rem;
+    color: #2f5233;
+    margin-bottom: 6px;
+}
+
+.password-subtitle {
+    color: #4f6f50;
+    font-size: 0.9rem;
+    margin-bottom: 14px;
+    max-width: 720px;
+    line-height: 1.35;
+}
+
+.password-alert {
+    margin-bottom: 12px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    font-size: 0.9rem;
+}
+
+.password-alert--error {
+    background: rgba(255, 235, 235, 0.9);
+    border: 1px solid rgba(220, 50, 50, 0.35);
+    color: #b00020;
+}
+
+.password-alert--success {
+    background: rgba(217, 248, 221, 0.9);
+    border: 1px solid rgba(136, 174, 141, 0.55);
+    color: #1e5b27;
+}
+
+.password-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.password-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.password-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.password-field label {
+    font-weight: bold;
+    color: #2f5233;
+    font-size: 0.9rem;
+}
+
+.password-field input {
+    width: 100%;
+    padding: 11px 12px;
+    border-radius: 10px;
+    border: 2px solid #88ae8d;
+    background: #f8fff8;
+    outline: none;
+    font-size: 0.95rem;
+    transition: 0.2s;
+}
+
+.password-field input:focus {
+    border-color: #2f5233;
+    box-shadow: 0 0 6px rgba(47, 82, 51, 0.25);
+}
+
+.password-actions {
+    display: flex;
+    justify-content: flex-end;
+}
+
+/* RESPONSIVE – без хоризонтален скрол */
 @media (max-width: 900px) {
     .edit-profile-page {
         padding: 30px 16px 50px;
@@ -216,6 +305,18 @@
 
     .edit-profile-actions {
         flex-wrap: wrap;
+    }
+
+    .password-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .password-actions {
+        justify-content: stretch;
+    }
+
+    .password-actions .btn-save {
+        width: 100%;
     }
 }
 
@@ -280,4 +381,3 @@
         text-align: center;
     }
 }
-

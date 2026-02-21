@@ -44,6 +44,7 @@ function Header() {
                     </div>
 
                     <Link to="/contacts">Контакти</Link>
+                    <Link to="/offer">Оферти</Link>
                     
 
                     <div className="nav-dropdown" ref={servicesRef}>
@@ -68,19 +69,7 @@ function Header() {
                 </nav>
 
                 <div className="header__right">
-                    <div
-                        className="lang-selector"
-                        ref={langRef}
-                        onClick={() => setLangOpen(!langOpen)}
-                    >
-                        <button className="lang-btn">{lang} ▾</button>
-                        {langOpen && (
-                            <div className="lang-menu">
-                                <button onClick={() => setLang("BG")}>BG</button>
-                                <button onClick={() => setLang("EN")}>EN</button>
-                            </div>
-                        )}
-                    </div>
+                    
 
                     <div className="header__buttons">
                         <Link to="/offer" className="btn-offer">Оферти</Link>

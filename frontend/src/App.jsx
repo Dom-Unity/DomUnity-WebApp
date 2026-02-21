@@ -16,6 +16,8 @@ import Entrance from './pages/Entrance';
 import Apartment from './pages/Apartment';
 import EditProfile from './pages/EditProfile';
 import AdminResidents from "./pages/AdminResidents";
+import ForgottenPassword from "./pages/ForgottenPassword";
+import ChangePassword from "./pages/ChangePassword";
 
 
 import api from './services/apiService';
@@ -43,6 +45,9 @@ function App() {
                     <Route path="/apartment" element={<Apartment />} />
                     <Route path="/editprofile" element={<EditProfile />} />
                     <Route path="/residents" element={<AdminResidents />} />
+                    <Route path="/forgottenpassword" element={<ForgottenPassword />} />
+                    <Route path="/changepassword" element={<ChangePassword />} />
+
                 </Routes>
 
                 <Footer />

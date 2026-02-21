@@ -133,7 +133,7 @@ const Profile = () => {
                     <Link to="/EditProfile" className="btn-profile-edit">
                         Редактирай профил
                     </Link>
-                    <button onClick={handleLogout} className="btn-profile-edit" style={{ marginLeft: '10px', background: '#dc3545', borderColor: '#dc3545' }}>
+                    <button onClick={handleLogout} className="btn-logout">
                         Изход
                     </button>
                     <p className="profile-email">{user.email}</p>
