@@ -120,13 +120,16 @@ body {
 }
 
 .login-links a {
-    color: #2f5233;
-    text-decoration: none;
-    font-size: 0.9rem;
+  display: inline-block; 
+  color: #2f5233;
+  text-decoration: underline;
+  font-weight: bold;
+  transition: all 0.25s ease;
 }
 
 .login-links a:hover {
-    text-decoration: underline;
+  color: #1e3d1e;
+  transform: scale(1.05);
 }
 
 /* LOGIN BUTTON */
@@ -146,6 +149,24 @@ body {
 .btn-login:hover {
     background: #1e3d1e;
     transform: scale(1.03);
+}
+
+.signup-links {
+  text-align: center;
+  margin-top: 15px;
+}
+
+.signup-links a {
+  display: inline-block;
+  color: #2f5233;
+  text-decoration: underline;
+  font-weight: bold;
+  transition: all 0.25s ease;
+}
+
+.signup-links a:hover {
+  color: #1e3d1e;
+  transform: scale(1.05);
 }
 
 @media (max-width: 600px) {
