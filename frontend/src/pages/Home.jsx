@@ -95,59 +95,35 @@ function Home() {
                 <div className="section-header">
                     <h2>Какво поемаме вместо вас</h2>
                     <p>
-                        Пълно обслужване на етажната собственост – от документацията
-                        до ежедневната поддръжка и комуникацията с живущите.
+                    Пълно обслужване на етажната собственост – от документацията
+                    до ежедневната поддръжка и комуникацията с живущите.
                     </p>
                 </div>
 
                 <div className="services-grid">
-                    <div className="service-card">
-                        <img
-                            src="/images/service_admin.png"
-                            alt="Административно управление"
-                        />
-                        <h3>Административно управление</h3>
-                        <p>
-                            Организация на общи събрания, протоколи, регистри,
-                            договори и кореспонденция с институции.
-                        </p>
-                    </div>
+                    <Link to="/services?tab=admin" className="service-card service-card--link">
+                    <img src="/images/service_admin.png" alt="Административно управление" />
+                    <h3>Административно управление</h3>
+                    <p>Организация на общи събрания, протоколи, регистри и кореспонденция.</p>
+                    </Link>
 
-                    <div className="service-card">
-                        <img
-                            src="/images/service_finance.png"
-                            alt="Финансово обслужване"
-                        />
-                        <h3>Финансово обслужване</h3>
-                        <p>
-                            Събиране на такси, разпределяне на разходи, месечни
-                            и годишни отчети с пълна видимост за собствениците.
-                        </p>
-                    </div>
+                    <Link to="/services?tab=finance" className="service-card service-card--link">
+                    <img src="/images/service_finance.png" alt="Финансово обслужване" />
+                    <h3>Финансово обслужване</h3>
+                    <p>Събиране на такси, разпределяне на разходи и прозрачни отчети.</p>
+                    </Link>
 
-                    <div className="service-card">
-                        <img
-                            src="/images/service_maintenance.png"
-                            alt="Техническа поддръжка"
-                        />
-                        <h3>Техническа поддръжка</h3>
-                        <p>
-                            Организация на ремонти, профилактика на асансьори,
-                            осветление и общи части, поддръжка на инсталации.
-                        </p>
-                    </div>
+                    <Link to="/services?tab=maintenance" className="service-card service-card--link">
+                    <img src="/images/service_maintenance.png" alt="Техническа поддръжка" />
+                    <h3>Техническа поддръжка</h3>
+                    <p>Ремонти, профилактика, осветление и поддръжка на инсталации.</p>
+                    </Link>
 
-                    <div className="service-card">
-                        <img
-                            src="/images/service_cleaning.png"
-                            alt="Почистване и хигиена"
-                        />
-                        <h3>Почистване и хигиена</h3>
-                        <p>
-                            Професионално почистване на входове, стълбища и
-                            прилежащи площи по фиксиран график.
-                        </p>
-                    </div>
+                    <Link to="/services?tab=cleaning" className="service-card service-card--link">
+                    <img src="/images/service_cleaning.png" alt="Почистване и хигиена" />
+                    <h3>Почистване и хигиена</h3>
+                    <p>Професионално почистване на входове и общи части по график.</p>
+                    </Link>
                 </div>
             </section>
 
