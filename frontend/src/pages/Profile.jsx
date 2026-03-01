@@ -79,7 +79,7 @@ const Profile = () => {
         };
 
         fetchProfileData();
-    }, [navigate]);
+    }, [navigate, t]);
 
     const handleLogout = () => {
         logout();

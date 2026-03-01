@@ -41,7 +41,7 @@ const Entrance = () => {
         };
 
         fetchBuilding();
-    }, [navigate]);
+    }, [navigate, t]);
 
     const [selected, setSelected] = useState(null);
 

@@ -12,12 +12,12 @@ export default function Services() {
   const query = useQuery();
   const { t } = useTranslation();
 
-  const TABS = [
+  const TABS = useMemo(() => [
     { key: "admin", label: t('services.tabAdmin') },
     { key: "finance", label: t('services.tabFinance') },
     { key: "maintenance", label: t('services.tabMaintenance') },
     { key: "cleaning", label: t('services.tabCleaning') },
-  ];
+  ], [t]);
 
   const initialTab = query.get("tab") || "admin";
   const [activeTab, setActiveTab] = useState(
@@ -32,7 +32,7 @@ export default function Services() {
       // по желание: скрол до горе
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
-  }, [query]);
+  }, [query, TABS]);
 
   const content = {
     admin: {
