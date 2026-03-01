@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import "flag-icons/css/flag-icons.min.css";
 import "./Header.css";
 
 function Header() {
@@ -94,7 +95,7 @@ function Header() {
                 type="button"
                 style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '0', fontSize: '1.2rem', background: 'none', border: 'none', cursor: 'pointer', color: 'inherit' }}
               >
-                {i18n.resolvedLanguage === 'bg' ? '🇧🇬' : '🇬🇧'} ▾
+                {i18n.resolvedLanguage === 'bg' ? <span className="fi fi-bg"></span> : <span className="fi fi-gb"></span>} ▾
               </button>
 
               {langOpen && (
@@ -103,13 +104,13 @@ function Header() {
                     onClick={() => { i18n.changeLanguage('bg'); setLangOpen(false); }}
                     style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', padding: '0.5rem 1rem', width: '100%', textAlign: 'left', fontSize: '1rem', fontWeight: i18n.resolvedLanguage === 'bg' ? 'bold' : 'normal' }}
                   >
-                    🇧🇬 BG
+                    <span className="fi fi-bg"></span> BG
                   </button>
                   <button
                     onClick={() => { i18n.changeLanguage('en'); setLangOpen(false); }}
                     style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', padding: '0.5rem 1rem', width: '100%', textAlign: 'left', fontSize: '1rem', fontWeight: i18n.resolvedLanguage === 'en' ? 'bold' : 'normal' }}
                   >
-                    🇬🇧 EN
+                    <span className="fi fi-gb"></span> EN
                   </button>
                 </div>
               )}
@@ -194,7 +195,7 @@ function Header() {
               onClick={() => setLangOpen((v) => !v)}
               style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px', fontSize: '1.2rem', padding: '8px 16px', background: 'rgba(255, 255, 255, 0.9)', border: '1px solid rgba(47, 82, 51, 0.3)', borderRadius: '12px', cursor: 'pointer', color: '#2f5233' }}
             >
-              {i18n.resolvedLanguage === 'bg' ? '🇧🇬' : '🇬🇧'} ▾
+              {i18n.resolvedLanguage === 'bg' ? <span className="fi fi-bg"></span> : <span className="fi fi-gb"></span>} ▾
             </button>
 
             {langOpen && (
@@ -203,14 +204,14 @@ function Header() {
                   onClick={() => { i18n.changeLanguage('bg'); closeMobileMenu(); }}
                   style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.5rem 1rem', fontSize: '1.2rem', display: 'flex', gap: '8px', color: '#2f5233', fontWeight: i18n.resolvedLanguage === 'bg' ? 'bold' : 'normal', width: '100%' }}
                 >
-                  🇧🇬 BG
+                  <span className="fi fi-bg"></span> BG
                 </button>
                 <div style={{ height: '1px', width: '100%', background: 'rgba(47, 82, 51, 0.18)', margin: '4px 0' }}></div>
                 <button
                   onClick={() => { i18n.changeLanguage('en'); closeMobileMenu(); }}
                   style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.5rem 1rem', fontSize: '1.2rem', display: 'flex', gap: '8px', color: '#2f5233', fontWeight: i18n.resolvedLanguage === 'en' ? 'bold' : 'normal', width: '100%' }}
                 >
-                  🇬🇧 EN
+                  <span className="fi fi-gb"></span> EN
                 </button>
               </div>
             )}
