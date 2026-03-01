@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import "./Profile.css";
 import { getProfile, isAuthenticated, logout } from '../services/apiService';
 
 const Profile = () => {
+    const { t } = useTranslation();
     const navigate = useNavigate();
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
@@ -36,7 +38,7 @@ const Profile = () => {
 
                 // Build user object from API response
                 const userData = {
-                    name: data.user?.full_name || 'Потребител',
+                    name: data.user?.full_name || t('profile.userDataDefault'),
                     email: data.user?.email || '',
                     building: data.building?.address || '',
                     entrance: data.building?.entrance || '',
@@ -70,7 +72,7 @@ const Profile = () => {
 
             } catch (err) {
                 console.error('Profile fetch failed:', err);
-                setError('Грешка при зареждане на профила');
+                setError(t('profile.profileError'));
             } finally {
                 setLoading(false);
             }
@@ -85,14 +87,14 @@ const Profile = () => {
     };
 
     const quickLinks = [
-        { to: "/entrance", label: "Моят вход", desc: "Статус на всички апартаменти" },
-        { to: "/apartment", label: "Моят апартамент", desc: "Такси, плащания и история" },
-        { to: "/balance", label: "Финансов отчет", desc: "Подробни финансови детайли" },
-        { to: "/offer", label: "Нова оферта", desc: "Заяви управление на друга сграда" },
+        { to: "/entrance", label: t('profile.quickLinks.entranceLabel'), desc: t('profile.quickLinks.entranceDesc') },
+        { to: "/apartment", label: t('profile.quickLinks.apartmentLabel'), desc: t('profile.quickLinks.apartmentDesc') },
+        { to: "/balance", label: t('profile.quickLinks.balanceLabel'), desc: t('profile.quickLinks.balanceDesc') },
+        { to: "/offer", label: t('profile.quickLinks.offerLabel'), desc: t('profile.quickLinks.offerDesc') },
     ];
 
     if (loading) {
-        return <main className="profile-layout"><p style={{ textAlign: 'center', padding: '2rem' }}>Зареждане...</p></main>;
+        return <main className="profile-layout"><p style={{ textAlign: 'center', padding: '2rem' }}>{t('profile.loading')}</p></main>;
     }
 
     if (error) {
@@ -105,7 +107,7 @@ const Profile = () => {
 
     // Show loading if user data not yet available
     if (!user) {
-        return <main className="profile-layout"><p style={{ textAlign: 'center', padding: '2rem' }}>Зареждане на данни...</p></main>;
+        return <main className="profile-layout"><p style={{ textAlign: 'center', padding: '2rem' }}>{t('profile.loadingData')}</p></main>;
     }
 
     return (
@@ -118,23 +120,23 @@ const Profile = () => {
                         className="profile-avatar"
                     />
                     <div className="profile-hero-text">
-                        <h1>Здравей, {user.name}</h1>
-                        <p>Тук можеш да следиш всичко, свързано с твоя дом и етажна собственост.</p>
+                        <h1>{t('profile.greeting', { name: user.name })}</h1>
+                        <p>{t('profile.heroSubtitle')}</p>
                         <div className="profile-tags">
-                            <span className="tag">Сграда: {user.building}</span>
-                            <span className="tag">Вход {user.entrance}</span>
-                            <span className="tag">Ап. {user.apartment}</span>
-                            <span className="tag">Клиент № {user.clientNumber}</span>
+                            <span className="tag">{t('profile.tagBuilding')}{user.building}</span>
+                            <span className="tag">{t('profile.tagEntrance')}{user.entrance}</span>
+                            <span className="tag">{t('profile.tagApartment')}{user.apartment}</span>
+                            <span className="tag">{t('profile.tagClientNumber')}{user.clientNumber}</span>
                         </div>
                     </div>
                 </div>
 
                 <div className="profile-hero-right">
                     <Link to="/EditProfile" className="btn-profile-edit">
-                        Редактирай профил
+                        {t('profile.btnEditProfile')}
                     </Link>
                     <button onClick={handleLogout} className="btn-logout">
-                        Изход
+                        {t('profile.btnLogout')}
                     </button>
                     <p className="profile-email">{user.email}</p>
                 </div>
@@ -143,63 +145,63 @@ const Profile = () => {
             <section className="profile-main-grid">
                 <div className="profile-main-left">
                     <div className="card card-stats">
-                        <h2>Обобщена информация</h2>
+                        <h2>{t('profile.sectionSummary')}</h2>
                         <div className="stats-grid">
                             <div className="stat-item">
-                                <span className="stat-label">Баланс</span>
+                                <span className="stat-label">{t('profile.statBalance')}</span>
                                 <span className="stat-value">{user.balance} лв.</span>
                             </div>
                             <div className="stat-item">
-                                <span className="stat-label">Живущи</span>
+                                <span className="stat-label">{t('profile.statResidents')}</span>
                                 <span className="stat-value">{user.residents}</span>
                             </div>
                             <div className="stat-item">
-                                <span className="stat-label">Текущо задължение</span>
+                                <span className="stat-label">{t('profile.statCurrentDebt')}</span>
                                 <span className="stat-value">
                                     {financialSummary?.currentMonthDebt || '0.00 лв.'}
                                 </span>
                             </div>
                             <div className="stat-item">
-                                <span className="stat-label">Просрочени суми</span>
+                                <span className="stat-label">{t('profile.statOverdue')}</span>
                                 <span className="stat-value warning">
                                     {financialSummary?.overdueAmount || '0.00 лв.'}
                                 </span>
                             </div>
                             <div className="stat-item">
-                                <span className="stat-label">Общо за годината</span>
+                                <span className="stat-label">{t('profile.statYearlyTotal')}</span>
                                 <span className="stat-value">
                                     {financialSummary?.yearlyTotal || '0.00 лв.'}
                                 </span>
                             </div>
                             <div className="stat-item">
-                                <span className="stat-label">Последно плащане</span>
+                                <span className="stat-label">{t('profile.statLastPayment')}</span>
                                 <span className="stat-value">
-                                    {user.lastPayment ? `${user.lastPayment} (${user.lastPaymentAmount})` : 'Няма данни'}
+                                    {user.lastPayment ? `${user.lastPayment} (${user.lastPaymentAmount})` : t('profile.noData')}
                                 </span>
                             </div>
                         </div>
                     </div>
 
                     <div className="card card-property">
-                        <h2>Моят имот</h2>
+                        <h2>{t('profile.sectionMyProperty')}</h2>
                         <div className="property-grid">
                             <Link to="/building" className="property-card">
                                 <div>
-                                    <h4>Сграда</h4>
+                                    <h4>{t('profile.propBuilding')}</h4>
                                     <p>{user.building}</p>
                                 </div>
                             </Link>
 
                             <Link to="/entrance" className="property-card">
                                 <div>
-                                    <h4>Вход</h4>
-                                    <p>Вход {user.entrance}</p>
+                                    <h4>{t('profile.propEntrance')}</h4>
+                                    <p>{t('profile.tagEntrance')}{user.entrance}</p>
                                 </div>
                             </Link>
 
                             <Link to="/apartment" className="property-card">
                                 <div>
-                                    <h4>Апартамент</h4>
+                                    <h4>{t('profile.propApartment')}</h4>
                                     <p>{user.apartment}</p>
                                 </div>
                             </Link>
@@ -209,17 +211,17 @@ const Profile = () => {
 
                     <div className="card card-finance">
                         <div className="card-header-row">
-                            <h2>Финансов преглед</h2>
+                            <h2>{t('profile.sectionFinance')}</h2>
                             <Link to="/apartment" className="link-text">
-                                Виж детайлен отчет →
+                                {t('profile.linkDetailReport')}
                             </Link>
                         </div>
 
                         <div className="finance-table-sm">
                             <div className="finance-row header">
-                                <span>Период</span>
-                                <span>Сума</span>
-                                <span>Статус</span>
+                                <span>{t('profile.thPeriod')}</span>
+                                <span>{t('profile.thAmount')}</span>
+                                <span>{t('profile.thStatus')}</span>
                             </div>
                             {payments.length > 0 ? (
                                 payments.slice(0, 3).map((payment, index) => (
@@ -227,13 +229,13 @@ const Profile = () => {
                                         <span>{payment.period}</span>
                                         <span>{payment.amount}</span>
                                         <span className={`status ${payment.status}`}>
-                                            {payment.status === 'paid' ? 'Платено' : payment.status === 'pending' ? 'Очаква плащане' : 'Просрочено'}
+                                            {payment.status === 'paid' ? t('profile.statusPaid') : payment.status === 'pending' ? t('profile.statusPending') : t('profile.statusOverdue')}
                                         </span>
                                     </div>
                                 ))
                             ) : (
                                 <div className="finance-row">
-                                    <span colSpan="3" style={{ textAlign: 'center' }}>Няма налични плащания</span>
+                                    <span colSpan="3" style={{ textAlign: 'center' }}>{t('profile.noPayments')}</span>
                                 </div>
                             )}
                         </div>
@@ -242,7 +244,7 @@ const Profile = () => {
 
                 <div className="profile-main-right">
                     <div className="card card-actions">
-                        <h2>Бързи действия</h2>
+                        <h2>{t('profile.sectionQuickActions')}</h2>
                         <ul className="quick-actions-list">
                             {quickLinks.map((item) => (
                                 <li key={item.to}>
@@ -256,7 +258,7 @@ const Profile = () => {
                     </div>
 
                     <div className="card card-events">
-                        <h2>Събития и известия</h2>
+                        <h2>{t('profile.sectionEvents')}</h2>
                         <ul className="events-list">
                             {events.map((e, i) => (
                                 <li key={i}>

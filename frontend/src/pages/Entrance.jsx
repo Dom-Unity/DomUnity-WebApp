@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import "./Entrance.css";
 import { getBuildingApartments, isAuthenticated } from '../services/apiService';
 
 const Entrance = () => {
+    const { t } = useTranslation();
     const navigate = useNavigate();
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
@@ -32,7 +34,7 @@ const Entrance = () => {
                 }
             } catch (err) {
                 console.error('Failed to fetch building:', err);
-                setError('Грешка при зареждане на данните');
+                setError(t('entrance.fetchError'));
             } finally {
                 setLoading(false);
             }
@@ -63,7 +65,7 @@ const Entrance = () => {
     };
 
     if (loading) {
-        return <main className="entrance-container"><p style={{ textAlign: 'center', padding: '2rem' }}>Зареждане...</p></main>;
+        return <main className="entrance-container"><p style={{ textAlign: 'center', padding: '2rem' }}>{t('entrance.loading')}</p></main>;
     }
 
     if (error) {
@@ -76,14 +78,14 @@ const Entrance = () => {
 
     return (
         <main className="entrance-container">
-            <h1>Вход {building.entrance} – {building.address}</h1>
-            <p className="subtitle">Проверете статуса на всеки апартамент</p>
+            <h1>{t('entrance.title', { entrance: building.entrance, address: building.address })}</h1>
+            <p className="subtitle">{t('entrance.subtitle')}</p>
 
             {/* SEARCH + FILTERS */}
             <div className="search-filter-bar">
                 <input
                     type="text"
-                    placeholder="Търси по номер или фамилия..."
+                    placeholder={t('entrance.searchPlaceholder')}
                     className="search-input"
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
@@ -94,37 +96,37 @@ const Entrance = () => {
                         className={filter === "all" ? "active" : ""}
                         onClick={() => setFilter("all")}
                     >
-                        Всички
+                        {t('entrance.filterAll')}
                     </button>
 
                     <button
                         className={filter === "paid" ? "active" : ""}
                         onClick={() => setFilter("paid")}
                     >
-                        ✔ Платено
+                        {t('entrance.filterPaid')}
                     </button>
 
                     <button
                         className={filter === "pending" ? "active" : ""}
                         onClick={() => setFilter("pending")}
                     >
-                        ⏳ Задължение
+                        {t('entrance.filterPending')}
                     </button>
 
                     <button
                         className={filter === "overdue" ? "active" : ""}
                         onClick={() => setFilter("overdue")}
                     >
-                        ⚠ Просрочено
+                        {t('entrance.filterOverdue')}
                     </button>
                 </div>
             </div>
 
             {/* LEGEND */}
             <div className="legend">
-                <span><span className="legend-item paid"></span> Платено</span>
-                <span><span className="legend-item pending"></span> Задължение</span>
-                <span><span className="legend-item overdue"></span> Просрочено</span>
+                <span><span className="legend-item paid"></span> {t('entrance.legendPaid')}</span>
+                <span><span className="legend-item pending"></span> {t('entrance.legendPending')}</span>
+                <span><span className="legend-item overdue"></span> {t('entrance.legendOverdue')}</span>
             </div>
 
             {/* FLOORS */}
@@ -138,7 +140,7 @@ const Entrance = () => {
 
                     return (
                         <div key={floor.floor} className="floor">
-                            <h2>Етаж {floor.floor}</h2>
+                            <h2>{t('entrance.floorTitle', { floor: floor.floor })}</h2>
 
                             <div className="apartments">
                                 {visibleApartments.map((ap) => (
@@ -147,7 +149,7 @@ const Entrance = () => {
                                         className={`apartment ${ap.status}`}
                                         onClick={() => openPopup(ap)}
                                     >
-                                        <span>Ап. {ap.number}</span>
+                                        <span>{t('entrance.aptNumber', { number: ap.number })}</span>
                                         <p>{ap.amount} лв</p>
                                         <small>{ap.family}</small>
                                     </div>
@@ -166,22 +168,22 @@ const Entrance = () => {
                             ×
                         </span>
 
-                        <h3>Ап. {selected.number}</h3>
-                        <p><strong>Фамилия:</strong> {selected.family}</p>
-                        <p><strong>Баланс:</strong> {selected.amount} лв.</p>
+                        <h3>{t('entrance.aptNumber', { number: selected.number })}</h3>
+                        <p><strong>{t('entrance.popupFamily')}</strong> {selected.family}</p>
+                        <p><strong>{t('entrance.popupBalance')}</strong> {selected.amount} лв.</p>
 
                         <p className={`status-label ${selected.status}`}>
-                            {selected.status === "paid" && "Платено"}
-                            {selected.status === "pending" && "Задължение"}
-                            {selected.status === "overdue" && "Просрочено"}
+                            {selected.status === "paid" && t('entrance.statusPaid')}
+                            {selected.status === "pending" && t('entrance.statusPending')}
+                            {selected.status === "overdue" && t('entrance.statusOverdue')}
                         </p>
 
                         <div className="popup-actions">
-                            <button onClick={() => alert("История на плащанията...")}>
-                                История
+                            <button onClick={() => alert(t('entrance.historyAlert'))}>
+                                {t('entrance.btnHistory')}
                             </button>
-                            <button onClick={() => alert("Изпращане на съобщение...")}>
-                                Съобщение
+                            <button onClick={() => alert(t('entrance.messageAlert'))}>
+                                {t('entrance.btnMessage')}
                             </button>
                         </div>
                     </div>

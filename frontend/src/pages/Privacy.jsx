@@ -1,8 +1,10 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import "./Privacy.css";
 
 export default function Privacy() {
+  const { t } = useTranslation();
   return (
     <main className="privacy-container">
       <div className="privacy-box">
@@ -14,135 +16,123 @@ export default function Privacy() {
           />
         </div>
 
-        <h1 className="privacy-title">Политика за поверителност</h1>
+        <h1 className="privacy-title">{t('privacy.title')}</h1>
         <p className="privacy-subtitle">
-          Последна актуализация: 2025 г. (примерен текст – заменете с вашата реална политика)
+          {t('privacy.subtitle')}
         </p>
 
         <div className="privacy-content">
           <section className="privacy-section">
-            <h2>1. Какво представлява тази политика</h2>
+            <h2>{t('privacy.sec1Title')}</h2>
             <p>
-              Настоящата Политика за поверителност описва как DomUnity („ние“, „нас“, „Платформата“)
-              събира, използва и защитава лични данни при използване на уебсайта и клиентския портал.
+              {t('privacy.sec1Desc')}
             </p>
           </section>
 
           <section className="privacy-section">
-            <h2>2. Администратор на лични данни</h2>
+            <h2>{t('privacy.sec2Title')}</h2>
             <p>
-              Администратор на лични данни е организацията/лицето, предоставящо услугата DomUnity
-              за конкретна сграда/вход. В зависимост от начина на внедряване, вашият домоуправител
-              може да има роля на администратор/съвместен администратор по отношение на определени данни.
+              {t('privacy.sec2Desc')}
             </p>
           </section>
 
           <section className="privacy-section">
-            <h2>3. Какви данни събираме</h2>
+            <h2>{t('privacy.sec3Title')}</h2>
             <ul>
-              <li>Идентификационни данни: име, имейл, телефон (ако е предоставен).</li>
-              <li>Данни за имота: сграда/вход/апартамент, клиентски номер (ако е приложимо).</li>
-              <li>Данни за профила: история на вход/активност, настройки и права за достъп.</li>
-              <li>Финансови данни: начисления и плащания (в рамките на функционалностите на портала).</li>
-              <li>Комуникация: сигнали, съобщения, заявки и кореспонденция с администратора.</li>
-              <li>Технически данни: IP адрес, тип устройство/браузър, логове за сигурност.</li>
+              <li>{t('privacy.sec3Li1')}</li>
+              <li>{t('privacy.sec3Li2')}</li>
+              <li>{t('privacy.sec3Li3')}</li>
+              <li>{t('privacy.sec3Li4')}</li>
+              <li>{t('privacy.sec3Li5')}</li>
+              <li>{t('privacy.sec3Li6')}</li>
             </ul>
           </section>
 
           <section className="privacy-section">
-            <h2>4. За какво използваме данните</h2>
+            <h2>{t('privacy.sec4Title')}</h2>
             <ul>
-              <li>За предоставяне и поддръжка на услугата (портал, отчети, известия).</li>
-              <li>За идентификация и управление на достъпа до профили и информация.</li>
-              <li>За комуникация по сигнали, заявки и административни процеси.</li>
-              <li>За подобряване на сигурността и предотвратяване на злоупотреби.</li>
-              <li>За спазване на законови задължения (ако са приложими).</li>
+              <li>{t('privacy.sec4Li1')}</li>
+              <li>{t('privacy.sec4Li2')}</li>
+              <li>{t('privacy.sec4Li3')}</li>
+              <li>{t('privacy.sec4Li4')}</li>
+              <li>{t('privacy.sec4Li5')}</li>
             </ul>
           </section>
 
           <section className="privacy-section">
-            <h2>5. Правно основание</h2>
+            <h2>{t('privacy.sec5Title')}</h2>
             <p>
-              Обработваме лични данни на основание: изпълнение на договор/услуга, законови задължения,
-              легитимен интерес (напр. сигурност), както и съгласие (напр. за бюлетин), когато е приложимо.
+              {t('privacy.sec5Desc')}
             </p>
           </section>
 
           <section className="privacy-section">
-            <h2>6. Съхранение и срокове</h2>
+            <h2>{t('privacy.sec6Title')}</h2>
             <p>
-              Данните се съхраняват за период, необходим за предоставяне на услугата и/или за изпълнение
-              на законови задължения. При прекратяване на услугата данните могат да бъдат архивирани
-              или изтрити според договорените условия и приложимите закони.
+              {t('privacy.sec6Desc')}
             </p>
           </section>
 
           <section className="privacy-section">
-            <h2>7. Споделяне на данни</h2>
+            <h2>{t('privacy.sec7Title')}</h2>
             <p>
-              Можем да споделяме данни само при необходимост: с домоуправителя/администратора на
-              конкретната сграда, с доставчици на хостинг/поддръжка (като обработващи),
-              или при законово изискване от компетентни органи.
+              {t('privacy.sec7Desc')}
             </p>
           </section>
 
           <section className="privacy-section">
-            <h2>8. Вашите права</h2>
+            <h2>{t('privacy.sec8Title')}</h2>
             <ul>
-              <li>Право на достъп до личните ви данни.</li>
-              <li>Право на корекция на неточни данни.</li>
-              <li>Право на изтриване („да бъдеш забравен“) – когато е приложимо.</li>
-              <li>Право на ограничаване на обработката – при определени условия.</li>
-              <li>Право на възражение срещу обработка на основание легитимен интерес.</li>
-              <li>Право на преносимост на данните – когато е приложимо.</li>
-              <li>Право да оттеглите съгласие (напр. за бюлетин), когато обработката се базира на съгласие.</li>
+              <li>{t('privacy.sec8Li1')}</li>
+              <li>{t('privacy.sec8Li2')}</li>
+              <li>{t('privacy.sec8Li3')}</li>
+              <li>{t('privacy.sec8Li4')}</li>
+              <li>{t('privacy.sec8Li5')}</li>
+              <li>{t('privacy.sec8Li6')}</li>
+              <li>{t('privacy.sec8Li7')}</li>
             </ul>
           </section>
 
           <section className="privacy-section">
-            <h2>9. Сигурност</h2>
+            <h2>{t('privacy.sec9Title')}</h2>
             <p>
-              Прилагаме технически и организационни мерки за защита на данните (контрол на достъп,
-              логове за сигурност, криптиране при пренос, и др.), но никоя система не може да гарантира
-              100% сигурност.
+              {t('privacy.sec9Desc')}
             </p>
           </section>
 
           <section className="privacy-section">
-            <h2>10. Бисквитки (Cookies)</h2>
+            <h2>{t('privacy.sec10Title')}</h2>
             <p>
-              Платформата може да използва бисквитки и подобни технологии за функционалност,
-              сигурност и подобряване на потребителското изживяване. (Добавете вашата реална
-              политика за cookies, ако използвате.)
+              {t('privacy.sec10Desc')}
             </p>
           </section>
 
           <section className="privacy-section">
-            <h2>11. Контакти</h2>
+            <h2>{t('privacy.sec11Title')}</h2>
             <p>
-              При въпроси относно тази Политика за поверителност, свържете се с нас:
+              {t('privacy.sec11Desc1')}
               {" "}
-              <Link to="/contacts" className="privacy-link">Контакти</Link>
+              <Link to="/contacts" className="privacy-link">{t('privacy.linkContacts')}</Link>
             </p>
             <p>
-              Можете да прегледате и Общите условия тук:
+              {t('privacy.sec11Desc2')}
               {" "}
-              <Link to="/terms" className="privacy-link">Общи условия</Link>
+              <Link to="/terms" className="privacy-link">{t('privacy.linkTerms')}</Link>
             </p>
           </section>
         </div>
 
         <div className="privacy-actions">
           <Link to="/" className="privacy-btn privacy-btn--secondary">
-            Начало
+            {t('privacy.btnHome')}
           </Link>
           <Link to="/contacts" className="privacy-btn privacy-btn--primary">
-            Свържи се с нас
+            {t('privacy.btnContact')}
           </Link>
         </div>
 
         <p className="privacy-smallprint">
-          * Този текст е примерен и не е юридически съвет. За реална политика се консултирайте с юрист и GDPR специалист.
+          {t('privacy.smallprint')}
         </p>
       </div>
     </main>

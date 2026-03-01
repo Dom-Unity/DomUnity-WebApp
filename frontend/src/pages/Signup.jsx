@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import './Login.css';
 import { register } from '../services/apiService';
 
 function Signup() {
+    const { t } = useTranslation();
     const [formData, setFormData] = useState({
         fullName: '',
         email: '',
@@ -29,12 +31,12 @@ function Signup() {
         setSuccess('');
 
         if (formData.password !== formData.confirmPassword) {
-            setError('Паролите не съвпадат');
+            setError(t('auth.passwordMismatch'));
             return;
         }
 
         if (formData.password.length < 8) {
-            setError('Паролата трябва да е поне 8 символа');
+            setError(t('auth.passwordLengthError'));
             return;
         }
 
@@ -49,13 +51,13 @@ function Signup() {
             );
 
             if (result.success) {
-                setSuccess('Регистрацията е успешна! Пренасочване...');
+                setSuccess(t('auth.signupSuccess'));
                 setTimeout(() => navigate('/login'), 2000);
             } else {
-                setError(result.message || 'Регистрацията не бе успешна. Опитайте отново.');
+                setError(result.message || t('auth.signupError'));
             }
         } catch (err) {
-            setError('Грешка при регистрация. Опитайте по-късно.');
+            setError(t('auth.signupNetworkError'));
             console.error('Signup error:', err);
         } finally {
             setLoading(false);
@@ -74,8 +76,8 @@ function Signup() {
                     />
                 </div>
 
-                <h2 className="login-title">Регистрация</h2>
-                <p className="login-subtitle">Създайте нов акаунт</p>
+                <h2 className="login-title">{t('auth.signupMainTitle')}</h2>
+                <p className="login-subtitle">{t('auth.signupSubtitle')}</p>
 
                 {error && <div style={{ color: 'red', marginBottom: '1rem', textAlign: 'center' }}>{error}</div>}
                 {success && <div style={{ color: 'green', marginBottom: '1rem', textAlign: 'center' }}>{success}</div>}
@@ -83,7 +85,7 @@ function Signup() {
                 <form className="login-form" onSubmit={handleSubmit}>
 
                     <div className="input-group">
-                        <label htmlFor="fullName">Име и фамилия</label>
+                        <label htmlFor="fullName">{t('auth.nameLabel')}</label>
                         <input
                             id="fullName"
                             name="fullName"
@@ -95,7 +97,7 @@ function Signup() {
                     </div>
 
                     <div className="input-group">
-                        <label htmlFor="email">Имейл адрес*</label>
+                        <label htmlFor="email">{t('auth.emailLabel')}</label>
                         <input
                             id="email"
                             name="email"
@@ -108,7 +110,7 @@ function Signup() {
                     </div>
 
                     <div className="input-group">
-                        <label htmlFor="phone">Телефон</label>
+                        <label htmlFor="phone">{t('auth.phoneLabel')}</label>
                         <input
                             id="phone"
                             name="phone"
@@ -120,7 +122,7 @@ function Signup() {
                     </div>
 
                     <div className="input-group">
-                        <label htmlFor="password">Парола*</label>
+                        <label htmlFor="password">{t('auth.passwordLabel')}</label>
                         <input
                             id="password"
                             name="password"
@@ -130,11 +132,11 @@ function Signup() {
                             required
                             disabled={loading}
                         />
-                        <small style={{ color: '#666', fontSize: '0.85rem' }}>Минимум 8 символа</small>
+                        <small style={{ color: '#666', fontSize: '0.85rem' }}>{t('auth.passwordHint')}</small>
                     </div>
 
                     <div className="input-group">
-                        <label htmlFor="confirmPassword">Потвърдете паролата*</label>
+                        <label htmlFor="confirmPassword">{t('auth.confirmPasswordLabel')}</label>
                         <input
                             id="confirmPassword"
                             name="confirmPassword"
@@ -147,12 +149,12 @@ function Signup() {
                     </div>
 
                     <button type="submit" className="btn-login" disabled={loading}>
-                        {loading ? 'Зареждане...' : 'Регистрация'}
+                        {loading ? t('auth.btnLoading') : t('auth.btnSignup')}
                     </button>
 
                     <div style={{ textAlign: 'center', marginTop: '15px' }}>
-                        <span>Вече имате акаунт? </span>
-                        <Link to="/login" style={{ color: '#2f5233', fontWeight: 'bold' }}>Вход</Link>
+                        <span>{t('auth.haveAccount')}</span>
+                        <Link to="/login" style={{ color: '#2f5233', fontWeight: 'bold' }}>{t('auth.loginLink')}</Link>
                     </div>
 
                 </form>

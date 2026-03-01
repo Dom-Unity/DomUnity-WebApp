@@ -1,9 +1,11 @@
 import React, { useMemo, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import "./Apartment.css";
 import { getApartmentDetails, isAuthenticated } from '../services/apiService';
 
 const Apartment = () => {
+    const { t } = useTranslation();
     const navigate = useNavigate();
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
@@ -33,7 +35,7 @@ const Apartment = () => {
                 const data = await getApartmentDetails();
                 if (data.error) {
                     if (data.error === 'No apartment found for user') {
-                        setError('Нямате свързан апартамент');
+                        setError(t('apartment.noApartment'));
                     } else {
                         setError(data.error);
                     }
@@ -48,15 +50,15 @@ const Apartment = () => {
                     // Build history from paid payments
                     const paidHistory = data.payments
                         .filter(p => p.status === 'paid' && p.paidAt)
-                        .map(p => `${p.month} ${p.year} — Платено на ${p.paidAt}`);
-                    setHistory(paidHistory.length > 0 ? paidHistory : ['Няма регистрирани плащания']);
+                        .map(p => t('apartment.paidAtFormat', { month: p.month, year: p.year, date: p.paidAt }));
+                    setHistory(paidHistory.length > 0 ? paidHistory : [t('apartment.noPaymentsHistory')]);
                 }
                 if (data.maintenance) {
                     setMaintenance(data.maintenance);
                 }
             } catch (err) {
                 console.error('Failed to fetch apartment:', err);
-                setError('Грешка при зареждане на данните');
+                setError(t('apartment.fetchError'));
             } finally {
                 setLoading(false);
             }
@@ -112,12 +114,12 @@ const Apartment = () => {
 
         setPayments(updated);
         setHistory((prev) => [
-            `${selectedPayment.month} ${selectedPayment.year} — Платено на ${new Date().toLocaleDateString("bg-BG")}`,
+            t('apartment.paidAtFormat', { month: selectedPayment.month, year: selectedPayment.year, date: new Date().toLocaleDateString("bg-BG") }),
             ...prev,
         ]);
 
         closePaymentModal();
-        alert("Плащането беше успешно!");
+        alert(t('apartment.paymentSuccessAlert'));
     };
 
     const handleCardInputChange = (e) => {
@@ -132,7 +134,7 @@ const Apartment = () => {
         e.preventDefault();
 
         if (!cardData.holder || !cardData.number || !cardData.expiry || !cardData.cvv) {
-            alert("Моля, попълнете всички полета за картата.");
+            alert(t('apartment.fillCardFieldsAlert'));
             return;
         }
 
@@ -156,7 +158,7 @@ const Apartment = () => {
         const unpaid = payments.filter((p) => p.status !== "paid");
         const overdue = payments.filter((p) => p.status === "overdue");
 
-        const lastPaid = history[0] || "Няма регистрирани плащания";
+        const lastPaid = history[0] || t('apartment.noPaymentsHistory');
 
         const totalUnpaid = unpaid.reduce(
             (sum, p) => sum + p.fee + p.repair + p.fund + p.extra,
@@ -190,7 +192,7 @@ const Apartment = () => {
     }, [payments, statusFilter, search]);
 
     if (loading) {
-        return <main className="apartment-page"><p style={{ textAlign: 'center', padding: '2rem' }}>Зареждане...</p></main>;
+        return <main className="apartment-page"><p style={{ textAlign: 'center', padding: '2rem' }}>{t('apartment.loading')}</p></main>;
     }
 
     if (error) {
@@ -205,80 +207,80 @@ const Apartment = () => {
         <main className="apartment-page">
             <section className="ap-header">
                 <h1>
-                    Апартамент {apartmentInfo.number} – Вход {apartmentInfo.entrance}, {apartmentInfo.building}
+                    {t('apartment.title', { number: apartmentInfo.number, entrance: apartmentInfo.entrance, building: apartmentInfo.building })}
                 </h1>
                 <p className="ap-header-subtitle">
-                    Информация относно вашия имот
+                    {t('apartment.subtitle')}
                 </p>
             </section>
 
             <section className="ap-section ap-dashboard">
-                <h2>Обобщение</h2>
+                <h2>{t('apartment.summaryTitle')}</h2>
                 <div className="ap-dashboard-grid">
                     <div className="ap-dashboard-card">
-                        <span className="label">Неплатени месеци</span>
+                        <span className="label">{t('apartment.unpaidMonths')}</span>
                         <span className="value">{stats.unpaidCount}</span>
                     </div>
                     <div className="ap-dashboard-card">
-                        <span className="label">Просрочени месеци</span>
+                        <span className="label">{t('apartment.overdueMonths')}</span>
                         <span className="value">{stats.overdueCount}</span>
                     </div>
                     <div className="ap-dashboard-card">
-                        <span className="label">Общо дължимо</span>
+                        <span className="label">{t('apartment.totalDue')}</span>
                         <span className="value">
                             {stats.totalUnpaid.toFixed(2)} лв.
                         </span>
                     </div>
                     <div className="ap-dashboard-card">
-                        <span className="label">Годишен разход</span>
+                        <span className="label">{t('apartment.yearlyExpense')}</span>
                         <span className="value">
                             {stats.totalYear.toFixed(2)} лв.
                         </span>
                     </div>
                     <div className="ap-dashboard-card wide">
-                        <span className="label">Последно плащане</span>
+                        <span className="label">{t('apartment.lastPayment')}</span>
                         <span className="value small">{stats.lastPaid}</span>
                     </div>
                 </div>
             </section>
 
             <section className="ap-section">
-                <h2>Моят апартамент</h2>
+                <h2>{t('apartment.myApartmentTitle')}</h2>
                 <div className="ap-info-grid">
                     <div className="ap-info-card">
                         <h4>{apartmentInfo.building}</h4>
-                        <p>Сграда</p>
+                        <p>{t('apartment.propBuilding')}</p>
                     </div>
                     <div className="ap-info-card">
-                        <h4>Вход {apartmentInfo.entrance}</h4>
-                        <p>Вход</p>
+                        <h4>{t('apartment.propEntrance')} {apartmentInfo.entrance}</h4>
+                        <p>{t('apartment.propEntrance')}</p>
                     </div>
                     <div className="ap-info-card">
-                        <h4>Ап. {apartmentInfo.number}</h4>
-                        <p>Номер</p>
+                        <h4>{t('apartment.propNumber')} {apartmentInfo.number}</h4>
+                        <p>{t('apartment.propNumber')}</p>
                     </div>
                     <div className="ap-info-card">
                         <h4>{apartmentInfo.residents}</h4>
-                        <p>Живущи</p>
+                        <p>{t('apartment.propResidents')}</p>
                     </div>
                     <div className="ap-info-card">
                         <h4>{apartmentInfo.balance.toFixed(2)} лв.</h4>
-                        <p>Баланс</p>
+                        <p>{t('apartment.propBalance')}</p>
                     </div>
                     <div className="ap-info-card">
                         <h4>{apartmentInfo.clientNumber}</h4>
-                        <p>Клиентски номер</p>
+                        <p>{t('apartment.propClientNum')}</p>
                     </div>
                 </div>
             </section>
 
             <section className="ap-section">
                 <div className="ap-section-header">
-                    <h2>Финансов отчет — 2025 г.</h2>
+                    <h2>{t('apartment.financeReportTitle')}</h2>
                     <div className="ap-filters">
                         <input
                             type="text"
-                            placeholder="Търси по месец..."
+                            placeholder={t('apartment.searchPlaceholder')}
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                         />
@@ -286,10 +288,10 @@ const Apartment = () => {
                             value={statusFilter}
                             onChange={(e) => setStatusFilter(e.target.value)}
                         >
-                            <option value="all">Всички</option>
-                            <option value="pending">Очаква плащане</option>
-                            <option value="overdue">Просрочено</option>
-                            <option value="paid">Платено</option>
+                            <option value="all">{t('apartment.filterAll')}</option>
+                            <option value="pending">{t('apartment.filterPending')}</option>
+                            <option value="overdue">{t('apartment.filterOverdue')}</option>
+                            <option value="paid">{t('apartment.filterPaid')}</option>
                         </select>
                     </div>
                 </div>
@@ -298,14 +300,14 @@ const Apartment = () => {
                     <table className="ap-table">
                         <thead>
                             <tr>
-                                <th>Месец</th>
-                                <th>Такса поддръжка</th>
-                                <th>Ремонт</th>
-                                <th>Фонд „Ремонт“</th>
-                                <th>Допълнителни разходи</th>
-                                <th>Общо</th>
-                                <th>Статус</th>
-                                <th>Действие</th>
+                                <th>{t('apartment.thMonth')}</th>
+                                <th>{t('apartment.thMaintenanceFee')}</th>
+                                <th>{t('apartment.thRepair')}</th>
+                                <th>{t('apartment.thFundRepair')}</th>
+                                <th>{t('apartment.thExtra')}</th>
+                                <th>{t('apartment.thTotal')}</th>
+                                <th>{t('apartment.thStatus')}</th>
+                                <th>{t('apartment.thAction')}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -328,9 +330,9 @@ const Apartment = () => {
                                         </td>
                                         <td>
                                             <span className={`status ${p.status}`}>
-                                                {p.status === "paid" && "Платено"}
-                                                {p.status === "pending" && "Очаква плащане"}
-                                                {p.status === "overdue" && "Просрочено"}
+                                                {p.status === "paid" && t('apartment.statusPaid')}
+                                                {p.status === "pending" && t('apartment.statusPending')}
+                                                {p.status === "overdue" && t('apartment.statusOverdue')}
                                             </span>
                                         </td>
                                         <td>
@@ -349,7 +351,7 @@ const Apartment = () => {
                                                         })
                                                     }
                                                 >
-                                                    Плати
+                                                    {t('apartment.btnPay')}
                                                 </button>
                                             )}
                                         </td>
@@ -362,7 +364,7 @@ const Apartment = () => {
             </section>
 
             <section className="ap-section">
-                <h2>История на плащанията</h2>
+                <h2>{t('apartment.historyTitle')}</h2>
                 <ul className="ap-history">
                     {history.map((item, idx) => (
                         <li key={idx}>{item}</li>
@@ -371,26 +373,26 @@ const Apartment = () => {
             </section>
 
             <section className="ap-section">
-                <h2>Ремонти и поддръжка</h2>
+                <h2>{t('apartment.maintenanceTitle')}</h2>
                 <div className="ap-maintenance-list">
                     {maintenance.map((m, idx) => (
                         <div className="ap-maint-card" key={idx}>
                             <div className="row">
-                                <span className="label">Дата</span>
+                                <span className="label">{t('apartment.maintDate')}</span>
                                 <span className="value">{m.date}</span>
                             </div>
                             <div className="row">
-                                <span className="label">Описание</span>
+                                <span className="label">{t('apartment.maintDesc')}</span>
                                 <span className="value">{m.description}</span>
                             </div>
                             <div className="row">
-                                <span className="label">Сума</span>
+                                <span className="label">{t('apartment.maintCost')}</span>
                                 <span className="value">{m.cost}</span>
                             </div>
                             <div className="row">
-                                <span className="label">Статус</span>
+                                <span className="label">{t('apartment.maintStatus')}</span>
                                 <span className={`tag ${m.status}`}>
-                                    {m.status === "completed" ? "Приключен" : "Планиран"}
+                                    {m.status === "completed" ? t('apartment.maintCompleted') : t('apartment.maintPlanned')}
                                 </span>
                             </div>
                         </div>
@@ -399,25 +401,25 @@ const Apartment = () => {
             </section>
 
             <section className="ap-section">
-                <h2>Контакт с домоуправителя</h2>
+                <h2>{t('apartment.contactTitle')}</h2>
                 <form
                     className="ap-contact-form"
                     onSubmit={(e) => {
                         e.preventDefault();
-                        alert("Съобщението е изпратено към домоуправителя.");
+                        alert(t('apartment.contactSuccessAlert'));
                         e.target.reset();
                     }}
                 >
                     <div className="form-group">
-                        <label>Тема</label>
+                        <label>{t('apartment.contactSubject')}</label>
                         <input type="text" name="subject" required />
                     </div>
                     <div className="form-group">
-                        <label>Съобщение</label>
+                        <label>{t('apartment.contactMessage')}</label>
                         <textarea name="message" rows="4" required></textarea>
                     </div>
                     <button type="submit" className="contact-btn">
-                        Изпрати съобщение
+                        {t('apartment.btnSend')}
                     </button>
                 </form>
             </section>
@@ -431,14 +433,14 @@ const Apartment = () => {
                         <button className="close-btn" onClick={closePaymentModal}>
                             ×
                         </button>
-                        <h3>Потвърди плащането</h3>
+                        <h3>{t('apartment.modalConfirmPayment')}</h3>
                         {selectedPayment && (
                             <>
                                 <p>
-                                    Период: {selectedPayment.month} {selectedPayment.year}
+                                    {t('apartment.modalPeriod')} {selectedPayment.month} {selectedPayment.year}
                                 </p>
                                 <p>
-                                    Сума за плащане:{" "}
+                                    {t('apartment.modalAmountDue')}{" "}
                                     <strong>
                                         {selectedPayment.total.toFixed(2)} лв.
                                     </strong>
@@ -456,7 +458,7 @@ const Apartment = () => {
                                     }
                                     onClick={() => setPaymentMethod("card")}
                                 >
-                                    Банкова карта
+                                    {t('apartment.tabCard')}
                                 </button>
                                 <button
                                     type="button"
@@ -466,7 +468,7 @@ const Apartment = () => {
                                     }
                                     onClick={() => setPaymentMethod("bank")}
                                 >
-                                    Банков превод
+                                    {t('apartment.tabBank')}
                                 </button>
                                 <button
                                     type="button"
@@ -476,7 +478,7 @@ const Apartment = () => {
                                     }
                                     onClick={() => setPaymentMethod("cash")}
                                 >
-                                    В брой
+                                    {t('apartment.tabCash')}
                                 </button>
                             </div>
 
@@ -484,7 +486,7 @@ const Apartment = () => {
                                 {paymentMethod === "card" && (
                                     <form className="card-form" onSubmit={handleCardPay}>
                                         <div className="card-form-row">
-                                            <label>Име на картодържателя</label>
+                                            <label>{t('apartment.cardHolder')}</label>
                                             <input
                                                 type="text"
                                                 name="holder"
@@ -494,7 +496,7 @@ const Apartment = () => {
                                             />
                                         </div>
                                         <div className="card-form-row">
-                                            <label>Номер на карта</label>
+                                            <label>{t('apartment.cardNumber')}</label>
                                             <input
                                                 type="text"
                                                 name="number"
@@ -505,7 +507,7 @@ const Apartment = () => {
                                         </div>
                                         <div className="card-form-row card-form-row-inline">
                                             <div>
-                                                <label>Валидна до</label>
+                                                <label>{t('apartment.cardExpiry')}</label>
                                                 <input
                                                     type="text"
                                                     name="expiry"
@@ -515,7 +517,7 @@ const Apartment = () => {
                                                 />
                                             </div>
                                             <div>
-                                                <label>CVV</label>
+                                                <label>{t('apartment.cardCvv')}</label>
                                                 <input
                                                     type="password"
                                                     name="cvv"
@@ -528,7 +530,7 @@ const Apartment = () => {
                                         </div>
 
                                         <button type="submit" className="confirm-btn main">
-                                            Плати с карта
+                                            {t('apartment.btnPayCard')}
                                         </button>
 
                                         <div className="wallet-buttons">
@@ -537,14 +539,14 @@ const Apartment = () => {
                                                 className="wallet-btn google"
                                                 onClick={() => handleWalletPay("Google Pay")}
                                             >
-                                                Плати с Google Pay
+                                                {t('apartment.btnGooglePay')}
                                             </button>
                                             <button
                                                 type="button"
                                                 className="wallet-btn apple"
                                                 onClick={() => handleWalletPay("Apple Pay")}
                                             >
-                                                Плати с Apple Pay
+                                                {t('apartment.btnApplePay')}
                                             </button>
                                         </div>
                                     </form>
@@ -553,20 +555,19 @@ const Apartment = () => {
                                 {paymentMethod === "bank" && (
                                     <div className="bank-info">
                                         <p>
-                                            Можете да платите по банков път, като използвате
-                                            следните данни:
+                                            {t('apartment.bankInfoText')}
                                         </p>
-                                        <p><strong>IBAN:</strong> BG00XXXX000000000000</p>
-                                        <p><strong>Титуляр:</strong> Етажна собственост Младост 3, бл. 325</p>
+                                        <p><strong>{t('apartment.bankIban')}</strong> BG00XXXX000000000000</p>
+                                        <p><strong>{t('apartment.bankHolder')}</strong> {t('apartment.bankHolderValue')}</p>
                                         <p>
-                                            <strong>Основание:</strong> Такса поддръжка – Ап. {apartmentInfo.number}
+                                            <strong>{t('apartment.bankReason')}{apartmentInfo.number}</strong>
                                         </p>
                                         <button
                                             type="button"
                                             className="confirm-btn"
                                             onClick={confirmPayment}
                                         >
-                                            Отбележи като платено
+                                            {t('apartment.btnMarkAsPaid')}
                                         </button>
                                     </div>
                                 )}
@@ -574,10 +575,10 @@ const Apartment = () => {
                                 {paymentMethod === "cash" && (
                                     <div className="cash-info">
                                         <p>
-                                            Плащането ще бъде извършено в брой при домоуправителя.
+                                            {t('apartment.cashInfoText')}
                                         </p>
                                         <p>
-                                            Моля, носете точната сума:{" "}
+                                            {t('apartment.cashExactAmount')}
                                             <strong>
                                                 {selectedPayment?.total.toFixed(2)} лв.
                                             </strong>
@@ -587,7 +588,7 @@ const Apartment = () => {
                                             className="confirm-btn"
                                             onClick={confirmPayment}
                                         >
-                                            Отбележи като платено
+                                            {t('apartment.btnMarkAsPaid')}
                                         </button>
                                     </div>
                                 )}
