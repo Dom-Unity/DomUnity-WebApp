@@ -1,9 +1,11 @@
 import React, { useMemo, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import "./AdminResidents.css";
 import { getAdminResidents, isAuthenticated } from '../services/apiService';
 
 const AdminResidents = () => {
+    const { t } = useTranslation();
     const navigate = useNavigate();
     const [residents, setResidents] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -38,14 +40,14 @@ const AdminResidents = () => {
                 }
             } catch (err) {
                 console.error('Failed to fetch residents:', err);
-                setError('Грешка при зареждане на данните');
+                setError(t('adminResidents.fetchError'));
             } finally {
                 setLoading(false);
             }
         };
 
         fetchResidents();
-    }, [navigate]);
+    }, [navigate, t]);
 
     // Get unique buildings for filter dropdown
     // eslint-disable-next-line no-unused-vars
@@ -90,7 +92,7 @@ const AdminResidents = () => {
             prev.map((r) => (r.id === editForm.id ? editForm : r))
         );
         closeEdit();
-        alert("Профилът е обновен успешно.");
+        alert(t('adminResidents.alertProfileUpdated'));
     };
 
     const addNewResident = () => {
@@ -100,7 +102,7 @@ const AdminResidents = () => {
 
         const newResident = {
             id: newId,
-            name: "Нов живущ",
+            name: t('adminResidents.newResidentName'),
             email: "",
             building: "",
             entrance: "",
@@ -109,7 +111,7 @@ const AdminResidents = () => {
             residentsCount: 1,
             balance: 0,
             totalDebt: 0,
-            role: "Потребител",
+            role: t('adminResidents.roleUser'),
             isActive: true,
         };
 
@@ -119,7 +121,7 @@ const AdminResidents = () => {
 
     const resetPassword = (resident) => {
         alert(
-            `Тук можеш да извикаш бекенд за ресет на паролата за: ${resident.email}`
+            t('adminResidents.alertResetPassword') + resident.email
         );
     };
 
@@ -163,7 +165,7 @@ const AdminResidents = () => {
     const totalDebtSum = residents.reduce((sum, r) => sum + (r.totalDebt || 0), 0);
 
     if (loading) {
-        return <main className="admin-page"><p style={{ textAlign: 'center', padding: '2rem' }}>Зареждане...</p></main>;
+        return <main className="admin-page"><p style={{ textAlign: 'center', padding: '2rem' }}>{t('adminResidents.loading')}</p></main>;
     }
 
     if (error) {
@@ -178,28 +180,28 @@ const AdminResidents = () => {
         <main className="admin-page">
             <header className="admin-header">
                 <div>
-                    <h1>Админ панел — Профили на живущите</h1>
+                    <h1>{t('adminResidents.title')}</h1>
                     <p className="admin-subtitle">
-                        Управлявайте профилите, данните и достъпа на всички живущи.
+                        {t('adminResidents.subtitle')}
                     </p>
                 </div>
                 <button className="admin-add-btn" onClick={addNewResident}>
-                    + Нов профил
+                    {t('adminResidents.btnAddResident')}
                 </button>
             </header>
 
             {/* Обобщение */}
             <section className="admin-section admin-stats">
                 <div className="admin-stat-card">
-                    <span className="label">Общ брой профили</span>
+                    <span className="label">{t('adminResidents.statTotalProfiles')}</span>
                     <span className="value">{totalUsers}</span>
                 </div>
                 <div className="admin-stat-card">
-                    <span className="label">Активни профили</span>
+                    <span className="label">{t('adminResidents.statActiveProfiles')}</span>
                     <span className="value">{activeUsers}</span>
                 </div>
                 <div className="admin-stat-card">
-                    <span className="label">Общ размер на задълженията</span>
+                    <span className="label">{t('adminResidents.statTotalDebt')}</span>
                     <span className="value">
                         {totalDebtSum.toFixed(2)} лв.
                     </span>
@@ -210,22 +212,22 @@ const AdminResidents = () => {
             <section className="admin-section">
                 <div className="admin-filters">
                     <div className="filter-group">
-                        <label>Търсене</label>
+                        <label>{t('adminResidents.filterSearchLabel')}</label>
                         <input
                             type="text"
-                            placeholder="Име, имейл, апартамент, клиентски №..."
+                            placeholder={t('adminResidents.filterSearchPlaceholder')}
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                         />
                     </div>
 
                     <div className="filter-group">
-                        <label>Сграда</label>
+                        <label>{t('adminResidents.filterBuildingLabel')}</label>
                         <select
                             value={buildingFilter}
                             onChange={(e) => setBuildingFilter(e.target.value)}
                         >
-                            <option value="all">Всички</option>
+                            <option value="all">{t('adminResidents.filterAll')}</option>
                             <option value="Младост 3, бл. 325">
                                 Младост 3, бл. 325
                             </option>
@@ -233,12 +235,12 @@ const AdminResidents = () => {
                     </div>
 
                     <div className="filter-group">
-                        <label>Вход</label>
+                        <label>{t('adminResidents.filterEntranceLabel')}</label>
                         <select
                             value={entranceFilter}
                             onChange={(e) => setEntranceFilter(e.target.value)}
                         >
-                            <option value="all">Всички</option>
+                            <option value="all">{t('adminResidents.filterAll')}</option>
                             <option value="А">А</option>
                             <option value="Б">Б</option>
                             <option value="В">В</option>
@@ -252,7 +254,7 @@ const AdminResidents = () => {
                                 checked={onlyDebtors}
                                 onChange={(e) => setOnlyDebtors(e.target.checked)}
                             />
-                            Само със задължения
+                            {t('adminResidents.filterOnlyDebtors')}
                         </label>
                     </div>
                 </div>
@@ -263,24 +265,24 @@ const AdminResidents = () => {
                     <table className="admin-table">
                         <thead>
                             <tr>
-                                <th>Име</th>
-                                <th>Имейл</th>
-                                <th>Сграда</th>
-                                <th>Вход</th>
-                                <th>Ап.</th>
-                                <th>Кл. №</th>
-                                <th>Живущи</th>
-                                <th>Баланс</th>
-                                <th>Задължение</th>
-                                <th>Статус</th>
-                                <th>Действия</th>
+                                <th>{t('adminResidents.thName')}</th>
+                                <th>{t('adminResidents.thEmail')}</th>
+                                <th>{t('adminResidents.thBuilding')}</th>
+                                <th>{t('adminResidents.thEntrance')}</th>
+                                <th>{t('adminResidents.thAp')}</th>
+                                <th>{t('adminResidents.thClientNum')}</th>
+                                <th>{t('adminResidents.thResidents')}</th>
+                                <th>{t('adminResidents.thBalance')}</th>
+                                <th>{t('adminResidents.thDebt')}</th>
+                                <th>{t('adminResidents.thStatus')}</th>
+                                <th>{t('adminResidents.thActions')}</th>
                             </tr>
                         </thead>
                         <tbody>
                             {filteredResidents.length === 0 ? (
                                 <tr>
                                     <td colSpan="11" className="no-data">
-                                        Няма намерени профили по зададените критерии.
+                                        {t('adminResidents.noData')}
                                     </td>
                                 </tr>
                             ) : (
@@ -302,7 +304,7 @@ const AdminResidents = () => {
                                                     (r.isActive ? "active" : "inactive")
                                                 }
                                             >
-                                                {r.isActive ? "Активен" : "Блокиран"}
+                                                {r.isActive ? t('adminResidents.statusActive') : t('adminResidents.statusBlocked')}
                                             </span>
                                         </td>
                                         <td>
@@ -311,13 +313,13 @@ const AdminResidents = () => {
                                                     className="small-btn"
                                                     onClick={() => openEdit(r)}
                                                 >
-                                                    Редактирай
+                                                    {t('adminResidents.btnEdit')}
                                                 </button>
                                                 <button
                                                     className="small-btn secondary"
                                                     onClick={() => resetPassword(r)}
                                                 >
-                                                    Ресет парола
+                                                    {t('adminResidents.btnResetPassword')}
                                                 </button>
                                             </div>
                                         </td>
@@ -338,11 +340,11 @@ const AdminResidents = () => {
                         <button className="admin-close-btn" onClick={closeEdit}>
                             ×
                         </button>
-                        <h2>Редакция на профил</h2>
+                        <h2>{t('adminResidents.modalTitle')}</h2>
                         <form onSubmit={saveResident} className="admin-edit-form">
                             <div className="form-row">
                                 <div className="form-group">
-                                    <label>Име</label>
+                                    <label>{t('adminResidents.labelName')}</label>
                                     <input
                                         type="text"
                                         name="name"
@@ -352,7 +354,7 @@ const AdminResidents = () => {
                                     />
                                 </div>
                                 <div className="form-group">
-                                    <label>Имейл</label>
+                                    <label>{t('adminResidents.labelEmail')}</label>
                                     <input
                                         type="email"
                                         name="email"
@@ -364,7 +366,7 @@ const AdminResidents = () => {
 
                             <div className="form-row">
                                 <div className="form-group">
-                                    <label>Сграда</label>
+                                    <label>{t('adminResidents.labelBuilding')}</label>
                                     <input
                                         type="text"
                                         name="building"
@@ -373,7 +375,7 @@ const AdminResidents = () => {
                                     />
                                 </div>
                                 <div className="form-group small">
-                                    <label>Вход</label>
+                                    <label>{t('adminResidents.labelEntrance')}</label>
                                     <input
                                         type="text"
                                         name="entrance"
@@ -382,7 +384,7 @@ const AdminResidents = () => {
                                     />
                                 </div>
                                 <div className="form-group small">
-                                    <label>Апартамент</label>
+                                    <label>{t('adminResidents.labelApartment')}</label>
                                     <input
                                         type="text"
                                         name="apartment"
@@ -394,7 +396,7 @@ const AdminResidents = () => {
 
                             <div className="form-row">
                                 <div className="form-group small">
-                                    <label>Живущи</label>
+                                    <label>{t('adminResidents.labelResidentsCount')}</label>
                                     <input
                                         type="number"
                                         name="residentsCount"
@@ -404,7 +406,7 @@ const AdminResidents = () => {
                                     />
                                 </div>
                                 <div className="form-group small">
-                                    <label>Баланс (лв.)</label>
+                                    <label>{t('adminResidents.labelBalance')}</label>
                                     <input
                                         type="number"
                                         step="0.01"
@@ -414,7 +416,7 @@ const AdminResidents = () => {
                                     />
                                 </div>
                                 <div className="form-group small">
-                                    <label>Задължение (лв.)</label>
+                                    <label>{t('adminResidents.labelTotalDebt')}</label>
                                     <input
                                         type="number"
                                         step="0.01"
@@ -427,7 +429,7 @@ const AdminResidents = () => {
 
                             <div className="form-row">
                                 <div className="form-group">
-                                    <label>Клиентски номер</label>
+                                    <label>{t('adminResidents.labelClientNum')}</label>
                                     <input
                                         type="text"
                                         name="clientNumber"
@@ -436,17 +438,17 @@ const AdminResidents = () => {
                                     />
                                 </div>
                                 <div className="form-group small">
-                                    <label>Роля</label>
+                                    <label>{t('adminResidents.labelRole')}</label>
                                     <select
                                         name="role"
                                         value={editForm.role}
                                         onChange={handleEditChange}
                                     >
-                                        <option value="Потребител">Потребител</option>
+                                        <option value="Потребител">{t('adminResidents.roleUser')}</option>
                                         <option value="Домоуправител">
-                                            Домоуправител
+                                            {t('adminResidents.roleManager')}
                                         </option>
-                                        <option value="Админ">Админ</option>
+                                        <option value="Админ">{t('adminResidents.roleAdmin')}</option>
                                     </select>
                                 </div>
                                 <div className="form-group checkbox-group">
@@ -457,7 +459,7 @@ const AdminResidents = () => {
                                             checked={editForm.isActive}
                                             onChange={handleEditChange}
                                         />
-                                        Активен профил
+                                        {t('adminResidents.labelActiveProfile')}
                                     </label>
                                 </div>
                             </div>
@@ -468,10 +470,10 @@ const AdminResidents = () => {
                                     className="cancel-btn"
                                     onClick={closeEdit}
                                 >
-                                    Отказ
+                                    {t('adminResidents.btnCancel')}
                                 </button>
                                 <button type="submit" className="save-btn">
-                                    Запази промените
+                                    {t('adminResidents.btnSaveChanges')}
                                 </button>
                             </div>
                         </form>

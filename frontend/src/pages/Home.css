@@ -7,7 +7,7 @@
 html,
 body {
     height: 100%;
-    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    
     scroll-behavior: smooth;
 }
 
@@ -312,6 +312,20 @@ main.main.home-main {
     transform: translateY(-6px);
     box-shadow: 0 12px 25px rgba(47, 82, 51, 0.25);
     border-color: #1e3d1e;
+}
+
+
+.service-card--link {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.service-card--link:hover {
+  transform: scale(1.02);
+  box-shadow: 0 12px 26px rgba(47, 82, 51, 0.18);
 }
 
 /* HOW IT WORKS */
