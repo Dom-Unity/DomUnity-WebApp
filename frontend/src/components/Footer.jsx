@@ -1,28 +1,30 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import "./Footer.css";
 
-const FAQ = [
-  {
-    q: "Как работи DomUnity?",
-    a: "DomUnity комбинира професионално управление на сгради с онлайн платформа за прозрачни отчети, сигнали и комуникация с живущите."
-  },
-  {
-    q: "Какво включва услугата домоуправител?",
-    a: "Административно управление, финансово обслужване, организация на ремонти/поддръжка и координация с доставчици според договорените услуги."
-  },
-  {
-    q: "Могат ли живущите да следят разходите?",
-    a: "Да — всеки апартамент има достъп до начисления, плащания и отчети (според правата в системата)."
-  },
-  {
-    q: "Как подавам сигнал за проблем?",
-    a: "Чрез профила си в клиентския портал (или чрез директен контакт с администратора, ако предпочитате)."
-  }
-];
-
 const Footer = () => {
+  const { t } = useTranslation();
   const [openIndex, setOpenIndex] = useState(null);
+
+  const FAQ = [
+    {
+      q: t('footer.faqQ1'),
+      a: t('footer.faqA1')
+    },
+    {
+      q: t('footer.faqQ2'),
+      a: t('footer.faqA2')
+    },
+    {
+      q: t('footer.faqQ3'),
+      a: t('footer.faqA3')
+    },
+    {
+      q: t('footer.faqQ4'),
+      a: t('footer.faqA4')
+    }
+  ];
 
   const toggleFaq = (idx) => {
     setOpenIndex((prev) => (prev === idx ? null : idx));
@@ -33,18 +35,18 @@ const Footer = () => {
       <div className="footer__container">
         {/* NEWSLETTER */}
         <div className="footer__newsletter">
-          <h2>Абонирай се за актуални новини и полезни съвети</h2>
+          <h2>{t('footer.newsletterTitle')}</h2>
 
           <form
             className="footer__newsletter-form"
             onSubmit={(e) => {
               e.preventDefault();
               // Тук за реална система: POST към backend / newsletter service
-              alert("Благодарим! Абонаментът е приет. (демо)");
+              alert(t('footer.newsletterAlert'));
             }}
           >
-            <input type="email" placeholder="Вашият e-mail *" required />
-            <button type="submit">Абониране</button>
+            <input type="email" placeholder={t('footer.newsletterPlaceholder')} required />
+            <button type="submit">{t('footer.newsletterBtn')}</button>
           </form>
         </div>
 
@@ -52,7 +54,7 @@ const Footer = () => {
         <div className="footer__bottom-area">
           {/* CONTACTS */}
           <div className="footer__contacts">
-            <h3>Контакти</h3>
+            <h3>{t('footer.contactsTitle')}</h3>
             <ul>
               <li>
                 <a href="tel:+359888440107">+359 88 844 0107</a>
@@ -61,8 +63,8 @@ const Footer = () => {
                 <a href="mailto:bobovlahov@gmail.com">bobovlahov@gmail.com</a>
               </li>
               <li>
-                гр. София, ж.к. Овча Купел 2<br />
-                бул. Президент Линкълн 1200
+                {t('footer.contactAddress1')}<br />
+                {t('footer.contactAddress2')}
               </li>
             </ul>
 
@@ -89,21 +91,21 @@ const Footer = () => {
 
           {/* LINKS */}
           <div className="footer__links">
-            <h3>Политики</h3>
+            <h3>{t('footer.policiesTitle')}</h3>
             <ul>
               <li>
                 <Link to="/terms" className="footer-link">
-                  Общи условия
+                  {t('footer.policyTerms')}
                 </Link>
               </li>
               <li>
                 <Link to="/privacy" className="footer-link">
-                  Политика за поверителност
+                  {t('footer.policyPrivacy')}
                 </Link>
               </li>
               <li>
                 <Link to="/contacts" className="footer-link">
-                  Свържи се с нас
+                  {t('footer.policyContact')}
                 </Link>
               </li>
             </ul>
@@ -111,7 +113,7 @@ const Footer = () => {
 
           {/* FAQ */}
           <div className="footer__faq">
-            <h3>Въпроси и отговори</h3>
+            <h3>{t('footer.faqTitle')}</h3>
 
             <div className="faq-list">
               {FAQ.map((item, idx) => {
@@ -139,7 +141,7 @@ const Footer = () => {
 
       {/* BOTTOM BAR */}
       <div className="footer__bottom">
-        <p>© 2025 DomUnity. Всички права запазени.</p>
+        <p>{t('footer.bottomText')}</p>
       </div>
     </footer>
   );
