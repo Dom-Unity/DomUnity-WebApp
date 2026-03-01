@@ -1,8 +1,10 @@
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import "./Offer.css";
 import { requestOffer, requestPresentation } from '../services/apiService';
 
 function Offer() {
+    const { t } = useTranslation();
     const [activeTab, setActiveTab] = useState("offer");
 
     const [offerData, setOfferData] = useState({
@@ -43,7 +45,7 @@ function Offer() {
     const handleOfferSubmit = async (e) => {
         e.preventDefault();
         if (!offerData.agree) {
-            setError("Трябва да приемете политиката за поверителност.");
+            setError(t('offer.errorAgree'));
             return;
         }
         setLoading(true);
@@ -53,13 +55,13 @@ function Offer() {
         try {
             const result = await requestOffer(offerData);
             if (result.success) {
-                setSuccess('Офертата е изпратена успешно!');
+                setSuccess(t('offer.successOffer'));
                 setOfferData({ phone: '', email: '', city: 'София', numProperties: 1, address: '', additionalInfo: '', agree: false });
             } else {
-                setError(result.message || 'Грешка при изпращане.');
+                setError(result.message || t('offer.errorSend'));
             }
         } catch (err) {
-            setError('Грешка при изпращане. Опитайте по-късно.');
+            setError(t('offer.networkError'));
         } finally {
             setLoading(false);
         }
@@ -68,7 +70,7 @@ function Offer() {
     const handlePresentationSubmit = async (e) => {
         e.preventDefault();
         if (!presentationData.agree) {
-            setError("Трябва да приемете политиката за поверителност.");
+            setError(t('offer.errorAgree'));
             return;
         }
         setLoading(true);
@@ -78,13 +80,13 @@ function Offer() {
         try {
             const result = await requestPresentation(presentationData);
             if (result.success) {
-                setSuccess('Заявката за презентация е изпратена успешно!');
+                setSuccess(t('offer.successPres'));
                 setPresentationData({ date: '', buildingType: 'Ново строителство', phone: '', email: '', address: '', additionalInfo: '', agree: false });
             } else {
-                setError(result.message || 'Грешка при изпращане.');
+                setError(result.message || t('offer.errorSend'));
             }
         } catch (err) {
-            setError('Грешка при изпращане. Опитайте по-късно.');
+            setError(t('offer.networkError'));
         } finally {
             setLoading(false);
         }
@@ -94,9 +96,9 @@ function Offer() {
         <main className="offer-page">
 
             <div className="page-top">
-                <h1>{activeTab === "offer" ? "Вземи оферта" : "Заяви презентация"}</h1>
+                <h1>{activeTab === "offer" ? t('offer.tabOffer') : t('offer.tabPresentation')}</h1>
                 <p className="page-subtitle">
-                    Попълнете формата и наш консултант ще се свърже с вас до 24 часа.
+                    {t('offer.pageSubtitle')}
                 </p>
             </div>
 
@@ -105,14 +107,14 @@ function Offer() {
                     className={`tab ${activeTab === "offer" ? "active" : ""}`}
                     onClick={() => setActiveTab("offer")}
                 >
-                    Вземи оферта
+                    {t('offer.tabOffer')}
                 </button>
 
                 <button
                     className={`tab ${activeTab === "presentation" ? "active" : ""}`}
                     onClick={() => setActiveTab("presentation")}
                 >
-                    Заяви презентация
+                    {t('offer.tabPresentation')}
                 </button>
             </div>
 
@@ -122,11 +124,11 @@ function Offer() {
                 {activeTab === "offer" ? (
                     <form onSubmit={handleOfferSubmit} className="form-side">
 
-                        <div className="form-section-title">Информация за контакт</div>
+                        <div className="form-section-title">{t('offer.contactInfoTitle')}</div>
 
                         <div className="form-row">
                             <div className="form-group">
-                                <label>Телефон *</label>
+                                <label>{t('offer.phoneLabel')}</label>
                                 <input
                                     name="phone"
                                     value={offerData.phone}
@@ -136,7 +138,7 @@ function Offer() {
                             </div>
 
                             <div className="form-group">
-                                <label>E-mail *</label>
+                                <label>{t('offer.emailLabel')}</label>
                                 <input
                                     type="email"
                                     name="email"
@@ -147,22 +149,22 @@ function Offer() {
                             </div>
                         </div>
 
-                        <div className="form-section-title">Информация за имота</div>
+                        <div className="form-section-title">{t('offer.propertyInfoTitle')}</div>
 
                         <div className="form-row">
                             <div className="form-group">
-                                <label>Град *</label>
+                                <label>{t('offer.cityLabel')}</label>
                                 <select name="city" value={offerData.city} onChange={handleOfferChange}>
-                                    <option>София</option>
-                                    <option>Пловдив</option>
-                                    <option>Варна</option>
-                                    <option>Бургас</option>
-                                    <option>Друг</option>
+                                    <option value="София">{t('offer.citySofia')}</option>
+                                    <option value="Пловдив">{t('offer.cityPlovdiv')}</option>
+                                    <option value="Варна">{t('offer.cityVarna')}</option>
+                                    <option value="Бургас">{t('offer.cityBurgas')}</option>
+                                    <option value="Друг">{t('offer.cityOther')}</option>
                                 </select>
                             </div>
 
                             <div className="form-group">
-                                <label>Брой обекти *</label>
+                                <label>{t('offer.numPropertiesLabel')}</label>
                                 <input
                                     type="number"
                                     min="1"
@@ -175,7 +177,7 @@ function Offer() {
                         </div>
 
                         <div className="form-group">
-                            <label>Адрес *</label>
+                            <label>{t('offer.addressLabel')}</label>
                             <input
                                 name="address"
                                 value={offerData.address}
@@ -202,20 +204,20 @@ function Offer() {
                                 onChange={handleOfferChange}
                             />
                             <label htmlFor="agree-offer">
-                                Съгласен съм с политиката за поверителност *
+                                {t('offer.agreeOfferLabel')}
                             </label>
                         </div>
 
-                        <button className="submit-btn">Изпрати</button>
+                        <button className="submit-btn">{t('offer.btnSubmitOffer')}</button>
                     </form>
                 ) : (
                     <form onSubmit={handlePresentationSubmit} className="form-side">
 
-                        <div className="form-section-title">Информация за презентация</div>
+                        <div className="form-section-title">{t('offer.presentationInfoTitle')}</div>
 
                         <div className="form-row">
                             <div className="form-group">
-                                <label>Дата *</label>
+                                <label>{t('offer.dateLabel')}</label>
                                 <input
                                     type="date"
                                     name="date"
@@ -226,25 +228,25 @@ function Offer() {
                             </div>
 
                             <div className="form-group">
-                                <label>Тип сграда *</label>
+                                <label>{t('offer.buildingTypeLabel')}</label>
                                 <select
                                     name="buildingType"
                                     value={presentationData.buildingType}
                                     onChange={handlePresentationChange}
                                 >
-                                    <option>Ново строителство</option>
-                                    <option>Старо строителство</option>
-                                    <option>Комплекс от затворен тип</option>
-                                    <option>Друго</option>
+                                    <option value="Ново строителство">{t('offer.buildingTypeNew')}</option>
+                                    <option value="Старо строителство">{t('offer.buildingTypeOld')}</option>
+                                    <option value="Комплекс от затворен тип">{t('offer.buildingTypeComplex')}</option>
+                                    <option value="Друго">{t('offer.buildingTypeOther')}</option>
                                 </select>
                             </div>
                         </div>
 
-                        <div className="form-section-title">Контактна информация</div>
+                        <div className="form-section-title">{t('offer.contactInfoTitlePres')}</div>
 
                         <div className="form-row">
                             <div className="form-group">
-                                <label>Телефон *</label>
+                                <label>{t('offer.phoneLabel')}</label>
                                 <input
                                     name="phone"
                                     value={presentationData.phone}
@@ -254,7 +256,7 @@ function Offer() {
                             </div>
 
                             <div className="form-group">
-                                <label>E-mail *</label>
+                                <label>{t('offer.emailLabel')}</label>
                                 <input
                                     type="email"
                                     name="email"
@@ -266,7 +268,7 @@ function Offer() {
                         </div>
 
                         <div className="form-group">
-                            <label>Адрес</label>
+                            <label>{t('offer.addressLabelPres')}</label>
                             <input
                                 name="address"
                                 value={presentationData.address}
@@ -275,7 +277,7 @@ function Offer() {
                         </div>
 
                         <div className="form-group">
-                            <label>Допълнителна информация</label>
+                            <label>{t('offer.additionalInfoLabelPres')}</label>
                             <textarea
                                 name="additionalInfo"
                                 value={presentationData.additionalInfo}
@@ -292,11 +294,11 @@ function Offer() {
                                 onChange={handlePresentationChange}
                             />
                             <label htmlFor="agree-presentation">
-                                Съгласен съм с политиката за поверителност *
+                                {t('offer.agreePresLabel')}
                             </label>
                         </div>
 
-                        <button className="submit-btn">Заяви презентация</button>
+                        <button className="submit-btn">{t('offer.btnSubmitPres')}</button>
                     </form>
                 )}
             </div>

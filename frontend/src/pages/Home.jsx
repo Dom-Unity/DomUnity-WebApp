@@ -1,8 +1,10 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import "./Home.css";
 
 function Home() {
+    const { t } = useTranslation();
     return (
         <main className="main home-main">
             <section className="hero">
@@ -13,37 +15,32 @@ function Home() {
                             alt="DomUnity Logo"
                             className="hero-logo"
                         />
-                        <h1>
-                            Професионално управление на<br />
-                            сгради и етажна собственост
-                        </h1>
+                        <h1 dangerouslySetInnerHTML={{ __html: t('home.heroTitle') }}></h1>
                         <p>
-                            DomUnity поема грижата за вашия вход – административно,
-                            финансово и техническо управление с пълна прозрачност за
-                            всеки живущ.
+                            {t('home.heroSubtitle')}
                         </p>
 
                         <div className="hero-buttons">
                             <Link to="/offer" className="btn secondary">
-                                Вземи оферта
+                                {t('home.btnOffer')}
                             </Link>
                             <Link to="/login" className="btn primary">
-                                Вход за клиенти
+                                {t('home.btnLogin')}
                             </Link>
                         </div>
 
                         <div className="hero-highlights">
                             <div className="hero-highlight">
-                                <span className="value">24/7</span>
-                                <span className="label">комуникация и сигнали</span>
+                                <span className="value">{t('home.highlight1Value')}</span>
+                                <span className="label">{t('home.highlight1Label')}</span>
                             </div>
                             <div className="hero-highlight">
-                                <span className="value">100%</span>
-                                <span className="label">прозрачност на разходите</span>
+                                <span className="value">{t('home.highlight2Value')}</span>
+                                <span className="label">{t('home.highlight2Label')}</span>
                             </div>
                             <div className="hero-highlight">
-                                <span className="value">1 платформа</span>
-                                <span className="label">за домоуправител и живущи</span>
+                                <span className="value">{t('home.highlight3Value')}</span>
+                                <span className="label">{t('home.highlight3Label')}</span>
                             </div>
                         </div>
                     </div>
@@ -52,40 +49,34 @@ function Home() {
 
             <section className="section about" id="about">
                 <div className="section-header">
-                    <h2>За кого е DomUnity?</h2>
+                    <h2>{t('home.aboutTitle')}</h2>
                     <p>
-                        Подходящо решение както за вече организирани етажни
-                        собствености, така и за нови сгради, които тепърва
-                        избират професионален домоуправител.
+                        {t('home.aboutSubtitle')}
                     </p>
                 </div>
 
                 <div className="about-grid">
                     <div className="about-card">
-                        <h3>За собственици и живущи</h3>
+                        <h3>{t('home.aboutCard1Title')}</h3>
                         <p>
-                            Достъп до актуален баланс, история на плащанията и
-                            всички разходи по сградата на едно място – без
-                            хартиени бележки и спорове.
+                            {t('home.aboutCard1Desc')}
                         </p>
                         <ul>
-                            <li>Личен профил за всеки апартамент</li>
-                            <li>Преглед на начисления и плащания</li>
-                            <li>Известия при просрочия и нови такси</li>
+                            <li>{t('home.aboutCard1Bullet1')}</li>
+                            <li>{t('home.aboutCard1Bullet2')}</li>
+                            <li>{t('home.aboutCard1Bullet3')}</li>
                         </ul>
                     </div>
 
                     <div className="about-card">
-                        <h3>За управители на сгради</h3>
+                        <h3>{t('home.aboutCard2Title')}</h3>
                         <p>
-                            Професионална система за управление на няколко входа,
-                            сгради и комплекси – с автоматизирани отчети и
-                            централизирана комуникация.
+                            {t('home.aboutCard2Desc')}
                         </p>
                         <ul>
-                            <li>Финансови отчети по вход и сграда</li>
-                            <li>История на ремонти и поддръжка</li>
-                            <li>Преглед на задължения по апартамент</li>
+                            <li>{t('home.aboutCard2Bullet1')}</li>
+                            <li>{t('home.aboutCard2Bullet2')}</li>
+                            <li>{t('home.aboutCard2Bullet3')}</li>
                         </ul>
                     </div>
                 </div>
@@ -93,95 +84,65 @@ function Home() {
 
             <section className="section services" id="services">
                 <div className="section-header">
-                    <h2>Какво поемаме вместо вас</h2>
+                    <h2>{t('home.servicesTitle')}</h2>
                     <p>
-                        Пълно обслужване на етажната собственост – от документацията
-                        до ежедневната поддръжка и комуникацията с живущите.
+                        {t('home.servicesSubtitle')}
                     </p>
                 </div>
 
                 <div className="services-grid">
-                    <div className="service-card">
-                        <img
-                            src="/images/service_admin.png"
-                            alt="Административно управление"
-                        />
-                        <h3>Административно управление</h3>
-                        <p>
-                            Организация на общи събрания, протоколи, регистри,
-                            договори и кореспонденция с институции.
-                        </p>
-                    </div>
+                    <Link to="/services?tab=admin" className="service-card service-card--link">
+                        <img src="/images/service_admin.png" alt={t('home.serviceAdminTitle')} />
+                        <h3>{t('home.serviceAdminTitle')}</h3>
+                        <p>{t('home.serviceAdminDesc')}</p>
+                    </Link>
 
-                    <div className="service-card">
-                        <img
-                            src="/images/service_finance.png"
-                            alt="Финансово обслужване"
-                        />
-                        <h3>Финансово обслужване</h3>
-                        <p>
-                            Събиране на такси, разпределяне на разходи, месечни
-                            и годишни отчети с пълна видимост за собствениците.
-                        </p>
-                    </div>
+                    <Link to="/services?tab=finance" className="service-card service-card--link">
+                        <img src="/images/service_finance.png" alt={t('home.serviceFinanceTitle')} />
+                        <h3>{t('home.serviceFinanceTitle')}</h3>
+                        <p>{t('home.serviceFinanceDesc')}</p>
+                    </Link>
 
-                    <div className="service-card">
-                        <img
-                            src="/images/service_maintenance.png"
-                            alt="Техническа поддръжка"
-                        />
-                        <h3>Техническа поддръжка</h3>
-                        <p>
-                            Организация на ремонти, профилактика на асансьори,
-                            осветление и общи части, поддръжка на инсталации.
-                        </p>
-                    </div>
+                    <Link to="/services?tab=maintenance" className="service-card service-card--link">
+                        <img src="/images/service_maintenance.png" alt={t('home.serviceMaintenanceTitle')} />
+                        <h3>{t('home.serviceMaintenanceTitle')}</h3>
+                        <p>{t('home.serviceMaintenanceDesc')}</p>
+                    </Link>
 
-                    <div className="service-card">
-                        <img
-                            src="/images/service_cleaning.png"
-                            alt="Почистване и хигиена"
-                        />
-                        <h3>Почистване и хигиена</h3>
-                        <p>
-                            Професионално почистване на входове, стълбища и
-                            прилежащи площи по фиксиран график.
-                        </p>
-                    </div>
+                    <Link to="/services?tab=cleaning" className="service-card service-card--link">
+                        <img src="/images/service_cleaning.png" alt={t('home.serviceCleaningTitle')} />
+                        <h3>{t('home.serviceCleaningTitle')}</h3>
+                        <p>{t('home.serviceCleaningDesc')}</p>
+                    </Link>
                 </div>
             </section>
 
             <section className="section how-it-works">
                 <div className="section-header">
-                    <h2>Как работи DomUnity</h2>
-                    <p>Три ясни стъпки към подредена и спокойна сграда.</p>
+                    <h2>{t('home.howItWorksTitle')}</h2>
+                    <p>{t('home.howItWorksSubtitle')}</p>
                 </div>
 
                 <div className="steps-grid">
                     <div className="step-card">
                         <span className="step-number">1</span>
-                        <h3>Заявка за оферта</h3>
+                        <h3>{t('home.step1Title')}</h3>
                         <p>
-                            Изпращате ни информация за сградата – брой входове,
-                            апартаменти и специфики. Получавате персонално
-                            предложение.
+                            {t('home.step1Desc')}
                         </p>
                     </div>
                     <div className="step-card">
                         <span className="step-number">2</span>
-                        <h3>Подписване на договор</h3>
+                        <h3>{t('home.step2Title')}</h3>
                         <p>
-                            Уточняваме услугите, графиците и начините на
-                            комуникация. Всеки собственик получава профил в
-                            DomUnity.
+                            {t('home.step2Desc')}
                         </p>
                     </div>
                     <div className="step-card">
                         <span className="step-number">3</span>
-                        <h3>Ежедневно управление</h3>
+                        <h3>{t('home.step3Title')}</h3>
                         <p>
-                            Ние поемаме административните, финансовите и
-                            техническите задачи, а вие следите всичко онлайн.
+                            {t('home.step3Desc')}
                         </p>
                     </div>
                 </div>
@@ -190,34 +151,31 @@ function Home() {
             <section className="section advantages">
                 <div className="advantages-inner">
                     <div className="advantages-text">
-                        <h2>Защо да изберете DomUnity?</h2>
+                        <h2>{t('home.advantagesTitle')}</h2>
                         <p>
-                            Комбинираме професионален домоуправител с модерен
-                            софтуер, така че всяка такса, ремонт и решение да
-                            бъдат проследими и ясни за всички.
+                            {t('home.advantagesDesc')}
                         </p>
 
                         <ul className="advantages-list">
-                            <li>Прозрачни отчети за всяка сграда и вход</li>
-                            <li>Онлайн достъп до информация 24/7</li>
-                            <li>Ясни правила и регламентирани процеси</li>
-                            <li>Отговорен партньор за дългосрочно управление</li>
+                            <li>{t('home.advBullet1')}</li>
+                            <li>{t('home.advBullet2')}</li>
+                            <li>{t('home.advBullet3')}</li>
+                            <li>{t('home.advBullet4')}</li>
                         </ul>
                     </div>
 
                     <div className="advantages-side">
                         <div className="advantages-box">
-                            <h3>Готови ли сте за подредена етажна собственост?</h3>
+                            <h3>{t('home.advBoxTitle')}</h3>
                             <p>
-                                Свържете се с нас за среща или изпратете запитване
-                                за конкретна оферта за вашата сграда.
+                                {t('home.advBoxDesc')}
                             </p>
                             <div className="adv-buttons">
                                 <Link to="/offer" className="btn primary">
-                                    Заяви оферта
+                                    {t('home.btnRequestOffer')}
                                 </Link>
                                 <Link to="/contacts" className="btn secondary">
-                                    Контакти
+                                    {t('home.btnContacts')}
                                 </Link>
                             </div>
                         </div>
