@@ -20,6 +20,10 @@ i18n
     .init({
         resources,
         fallbackLng: 'bg',
+        detection: {
+            order: ['localStorage'],
+            caches: ['localStorage']
+        },
         debug: false,
         interpolation: {
             escapeValue: false, // not needed for react as it escapes by default
