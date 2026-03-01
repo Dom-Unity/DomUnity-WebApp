@@ -506,5 +506,28 @@
     "btnHome": "Home",
     "btnContact": "Contact Us",
     "smallprint": "* This text is a placeholder and not legal advice. For actual terms and conditions, consult a lawyer."
+  },
+  "footer": {
+    "newsletterTitle": "Subscribe for the latest news and useful tips",
+    "newsletterPlaceholder": "Your email *",
+    "newsletterBtn": "Subscribe",
+    "newsletterAlert": "Thank you! Subscription received. (demo)",
+    "contactsTitle": "Contacts",
+    "contactAddress1": "Sofia, Ovcha Kupel 2",
+    "contactAddress2": "President Lincoln Blvd 1200",
+    "policiesTitle": "Policies",
+    "policyTerms": "Terms and Conditions",
+    "policyPrivacy": "Privacy Policy",
+    "policyContact": "Contact Us",
+    "faqTitle": "Questions and Answers",
+    "faqQ1": "How does DomUnity work?",
+    "faqA1": "DomUnity combines professional building management with an online platform for transparent reports, alerts, and communication with residents.",
+    "faqQ2": "What does the building manager service include?",
+    "faqA2": "Administrative management, financial services, organization of repairs/maintenance, and coordination with suppliers according to agreed services.",
+    "faqQ3": "Can residents track expenses?",
+    "faqA3": "Yes — every apartment has access to charges, payments, and reports (according to system rights).",
+    "faqQ4": "How do I report a problem?",
+    "faqA4": "Through your profile in the client portal (or via direct contact with the administrator, if you prefer).",
+    "bottomText": "© 2025 DomUnity. All rights reserved."
   }
 }
