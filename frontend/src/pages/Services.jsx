@@ -1,13 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import "./Services.css";
-
-const TABS = [
-  { key: "admin", label: "Административно" },
-  { key: "finance", label: "Финансово" },
-  { key: "maintenance", label: "Техническо" },
-  { key: "cleaning", label: "Почистване" },
-];
 
 function useQuery() {
   const { search } = useLocation();
@@ -16,9 +10,18 @@ function useQuery() {
 
 export default function Services() {
   const query = useQuery();
+  const { t } = useTranslation();
+
+  const TABS = [
+    { key: "admin", label: t('services.tabAdmin') },
+    { key: "finance", label: t('services.tabFinance') },
+    { key: "maintenance", label: t('services.tabMaintenance') },
+    { key: "cleaning", label: t('services.tabCleaning') },
+  ];
+
   const initialTab = query.get("tab") || "admin";
   const [activeTab, setActiveTab] = useState(
-    TABS.some((t) => t.key === initialTab) ? initialTab : "admin"
+    TABS.some((tab) => tab.key === initialTab) ? initialTab : "admin"
   );
 
   // Ако кликнеш от Home и URL-а е с tab=..., да се отрази
@@ -33,51 +36,47 @@ export default function Services() {
 
   const content = {
     admin: {
-      title: "Административно управление",
+      title: t('services.contentAdminTitle'),
       image: "/images/service_admin.png",
-      intro:
-        "Поемаме документацията и организацията на етажната собственост, така че всичко да е законно, подредено и проследимо.",
+      intro: t('services.contentAdminIntro'),
       bullets: [
-        "Организация на общи събрания и протоколи",
-        "Водене на регистри и документация",
-        "Комуникация с институции и доставчици",
-        "Изготвяне и съхранение на договори и решения",
+        t('services.contentAdminBullet1'),
+        t('services.contentAdminBullet2'),
+        t('services.contentAdminBullet3'),
+        t('services.contentAdminBullet4'),
       ],
     },
     finance: {
-      title: "Финансово обслужване",
+      title: t('services.contentFinanceTitle'),
       image: "/images/service_finance.png",
-      intro:
-        "Прозрачни начисления, проследими плащания и ясни отчети за всеки апартамент – без спорове и недоразумения.",
+      intro: t('services.contentFinanceIntro'),
       bullets: [
-        "Начисления и разпределение на разходи",
-        "История на плащанията по апартамент",
-        "Месечни/годишни отчети по вход и сграда",
-        "Известия при просрочия и натрупани задължения",
+        t('services.contentFinanceBullet1'),
+        t('services.contentFinanceBullet2'),
+        t('services.contentFinanceBullet3'),
+        t('services.contentFinanceBullet4'),
       ],
     },
     maintenance: {
-      title: "Техническа поддръжка",
+      title: t('services.contentMaintenanceTitle'),
       image: "/images/service_maintenance.png",
-      intro:
-        "Ремонти и профилактика без хаос – организираме, контролираме и документираме всичко по общите части и инсталациите.",
+      intro: t('services.contentMaintenanceIntro'),
       bullets: [
-        "Организация на ремонти и оферти",
-        "Профилактика на асансьори и съоръжения",
-        "Поддръжка на осветление и общи части",
-        "Координация на аварии и сервизни посещения",
+        t('services.contentMaintenanceBullet1'),
+        t('services.contentMaintenanceBullet2'),
+        t('services.contentMaintenanceBullet3'),
+        t('services.contentMaintenanceBullet4'),
       ],
     },
     cleaning: {
-      title: "Почистване и хигиена",
+      title: t('services.contentCleaningTitle'),
       image: "/images/service_cleaning.png",
-      intro:
-        "Чист вход и общи части по ясен график — с контрол на качеството и обратна връзка от живущите.",
+      intro: t('services.contentCleaningIntro'),
       bullets: [
-        "Почистване на стълбища и площадки",
-        "Почистване на входове и витрини",
-        "Хигиенизиране на общи зони",
-        "Гъвкави графици според нуждите на сградата",
+        t('services.contentCleaningBullet1'),
+        t('services.contentCleaningBullet2'),
+        t('services.contentCleaningBullet3'),
+        t('services.contentCleaningBullet4'),
       ],
     },
   };
@@ -88,10 +87,9 @@ export default function Services() {
     <main className="services-page">
       <div className="services-card">
         <header className="services-header">
-          <h1>Услуги</h1>
+          <h1>{t('services.pageTitle')}</h1>
           <p>
-            Изберете услуга, за да видите подробна информация. Всичко е организирано
-            и прозрачно — както за домоуправителя, така и за живущите.
+            {t('services.pageSubtitle')}
           </p>
 
           <div className="services-tabs">
@@ -125,10 +123,10 @@ export default function Services() {
 
             <div className="services-actions">
               <Link to="/offer" className="services-btn services-btn--primary">
-                Поискай оферта
+                {t('services.btnOffer')}
               </Link>
               <Link to="/contacts" className="services-btn services-btn--secondary">
-                Свържи се с нас
+                {t('services.btnContacts')}
               </Link>
             </div>
           </div>

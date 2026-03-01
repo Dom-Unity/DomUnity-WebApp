@@ -1,6 +1,8 @@
 import React, { useMemo, useState } from "react";
 import "./ForgottenPassword.css";
 import { Link } from "react-router-dom";
+import i18n from "../i18n";
+import { useTranslation } from "react-i18next";
 
 /**
  * Очакван backend (пример):
@@ -25,19 +27,20 @@ async function sendForgottenPasswordRequest(name, email) {
   }
 
   if (!res.ok) {
-    const msg = data?.message || "Грешка при изпращане на заявката. Опитайте по-късно.";
+    const msg = data?.message || i18n.t('auth.reqError');
     throw new Error(msg);
   }
 
   // ако има success флаг
   if (data && data.success === false) {
-    throw new Error(data.message || "Заявката не можа да бъде обработена.");
+    throw new Error(data.message || i18n.t('auth.reqFailed'));
   }
 
   return data || { success: true };
 }
 
 export default function ForgottenPassword() {
+  const { t } = useTranslation();
   const [formData, setFormData] = useState({ name: "", email: "" });
   const [error, setError] = useState("");
   const [sent, setSent] = useState(false);
@@ -65,7 +68,7 @@ export default function ForgottenPassword() {
     setError("");
 
     if (!isValid) {
-      setError("Моля, въведете име и имейл.");
+      setError(t('auth.validationError'));
       return;
     }
 
@@ -74,7 +77,7 @@ export default function ForgottenPassword() {
       await sendForgottenPasswordRequest(formData.name.trim(), formData.email.trim());
       setSent(true);
     } catch (err) {
-      setError(err?.message || "Възникна грешка. Опитайте по-късно.");
+      setError(err?.message || t('auth.genericError'));
       console.error("ForgottenPassword error:", err);
     } finally {
       setLoading(false);
@@ -92,9 +95,9 @@ export default function ForgottenPassword() {
           />
         </div>
 
-        <h2 className="forgot-title">Забравена парола</h2>
+        <h2 className="forgot-title">{t('auth.forgotMainTitle')}</h2>
         <p className="forgot-subtitle">
-          Въведете име и имейл. Заявката отива до администратора, който ще ви съдейства.
+          {t('auth.forgotSubtitle')}
         </p>
 
         {error && (
@@ -106,7 +109,7 @@ export default function ForgottenPassword() {
         {!sent ? (
           <form className="forgot-form" onSubmit={handleSubmit}>
             <div className="input-group">
-              <label htmlFor="name">Име и фамилия*</label>
+              <label htmlFor="name">{t('auth.nameLabel')}*</label>
               <input
                 id="name"
                 name="name"
@@ -120,7 +123,7 @@ export default function ForgottenPassword() {
             </div>
 
             <div className="input-group">
-              <label htmlFor="email">Имейл адрес*</label>
+              <label htmlFor="email">{t('auth.emailLabel')}</label>
               <input
                 id="email"
                 name="email"
@@ -138,26 +141,26 @@ export default function ForgottenPassword() {
               className="btn-forgot"
               disabled={loading || !isValid}
             >
-              {loading ? "Изпращане..." : "Изпрати заявка до админа"}
+              {loading ? t('auth.btnForgotLoading') : t('auth.btnForgot')}
             </button>
 
             <div className="forgot-links">
-              <Link to="/login">Обратно към вход</Link>
+              <Link to="/login">{t('auth.backToLogin')}</Link>
             </div>
           </form>
         ) : (
           <div className="forgot-success">
-            <div className="forgot-success-badge">✅ Заявката е изпратена</div>
+            <div className="forgot-success-badge">{t('auth.successBadge')}</div>
             <p className="forgot-success-text">
-              Администраторът ще прегледа заявката и ще се свърже с вас по имейл.
+              {t('auth.successText')}
             </p>
 
             <button className="btn-forgot" onClick={reset}>
-              Нова заявка
+              {t('auth.btnNewRequest')}
             </button>
 
             <div className="forgot-links" style={{ marginTop: 14 }}>
-              <Link to="/login">Обратно към вход</Link>
+              <Link to="/login">{t('auth.backToLogin')}</Link>
             </div>
           </div>
         )}

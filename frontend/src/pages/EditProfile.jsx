@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import "./EditProfile.css";
 import { getProfile, isAuthenticated } from "../services/apiService";
 
 const EditProfile = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
 
@@ -78,12 +80,12 @@ const EditProfile = () => {
     e.preventDefault();
 
     if (!selectedFile) {
-      alert("Моля, изберете нова снимка, преди да запазите.");
+      alert(t('editProfile.noPhotoAlert'));
       return;
     }
 
     console.log("Uploading new avatar:", selectedFile);
-    alert("Профилната снимка е обновена успешно! (демо)");
+    alert(t('editProfile.updateSuccessAlert'));
 
     navigate("/profile");
   };
@@ -106,17 +108,17 @@ const EditProfile = () => {
     const confirmP = passwordForm.confirmNewPassword.trim();
 
     if (!oldP || !newP || !confirmP) {
-      setPasswordError("Моля, попълнете всички полета.");
+      setPasswordError(t('editProfile.fillAllFields'));
       return;
     }
 
     if (newP.length < 6) {
-      setPasswordError("Новата парола трябва да бъде поне 6 символа.");
+      setPasswordError(t('editProfile.passwordLength'));
       return;
     }
 
     if (newP !== confirmP) {
-      setPasswordError("Новата парола и повторението не съвпадат.");
+      setPasswordError(t('editProfile.passwordMismatch'));
       return;
     }
 
@@ -126,11 +128,11 @@ const EditProfile = () => {
       // await changePassword(oldP, newP);
       console.log("Change password:", { oldPassword: oldP, newPassword: newP });
 
-      setPasswordSuccess("Паролата е сменена успешно! (демо)");
+      setPasswordSuccess(t('editProfile.passwordSuccess'));
       setPasswordForm({ oldPassword: "", newPassword: "", confirmNewPassword: "" });
     } catch (err) {
       console.error("Change password error:", err);
-      setPasswordError("Грешка при смяна на парола. Опитайте по-късно.");
+      setPasswordError(t('editProfile.passwordError'));
     } finally {
       setPasswordLoading(false);
     }
@@ -139,7 +141,7 @@ const EditProfile = () => {
   if (loading) {
     return (
       <main className="edit-profile-page">
-        <p style={{ textAlign: "center", padding: "2rem" }}>Зареждане...</p>
+        <p style={{ textAlign: "center", padding: "2rem" }}>{t('editProfile.loading')}</p>
       </main>
     );
   }
@@ -148,10 +150,9 @@ const EditProfile = () => {
     <main className="edit-profile-page">
       <div className="edit-profile-card">
         <header className="edit-profile-header">
-          <h1>Редакция на профил</h1>
+          <h1>{t('editProfile.pageTitle')}</h1>
           <p>
-            Тук можете да смените само своята профилна снимка. Останалите данни
-            се управляват от администратор.
+            {t('editProfile.pageSubtitle')}
           </p>
         </header>
 
@@ -163,20 +164,20 @@ const EditProfile = () => {
 
             <form onSubmit={handleSubmit} className="avatar-form">
               <label className="file-label">
-                <span>Изберете нова снимка</span>
+                <span>{t('editProfile.chooseNewPhoto')}</span>
                 <input type="file" accept="image/*" onChange={handleFileChange} />
               </label>
 
               <p className="file-hint">
-                Поддържани формати: JPG, PNG. Препоръчителен размер: 400×400 px.
+                {t('editProfile.photoHint')}
               </p>
 
               <div className="edit-profile-actions">
                 <button type="submit" className="btn-save">
-                  Запази снимката
+                  {t('editProfile.btnSavePhoto')}
                 </button>
                 <Link to="/profile" className="btn-cancel">
-                  Отказ
+                  {t('editProfile.btnCancel')}
                 </Link>
               </div>
             </form>
@@ -184,45 +185,44 @@ const EditProfile = () => {
 
           <div className="edit-profile-right">
             <div className="info-block">
-              <h2>Потребителски данни</h2>
+              <h2>{t('editProfile.userDataTitle')}</h2>
               <div className="info-row">
-                <span className="info-label">Име:</span>
+                <span className="info-label">{t('editProfile.labelName')}</span>
                 <span className="info-value">{user.name}</span>
               </div>
               <div className="info-row">
-                <span className="info-label">E-mail:</span>
+                <span className="info-label">{t('editProfile.labelEmail')}</span>
                 <span className="info-value">{user.email}</span>
               </div>
               <div className="info-row">
-                <span className="info-label">Сграда:</span>
+                <span className="info-label">{t('editProfile.labelBuilding')}</span>
                 <span className="info-value">{user.building}</span>
               </div>
               <div className="info-row">
-                <span className="info-label">Вход:</span>
+                <span className="info-label">{t('editProfile.labelEntrance')}</span>
                 <span className="info-value">{user.entrance}</span>
               </div>
               <div className="info-row">
-                <span className="info-label">Апартамент:</span>
+                <span className="info-label">{t('editProfile.labelApartment')}</span>
                 <span className="info-value">{user.apartment}</span>
               </div>
               <div className="info-row">
-                <span className="info-label">Клиентски номер:</span>
+                <span className="info-label">{t('editProfile.labelClientNumber')}</span>
                 <span className="info-value">{user.clientNumber}</span>
               </div>
             </div>
 
             <div className="info-note">
-              Ако желаете промяна на имейл, име или други данни за профила, моля
-              свържете се с домоуправителя или администратора на системата.
+              {t('editProfile.infoNote')}
             </div>
           </div>
         </section>
 
         {/* NEW: Change Password box under left/right */}
         <section className="password-card">
-          <h2 className="password-title">Смяна на парола</h2>
+          <h2 className="password-title">{t('editProfile.passwordTitle')}</h2>
           <p className="password-subtitle">
-            За по-голяма сигурност въведете старата си парола и задайте нова.
+            {t('editProfile.passwordSubtitle')}
           </p>
 
           {passwordError && <div className="password-alert password-alert--error">{passwordError}</div>}
@@ -231,7 +231,7 @@ const EditProfile = () => {
           <form className="password-form" onSubmit={handlePasswordSubmit}>
             <div className="password-grid">
               <div className="password-field">
-                <label htmlFor="oldPassword">Стара парола</label>
+                <label htmlFor="oldPassword">{t('editProfile.labelOldPassword')}</label>
                 <input
                   id="oldPassword"
                   name="oldPassword"
@@ -244,7 +244,7 @@ const EditProfile = () => {
               </div>
 
               <div className="password-field">
-                <label htmlFor="newPassword">Нова парола</label>
+                <label htmlFor="newPassword">{t('editProfile.labelNewPassword')}</label>
                 <input
                   id="newPassword"
                   name="newPassword"
@@ -257,7 +257,7 @@ const EditProfile = () => {
               </div>
 
               <div className="password-field">
-                <label htmlFor="confirmNewPassword">Повтори новата парола</label>
+                <label htmlFor="confirmNewPassword">{t('editProfile.labelConfirmPassword')}</label>
                 <input
                   id="confirmNewPassword"
                   name="confirmNewPassword"
@@ -272,7 +272,7 @@ const EditProfile = () => {
 
             <div className="password-actions">
               <button type="submit" className="btn-save" disabled={passwordLoading}>
-                {passwordLoading ? "Запазване..." : "Запази"}
+                {passwordLoading ? t('editProfile.btnPasswordSaving') : t('editProfile.btnPasswordSave')}
               </button>
             </div>
           </form>

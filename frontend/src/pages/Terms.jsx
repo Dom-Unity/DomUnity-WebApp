@@ -1,8 +1,10 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import "./Terms.css";
 
 export default function Terms() {
+  const { t } = useTranslation();
   return (
     <main className="terms-container">
       <div className="terms-box">
@@ -14,109 +16,97 @@ export default function Terms() {
           />
         </div>
 
-        <h1 className="terms-title">Общи условия</h1>
+        <h1 className="terms-title">{t('terms.title')}</h1>
         <p className="terms-subtitle">
-          Последна актуализация: 2025 г. (примерен текст – заменете с вашите реални условия)
+          {t('terms.subtitle')}
         </p>
 
         <div className="terms-content">
           <section className="terms-section">
-            <h2>1. Общи положения</h2>
+            <h2>{t('terms.sec1Title')}</h2>
             <p>
-              Настоящите Общи условия уреждат правилата за достъп и използване на
-              платформата DomUnity („Платформата“), включително клиентски портал,
-              публични страници и функционалности за комуникация между администратор
-              (домоуправител) и потребители (живущи/собственици).
+              {t('terms.sec1Desc')}
             </p>
           </section>
 
           <section className="terms-section">
-            <h2>2. Дефиниции</h2>
+            <h2>{t('terms.sec2Title')}</h2>
             <ul>
-              <li><strong>Потребител</strong> – лице, което използва платформата.</li>
-              <li><strong>Администратор</strong> – домоуправител/упълномощено лице, което управлява данни и достъпи.</li>
-              <li><strong>Сграда/Вход</strong> – обект на управление в платформата.</li>
-              <li><strong>Профил</strong> – потребителски акаунт с права за достъп.</li>
+              <li><strong>{t('terms.sec2Li1User')}</strong>{t('terms.sec2Li1Desc')}</li>
+              <li><strong>{t('terms.sec2Li2Admin')}</strong>{t('terms.sec2Li2Desc')}</li>
+              <li><strong>{t('terms.sec2Li3Building')}</strong>{t('terms.sec2Li3Desc')}</li>
+              <li><strong>{t('terms.sec2Li4Profile')}</strong>{t('terms.sec2Li4Desc')}</li>
             </ul>
           </section>
 
           <section className="terms-section">
-            <h2>3. Регистрация и достъп</h2>
+            <h2>{t('terms.sec3Title')}</h2>
             <p>
-              Достъпът до клиентския портал може да бъде предоставен от Администратора
-              след верификация на самоличност/принадлежност към конкретна етажна собственост.
-              Потребителят носи отговорност за опазване на своите данни за вход.
+              {t('terms.sec3Desc')}
             </p>
           </section>
 
           <section className="terms-section">
-            <h2>4. Услуги и функционалности</h2>
+            <h2>{t('terms.sec4Title')}</h2>
             <p>
-              Платформата може да предоставя: преглед на начисления и плащания, известия,
-              подаване на сигнали, достъп до документи и отчети, както и други функционалности
-              според договорените услуги за конкретната сграда.
+              {t('terms.sec4Desc')}
             </p>
           </section>
 
           <section className="terms-section">
-            <h2>5. Задължения на потребителя</h2>
+            <h2>{t('terms.sec5Title')}</h2>
             <ul>
-              <li>Да предоставя верни и актуални данни.</li>
-              <li>Да не злоупотребява с функционалностите (спам, опити за неоторизиран достъп и др.).</li>
-              <li>Да пази конфиденциалността на данните за вход.</li>
+              <li>{t('terms.sec5Li1')}</li>
+              <li>{t('terms.sec5Li2')}</li>
+              <li>{t('terms.sec5Li3')}</li>
             </ul>
           </section>
 
           <section className="terms-section">
-            <h2>6. Ограничаване на отговорността</h2>
+            <h2>{t('terms.sec6Title')}</h2>
             <p>
-              DomUnity полага усилия за коректна работа и сигурност, но не гарантира
-              непрекъсната наличност. DomUnity не носи отговорност за прекъсвания,
-              причинени от форсмажорни обстоятелства, интернет доставчици или външни услуги.
+              {t('terms.sec6Desc')}
             </p>
           </section>
 
           <section className="terms-section">
-            <h2>7. Лични данни</h2>
+            <h2>{t('terms.sec7Title')}</h2>
             <p>
-              Обработката на лични данни се извършва съгласно Политиката за поверителност.
-              Препоръчваме да се запознаете с нея.
+              {t('terms.sec7Desc1')}
             </p>
             <p>
-              <Link to="/privacy" className="terms-link">Виж Политика за поверителност</Link>
-            </p>
-          </section>
-
-          <section className="terms-section">
-            <h2>8. Промени в условията</h2>
-            <p>
-              DomUnity може да актуализира настоящите Общи условия при промени във
-              функционалността, законодателството или услугите. Актуалната версия
-              се публикува на тази страница.
+              <Link to="/privacy" className="terms-link">{t('terms.sec7Desc2')}</Link>
             </p>
           </section>
 
           <section className="terms-section">
-            <h2>9. Контакти</h2>
+            <h2>{t('terms.sec8Title')}</h2>
             <p>
-              При въпроси относно Общите условия, свържете се с нас:
+              {t('terms.sec8Desc')}
+            </p>
+          </section>
+
+          <section className="terms-section">
+            <h2>{t('terms.sec9Title')}</h2>
+            <p>
+              {t('terms.sec9Desc')}
               {" "}
-              <Link to="/contacts" className="terms-link">Контакти</Link>
+              <Link to="/contacts" className="terms-link">{t('terms.linkContacts')}</Link>
             </p>
           </section>
         </div>
 
         <div className="terms-actions">
           <Link to="/" className="terms-btn terms-btn--secondary">
-            Начало
+            {t('terms.btnHome')}
           </Link>
           <Link to="/contacts" className="terms-btn terms-btn--primary">
-            Свържи се с нас
+            {t('terms.btnContact')}
           </Link>
         </div>
 
         <p className="terms-smallprint">
-          * Този текст е примерен и не е юридически съвет. За реални общи условия се консултирайте с юрист.
+          {t('terms.smallprint')}
         </p>
       </div>
     </main>
