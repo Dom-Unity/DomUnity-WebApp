@@ -65,7 +65,7 @@ const Apartment = () => {
         };
 
         fetchApartment();
-    }, [navigate]);
+    }, [navigate, t]);
 
     const [statusFilter, setStatusFilter] = useState("all");
     const [search, setSearch] = useState("");
@@ -172,7 +172,7 @@ const Apartment = () => {
             totalUnpaid,
             lastPaid,
         };
-    }, [payments, history]);
+    }, [payments, history, t]);
 
     const filteredPayments = useMemo(() => {
         return payments.filter((p) => {

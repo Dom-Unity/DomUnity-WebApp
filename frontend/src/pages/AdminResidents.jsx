@@ -47,7 +47,7 @@ const AdminResidents = () => {
         };
 
         fetchResidents();
-    }, [navigate]);
+    }, [navigate, t]);
 
     // Get unique buildings for filter dropdown
     // eslint-disable-next-line no-unused-vars
