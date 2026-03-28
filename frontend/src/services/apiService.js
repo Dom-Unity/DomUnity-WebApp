@@ -7,9 +7,9 @@
 const getApiUrl = () => {
     const host = process.env.REACT_APP_BACKEND_URL;
     if (process.env.NODE_ENV === 'production') {
-        return host ? `https://${host}.onrender.com` : 'http://localhost:8080';
+        return host ? `https://${host}.onrender.com` : 'https://domunity-backend-python.onrender.com';
     }
-    return host ? 'http://localhost:8080' : 'https://domunity-backend-python.onrender.com';
+    return 'http://localhost:8080';
 };
 
 const API_URL = getApiUrl();
