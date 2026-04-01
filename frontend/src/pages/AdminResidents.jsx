@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useMemo, useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import "./AdminResidents.css";
@@ -8,8 +8,10 @@ const AdminResidents = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
 
-  const tr = (key, defaultValue, options = {}) =>
-    t(key, { defaultValue, ...options });
+  const tr = useCallback(
+    (key, defaultValue, options = {}) => t(key, { defaultValue, ...options }),
+    [t]
+  );
 
   const [residents, setResidents] = useState([]);
   const [entrances, setEntrances] = useState([]);
@@ -21,7 +23,6 @@ const AdminResidents = () => {
   const [entranceFilter, setEntranceFilter] = useState("all");
   const [onlyDebtors, setOnlyDebtors] = useState(false);
 
-  const [selectedResident, setSelectedResident] = useState(null);
   const [editForm, setEditForm] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [isCreatingResident, setIsCreatingResident] = useState(false);
@@ -65,7 +66,7 @@ const AdminResidents = () => {
     };
 
     fetchResidents();
-  }, [navigate, t]);
+  }, [navigate, tr]);
 
   useEffect(() => {
     const grouped = {};
@@ -172,7 +173,7 @@ const AdminResidents = () => {
 
       return [...merged, ...manualOnly];
     });
-  }, [residents, t]);
+  }, [residents, tr]);
 
   const buildings = useMemo(() => {
     const fromResidents = residents.map((r) => r.building).filter(Boolean);
@@ -209,14 +210,12 @@ const AdminResidents = () => {
   }, [entrances, editForm?.building, editForm?.entrance]);
 
   const openEdit = (resident) => {
-    setSelectedResident(resident);
     setEditForm({ ...resident });
     setIsEditing(true);
     setIsCreatingResident(false);
   };
 
   const closeEdit = () => {
-    setSelectedResident(null);
     setEditForm(null);
     setIsEditing(false);
     setIsCreatingResident(false);
@@ -332,7 +331,6 @@ const AdminResidents = () => {
     };
 
     setResidents((prev) => [newResident, ...prev]);
-    setSelectedResident(newResident);
     setEditForm(newResident);
     setIsEditing(true);
     setIsCreatingResident(true);
