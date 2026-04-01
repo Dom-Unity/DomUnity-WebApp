@@ -1,39 +1,65 @@
 import os
-import psycopg2
-from psycopg2.extras import RealDictCursor
 import logging
+from pymongo import MongoClient, ASCENDING, DESCENDING
+from bson import ObjectId
+from datetime import datetime
+import bcrypt
 
 logger = logging.getLogger(__name__)
 
+class DatabaseAddress:
+    """Helper to represent a database address similar to how it was used before"""
+    def __init__(self, db):
+        self.db = db
+        
+    def __getitem__(self, name):
+        return self.db[name]
+
 class Database:
     def __init__(self):
-        self.conn = None
+        self.client = None
+        self.db = None
         self.connect()
         
     def connect(self):
-        """Connect to PostgreSQL database with comprehensive logging"""
+        """Connect to MongoDB database with comprehensive logging"""
         try:
-            database_url = os.getenv('DATABASE_URL')
-            logger.info("=" * 80)
-            logger.info("DATABASE CONNECTION ATTEMPT")
-            logger.info("=" * 80)
-            logger.info(f"Database URL present: {bool(database_url)}")
+            mongodb_uri = os.getenv('MONGODB_URI')
+            # Fallback to DATABASE_URL if MONGODB_URI is not set yet but has a mongo scheme
+            if not mongodb_uri:
+                fallback_url = os.getenv('DATABASE_URL')
+                if fallback_url and fallback_url.startswith('mongodb'):
+                    mongodb_uri = fallback_url
             
-            if database_url:
-                # Log the database URL (obscure password)
-                obscured_url = self._obscure_password(database_url)
-                logger.info(f"Database URL (obscured): {obscured_url}")
+            logger.info("=" * 80)
+            logger.info("MONGODB CONNECTION ATTEMPT")
+            logger.info("=" * 80)
+            logger.info(f"MongoDB URI present: {bool(mongodb_uri)}")
+            
+            if mongodb_uri:
+                # Log the URI (obscure password)
+                obscured_uri = self._obscure_password(mongodb_uri)
+                logger.info(f"MongoDB URI (obscured): {obscured_uri}")
             else:
-                logger.error("DATABASE_URL environment variable not set!")
-                raise ValueError("DATABASE_URL not configured")
+                logger.error("MONGODB_URI environment variable not set!")
+                raise ValueError("MONGODB_URI not configured")
             
-            self.conn = psycopg2.connect(database_url, cursor_factory=RealDictCursor)
-            self.conn.autocommit = False
+            self.client = MongoClient(mongodb_uri)
+            # Trigger connection
+            self.client.admin.command('ping')
             
-            logger.info("✓ Database connection established successfully")
+            # Get database name from URI or use default
+            try:
+                db_name = self.client.get_database().name
+            except Exception:
+                db_name = 'domunity'
+            
+            self.db = self.client[db_name]
+            
+            logger.info(f"✓ Database connection established successfully to: {db_name}")
             logger.info("=" * 80)
             
-            # Initialize schema
+            # Initialize schema (indexes)
             self._init_schema()
             
         except Exception as e:
@@ -45,11 +71,11 @@ class Database:
             logger.error("=" * 80)
             raise
     
-    def _obscure_password(self, url):
+    def _obscure_password(self, uri):
         """Obscure password in connection string for logging"""
         try:
-            if '@' in url and ':' in url:
-                parts = url.split('@')
+            if '@' in uri and ':' in uri:
+                parts = uri.split('@')
                 before_at = parts[0]
                 after_at = '@'.join(parts[1:])
                 
@@ -58,186 +84,67 @@ class Database:
                     if ':' in credentials:
                         username, _ = credentials.split(':', 1)
                         return f"{protocol}://{username}:****@{after_at}"
-            return url
+            return uri
         except:
             return "****"
     
     def _init_schema(self):
-        """Initialize database schema with logging"""
-        logger.info("Initializing database schema...")
+        """Initialize MongoDB indexes with logging"""
+        logger.info("Initializing database indexes...")
         
         try:
-            cursor = self.conn.cursor()
+            # Users indexes
+            self.db.users.create_index([("email", ASCENDING)], unique=True)
             
-            # Users table
-            logger.info("Creating users table...")
-            cursor.execute("""
-                CREATE TABLE IF NOT EXISTS users (
-                    id SERIAL PRIMARY KEY,
-                    email VARCHAR(255) UNIQUE NOT NULL,
-                    password_hash VARCHAR(255) NOT NULL,
-                    full_name VARCHAR(255),
-                    phone VARCHAR(50),
-                    role VARCHAR(50) DEFAULT 'user',
-                    is_active BOOLEAN DEFAULT true,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                )
-            """)
+            # Buildings indexes
+            self.db.buildings.create_index([("address", ASCENDING)])
             
-            # Add role and is_active columns if they don't exist (for existing tables)
-            cursor.execute("""
-                DO $$ BEGIN
-                    ALTER TABLE users ADD COLUMN IF NOT EXISTS role VARCHAR(50) DEFAULT 'user';
-                    ALTER TABLE users ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT true;
-                EXCEPTION WHEN others THEN NULL;
-                END $$;
-            """)
+            # Apartments indexes
+            self.db.apartments.create_index([("building_id", ASCENDING)])
+            self.db.apartments.create_index([("user_id", ASCENDING)])
+            self.db.apartments.create_index([("building_id", ASCENDING), ("number", ASCENDING)])
             
-            # Buildings table
-            logger.info("Creating buildings table...")
-            cursor.execute("""
-                CREATE TABLE IF NOT EXISTS buildings (
-                    id SERIAL PRIMARY KEY,
-                    address VARCHAR(500) NOT NULL,
-                    entrance VARCHAR(10),
-                    total_apartments INTEGER DEFAULT 0,
-                    total_residents INTEGER DEFAULT 0
-                )
-            """)
+            # Events indexes
+            self.db.events.create_index([("building_id", ASCENDING), ("date", DESCENDING)])
             
-            # Apartments table
-            logger.info("Creating apartments table...")
-            cursor.execute("""
-                CREATE TABLE IF NOT EXISTS apartments (
-                    id SERIAL PRIMARY KEY,
-                    building_id INTEGER REFERENCES buildings(id),
-                    number INTEGER NOT NULL,
-                    floor INTEGER,
-                    type VARCHAR(50),
-                    residents INTEGER DEFAULT 0,
-                    user_id INTEGER REFERENCES users(id)
-                )
-            """)
+            # Financial records indexes
+            self.db.financial_records.create_index([("apartment_id", ASCENDING), ("period", ASCENDING)])
             
-            # Events table
-            logger.info("Creating events table...")
-            cursor.execute("""
-                CREATE TABLE IF NOT EXISTS events (
-                    id SERIAL PRIMARY KEY,
-                    building_id INTEGER REFERENCES buildings(id),
-                    date DATE NOT NULL,
-                    title VARCHAR(500),
-                    description TEXT,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                )
-            """)
+            # User profiles indexes
+            self.db.user_profiles.create_index([("user_id", ASCENDING)], unique=True)
             
-            # Financial records table
-            logger.info("Creating financial_records table...")
-            cursor.execute("""
-                CREATE TABLE IF NOT EXISTS financial_records (
-                    id SERIAL PRIMARY KEY,
-                    apartment_id INTEGER REFERENCES apartments(id),
-                    period VARCHAR(20),
-                    elevator_gtp DECIMAL(10, 2) DEFAULT 0,
-                    elevator_electricity DECIMAL(10, 2) DEFAULT 0,
-                    common_area_electricity DECIMAL(10, 2) DEFAULT 0,
-                    elevator_maintenance DECIMAL(10, 2) DEFAULT 0,
-                    management_fee DECIMAL(10, 2) DEFAULT 0,
-                    repair_fund DECIMAL(10, 2) DEFAULT 0,
-                    total_due DECIMAL(10, 2) DEFAULT 0
-                )
-            """)
+            # Payments indexes
+            self.db.payments.create_index([("user_id", ASCENDING), ("created_at", DESCENDING)])
+            self.db.payments.create_index([("apartment_id", ASCENDING)])
             
-            # Contact requests table
-            logger.info("Creating contact_requests table...")
-            cursor.execute("""
-                CREATE TABLE IF NOT EXISTS contact_requests (
-                    id SERIAL PRIMARY KEY,
-                    name VARCHAR(255),
-                    phone VARCHAR(50),
-                    email VARCHAR(255),
-                    message TEXT,
-                    type VARCHAR(50),
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                )
-            """)
+            # Maintenance records indexes
+            self.db.maintenance_records.create_index([("building_id", ASCENDING), ("date", DESCENDING)])
             
-            # User profiles table
-            logger.info("Creating user_profiles table...")
-            cursor.execute("""
-                CREATE TABLE IF NOT EXISTS user_profiles (
-                    id SERIAL PRIMARY KEY,
-                    user_id INTEGER UNIQUE REFERENCES users(id),
-                    account_manager VARCHAR(255),
-                    balance DECIMAL(10, 2) DEFAULT 0,
-                    client_number VARCHAR(50),
-                    contract_end_date DATE
-                )
-            """)
+            logger.info("✓ Database indexes initialized successfully")
             
-            # Payments table
-            logger.info("Creating payments table...")
-            cursor.execute("""
-                CREATE TABLE IF NOT EXISTS payments (
-                    id SERIAL PRIMARY KEY,
-                    user_id INTEGER REFERENCES users(id),
-                    apartment_id INTEGER REFERENCES apartments(id),
-                    amount DECIMAL(10, 2) NOT NULL,
-                    period VARCHAR(50) NOT NULL,
-                    status VARCHAR(20) DEFAULT 'pending',
-                    paid_date DATE,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                )
-            """)
-            
-            # Maintenance records table
-            logger.info("Creating maintenance_records table...")
-            cursor.execute("""
-                CREATE TABLE IF NOT EXISTS maintenance_records (
-                    id SERIAL PRIMARY KEY,
-                    building_id INTEGER REFERENCES buildings(id),
-                    date DATE NOT NULL,
-                    description TEXT,
-                    cost DECIMAL(10, 2) DEFAULT 0,
-                    status VARCHAR(20) DEFAULT 'planned',
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                )
-            """)
-            
-            self.conn.commit()
-            logger.info("✓ Database schema initialized successfully")
-            
-            # Insert sample data if tables are empty
+            # Insert sample data if collections are empty
             self._insert_sample_data()
             
         except Exception as e:
-            self.conn.rollback()
-            logger.error(f"Schema initialization failed: {e}")
+            logger.error(f"Index initialization failed: {e}")
             raise
     
     def _insert_sample_data(self):
-        """Insert sample data for testing"""
+        """Insert sample data for testing into MongoDB"""
         try:
-            cursor = self.conn.cursor()
-            
-            # Check if we already have data
-            cursor.execute("SELECT COUNT(*) as count FROM buildings")
-            result = cursor.fetchone()
-            
-            if result['count'] == 0:
-                logger.info("Inserting sample data...")
-                import bcrypt
+            if self.db.buildings.count_documents({}) == 0:
+                logger.info("Inserting sample data into MongoDB...")
                 
                 # Insert sample building
-                cursor.execute("""
-                    INSERT INTO buildings (address, entrance, total_apartments, total_residents)
-                    VALUES ('ж.к. Младост 3, бл. 325', 'Б', 24, 38)
-                    RETURNING id
-                """)
-                building_id = cursor.fetchone()['id']
+                building = {
+                    "address": "ж.к. Младост 3, бл. 325",
+                    "entrance": "Б",
+                    "total_apartments": 24,
+                    "total_residents": 38
+                }
+                building_id = self.db.buildings.insert_one(building).inserted_id
                 
-                # Insert sample test users with different roles
+                # Insert sample test users
                 users_data = [
                     ('ivan.ivanov@example.com', 'Иван Иванов', '+359 888 123 456', 'user', True),
                     ('m.georgieva@example.com', 'Мария Георгиева', '+359 888 234 567', 'user', True),
@@ -248,18 +155,23 @@ class Database:
                 user_ids = []
                 for email, name, phone, role, is_active in users_data:
                     password_hash = bcrypt.hashpw('test123'.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-                    cursor.execute("""
-                        INSERT INTO users (email, password_hash, full_name, phone, role, is_active)
-                        VALUES (%s, %s, %s, %s, %s, %s)
-                        RETURNING id
-                    """, (email, password_hash, name, phone, role, is_active))
-                    user_ids.append(cursor.fetchone()['id'])
+                    user = {
+                        "email": email,
+                        "password_hash": password_hash,
+                        "full_name": name,
+                        "phone": phone,
+                        "role": role,
+                        "is_active": is_active,
+                        "created_at": datetime.utcnow()
+                    }
+                    u_id = self.db.users.insert_one(user).inserted_id
+                    user_ids.append(u_id)
                 
-                # Insert apartments and link to users
+                # Insert apartments
                 apartments_data = [
-                    (25, 5, 3, user_ids[0]),  # Иван Иванов
-                    (26, 5, 2, user_ids[1]),  # Мария Георгиева
-                    (27, 5, 4, user_ids[2]),  # Петър Петров
+                    (25, 5, 3, user_ids[0]), # Ivan
+                    (26, 5, 2, user_ids[1]), # Maria
+                    (27, 5, 4, user_ids[2]), # Petar
                     (22, 4, 2, None),
                     (23, 4, 3, None),
                     (24, 4, 2, None),
@@ -267,12 +179,16 @@ class Database:
                 
                 apartment_ids = []
                 for number, floor, residents, uid in apartments_data:
-                    cursor.execute("""
-                        INSERT INTO apartments (building_id, number, floor, type, residents, user_id)
-                        VALUES (%s, %s, %s, 'Апартамент', %s, %s)
-                        RETURNING id
-                    """, (building_id, number, floor, residents, uid))
-                    apartment_ids.append(cursor.fetchone()['id'])
+                    apt = {
+                        "building_id": building_id,
+                        "number": number,
+                        "floor": floor,
+                        "type": "Апартамент",
+                        "residents": residents,
+                        "user_id": uid
+                    }
+                    a_id = self.db.apartments.insert_one(apt).inserted_id
+                    apartment_ids.append(a_id)
                 
                 # Insert user profiles
                 profiles_data = [
@@ -281,69 +197,76 @@ class Database:
                     (user_ids[2], 'Мария Петрова', 0.00, '55555555'),
                 ]
                 for uid, manager, balance, client_num in profiles_data:
-                    cursor.execute("""
-                        INSERT INTO user_profiles (user_id, account_manager, balance, client_number, contract_end_date)
-                        VALUES (%s, %s, %s, %s, '2026-12-31')
-                    """, (uid, manager, balance, client_num))
+                    profile = {
+                        "user_id": uid,
+                        "account_manager": manager,
+                        "balance": balance,
+                        "client_number": client_num,
+                        "contract_end_date": datetime(2026, 12, 31)
+                    }
+                    self.db.user_profiles.insert_one(profile)
                 
-                # Insert sample payments for multiple users
+                # Insert sample payments
                 payments_data = [
-                    # User 1 (Ivan) - some paid, some pending
                     (user_ids[0], apartment_ids[0], 30.00, 'Ноември 2025', 'pending', None),
-                    (user_ids[0], apartment_ids[0], 40.00, 'Октомври 2025', 'paid', '2025-10-15'),
-                    (user_ids[0], apartment_ids[0], 30.00, 'Септември 2025', 'paid', '2025-09-12'),
-                    # User 2 (Maria) - some pending
+                    (user_ids[0], apartment_ids[0], 40.00, 'Октомври 2025', 'paid', datetime(2025, 10, 15)),
+                    (user_ids[0], apartment_ids[0], 30.00, 'Септември 2025', 'paid', datetime(2025, 9, 12)),
                     (user_ids[1], apartment_ids[1], 25.00, 'Ноември 2025', 'pending', None),
-                    (user_ids[1], apartment_ids[1], 25.00, 'Октомври 2025', 'paid', '2025-10-20'),
-                    # User 3 (Petar) - overdue
+                    (user_ids[1], apartment_ids[1], 25.00, 'Октомври 2025', 'paid', datetime(2025, 10, 20)),
                     (user_ids[2], apartment_ids[2], 35.00, 'Ноември 2025', 'overdue', None),
                     (user_ids[2], apartment_ids[2], 35.00, 'Октомври 2025', 'overdue', None),
                 ]
                 for uid, apt_id, amount, period, status, paid_date in payments_data:
-                    cursor.execute("""
-                        INSERT INTO payments (user_id, apartment_id, amount, period, status, paid_date)
-                        VALUES (%s, %s, %s, %s, %s, %s)
-                    """, (uid, apt_id, amount, period, status, paid_date))
+                    payment = {
+                        "user_id": uid,
+                        "apartment_id": apt_id,
+                        "amount": amount,
+                        "period": period,
+                        "status": status,
+                        "paid_date": paid_date,
+                        "created_at": datetime.utcnow()
+                    }
+                    self.db.payments.insert_one(payment)
                 
                 # Insert sample events
-                cursor.execute("""
-                    INSERT INTO events (building_id, date, title, description)
-                    VALUES 
-                        (%s, '2025-11-05', 'Планирана профилактика', 'Планирана профилактика на асансьора от 10:00 до 13:00 ч.'),
-                        (%s, '2025-11-02', 'Общо събрание', 'Общо събрание на вход Б – от 19:00 ч. във входното фоайе.'),
-                        (%s, '2025-10-28', 'Напомняне за такса', 'Изпратено напомняне за месечна такса за поддръжка.')
-                """, (building_id, building_id, building_id))
+                events = [
+                    {"building_id": building_id, "date": datetime(2025, 11, 5), "title": "Планирана профилактика", "description": "Планирана профилактика на асансьора от 10:00 до 13:00 ч."},
+                    {"building_id": building_id, "date": datetime(2025, 11, 2), "title": "Общо събрание", "description": "Общо събрание на вход Б – от 19:00 ч. във входното фоайе."},
+                    {"building_id": building_id, "date": datetime(2025, 10, 28), "title": "Напомняне за такса", "description": "Изпратено напомняне за месечна такса за поддръжка."}
+                ]
+                self.db.events.insert_many(events)
                 
-                # Insert sample maintenance records
-                cursor.execute("""
-                    INSERT INTO maintenance_records (building_id, date, description, cost, status)
-                    VALUES 
-                        (%s, '2025-02-05', 'Почистване и дезинфекция на входа', 20.00, 'completed'),
-                        (%s, '2025-03-18', 'Профилактика на асансьора', 60.00, 'planned'),
-                        (%s, '2025-01-15', 'Смяна на осветление в стълбището', 35.00, 'completed')
-                """, (building_id, building_id, building_id))
+                # Insert maintenance records
+                maintenance = [
+                    {"building_id": building_id, "date": datetime(2025, 2, 5), "description": "Почистване и дезинфекция на входа", "cost": 20.00, "status": "completed"},
+                    {"building_id": building_id, "date": datetime(2025, 3, 18), "description": "Профилактика на асансьора", "cost": 60.00, "status": "planned"},
+                    {"building_id": building_id, "date": datetime(2025, 1, 15), "description": "Смяна на осветление в стълбището", "cost": 35.00, "status": "completed"}
+                ]
+                self.db.maintenance_records.insert_many(maintenance)
                 
-                self.conn.commit()
-                logger.info("✓ Sample data inserted successfully")
+                logger.info("✓ Sample data inserted successfully into MongoDB")
                 
         except Exception as e:
-            self.conn.rollback()
-            logger.warning(f"Sample data insertion failed (this may be normal): {e}")
-    
-    def get_cursor(self):
-        """Get database cursor"""
-        return self.conn.cursor()
+            logger.warning(f"Sample data insertion failed: {e}")
+
+    def get_collection(self, name):
+        """Get MongoDB collection"""
+        return self.db[name]
     
     def commit(self):
-        """Commit transaction"""
-        self.conn.commit()
+        """No-op for MongoDB (unless using sessions)"""
+        pass
     
     def rollback(self):
-        """Rollback transaction"""
-        self.conn.rollback()
+        """No-op for MongoDB (unless using sessions)"""
+        pass
     
     def close(self):
         """Close database connection"""
-        if self.conn:
-            self.conn.close()
-            logger.info("Database connection closed")
+        if self.client:
+            self.client.close()
+            logger.info("MongoDB connection closed")
+
+    def get_db(self):
+        """Return the database object"""
+        return self.db
