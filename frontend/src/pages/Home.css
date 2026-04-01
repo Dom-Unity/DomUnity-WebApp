@@ -99,7 +99,7 @@ main.main.home-main {
 
 
 .btn {
-    display: inline-block;
+    display: flex;
     padding: 12px 12px;
     font-size: 0.95rem;
     font-weight: bold;
@@ -468,6 +468,9 @@ main.main.home-main {
     .advantages-inner {
         grid-template-columns: 1fr;
     }
+    .btn.primary, .btn.secondary{
+        max-width: fit-content;
+    }
 }
 
 @media (max-width: 600px) {
@@ -482,5 +485,8 @@ main.main.home-main {
 
     .hero-logo {
         width: 190px;
+    }
+        .btn.primary, .btn.secondary{
+        max-width: fit-content;
     }
 }
