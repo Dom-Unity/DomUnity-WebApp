@@ -27,8 +27,8 @@ class TestDatabaseConnection(unittest.TestCase):
         """Test password obscuring in connection strings"""
         db = Database.__new__(Database)
         
-        # Test standard postgres URL
-        url = "postgresql://user:secret123@localhost:5432/dbname"
+        # Test standard mongodb URL
+        url = "mongodb://user:secret123@localhost:27017/dbname"
         obscured = db._obscure_password(url)
         self.assertNotIn("secret123", obscured)
         self.assertIn("user", obscured)
@@ -37,7 +37,7 @@ class TestDatabaseConnection(unittest.TestCase):
     def test_obscure_password_no_password(self):
         """Test obscuring when no password in URL"""
         db = Database.__new__(Database)
-        url = "postgresql://localhost:5432/dbname"
+        url = "mongodb://localhost:27017/dbname"
         obscured = db._obscure_password(url)
         self.assertEqual(url, obscured)
 
@@ -51,8 +51,9 @@ class TestJWTFunctions(unittest.TestCase):
     
     def test_jwt_encode_decode(self):
         """Test JWT token creation and decoding"""
+        user_id = "65ba3f7e8b234a5d6c7e8f90"
         payload = {
-            'user_id': 1,
+            'user_id': user_id,
             'email': 'test@example.com',
             'exp': datetime.utcnow() + timedelta(hours=1)
         }
@@ -60,7 +61,7 @@ class TestJWTFunctions(unittest.TestCase):
         token = jwt.encode(payload, self.secret, algorithm=self.algorithm)
         decoded = jwt.decode(token, self.secret, algorithms=[self.algorithm])
         
-        self.assertEqual(decoded['user_id'], 1)
+        self.assertEqual(decoded['user_id'], user_id)
         self.assertEqual(decoded['email'], 'test@example.com')
     
     def test_jwt_expired_token(self):

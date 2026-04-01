@@ -11,6 +11,7 @@ import jwt
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import threading
 import json
+from bson import ObjectId
 
 # Configure logging with extensive detail
 logging.basicConfig(
@@ -53,12 +54,7 @@ class AuthServicer(domunity_pb2_grpc.AuthServiceServicer):
         logger.info("=" * 80)
         
         try:
-            cursor = self.db.get_cursor()
-            cursor.execute(
-                "SELECT * FROM users WHERE email = %s",
-                (request.email,)
-            )
-            user = cursor.fetchone()
+            user = self.db.db.users.find_one({"email": request.email})
             
             if not user:
                 logger.warning(f"User not found: {request.email}")
@@ -71,13 +67,13 @@ class AuthServicer(domunity_pb2_grpc.AuthServiceServicer):
             if bcrypt.checkpw(request.password.encode('utf-8'), user['password_hash'].encode('utf-8')):
                 # Generate tokens
                 access_token = jwt.encode({
-                    'user_id': user['id'],
+                    'user_id': str(user['_id']),
                     'email': user['email'],
                     'exp': datetime.utcnow() + timedelta(hours=JWT_EXPIRATION_HOURS)
                 }, JWT_SECRET, algorithm=JWT_ALGORITHM)
                 
                 refresh_token = jwt.encode({
-                    'user_id': user['id'],
+                    'user_id': str(user['_id']),
                     'exp': datetime.utcnow() + timedelta(days=30)
                 }, JWT_SECRET, algorithm=JWT_ALGORITHM)
                 
@@ -89,11 +85,11 @@ class AuthServicer(domunity_pb2_grpc.AuthServiceServicer):
                     access_token=access_token,
                     refresh_token=refresh_token,
                     user=domunity_pb2.User(
-                        id=str(user['id']),
+                        id=str(user['_id']),
                         email=user['email'],
                         full_name=user['full_name'] or '',
                         phone=user['phone'] or '',
-                        created_at=str(user['created_at'])
+                        created_at=str(user.get('created_at', ''))
                     )
                 )
             else:
@@ -121,14 +117,17 @@ class AuthServicer(domunity_pb2_grpc.AuthServiceServicer):
             # Hash password
             password_hash = bcrypt.hashpw(request.password.encode('utf-8'), bcrypt.gensalt())
             
-            cursor = self.db.get_cursor()
-            cursor.execute("""
-                INSERT INTO users (email, password_hash, full_name, phone)
-                VALUES (%s, %s, %s, %s)
-                RETURNING id
-            """, (request.email, password_hash.decode('utf-8'), request.full_name, request.phone))
+            result = self.db.db.users.insert_one({
+                "email": request.email,
+                "password_hash": password_hash.decode('utf-8'),
+                "full_name": request.full_name,
+                "phone": request.phone,
+                "role": "user",
+                "is_active": True,
+                "created_at": datetime.utcnow()
+            })
             
-            user_id = cursor.fetchone()['id']
+            user_id = result.inserted_id
             self.db.commit()
             
             logger.info(f"✓ User registered successfully: {request.email} (ID: {user_id})")
@@ -187,29 +186,30 @@ class UserServicer(domunity_pb2_grpc.UserServiceServicer):
         logger.info(f"GET PROFILE REQUEST for user_id: {request.user_id}")
         
         try:
-            cursor = self.db.get_cursor()
-            
             # Get user
-            cursor.execute("SELECT * FROM users WHERE id = %s", (int(request.user_id),))
-            user = cursor.fetchone()
+            user = self.db.db.users.find_one({"_id": ObjectId(request.user_id)})
             
             if not user:
                 logger.warning(f"User not found: {request.user_id}")
                 context.abort(grpc.StatusCode.NOT_FOUND, "User not found")
             
             # Get user's apartment and building
-            cursor.execute("""
-                SELECT a.*, b.*
-                FROM apartments a
-                JOIN buildings b ON a.building_id = b.id
-                WHERE a.user_id = %s
-            """, (int(request.user_id),))
+            apartment_doc = self.db.db.apartments.find_one({"user_id": ObjectId(request.user_id)})
             
-            apartment_building = cursor.fetchone()
+            building_doc = None
+            if apartment_doc:
+                building_doc = self.db.db.buildings.find_one({"_id": apartment_doc['building_id']})
+            
+            apartment_building = None
+            if apartment_doc and building_doc:
+                # Merge for compatibility with existing logic if needed, 
+                # but we'll manually map below anyway
+                apartment_building = {**apartment_doc, **building_doc}
+                apartment_building['id'] = building_doc['_id']
+                apartment_building['apartment_id'] = apartment_doc['_id']
             
             # Get user profile
-            cursor.execute("SELECT * FROM user_profiles WHERE user_id = %s", (int(request.user_id),))
-            profile = cursor.fetchone()
+            profile = self.db.db.user_profiles.find_one({"user_id": ObjectId(request.user_id)})
             
             building = None
             apartment = None
@@ -246,11 +246,11 @@ class UserServicer(domunity_pb2_grpc.UserServiceServicer):
             
             return domunity_pb2.UserProfile(
                 user=domunity_pb2.User(
-                    id=str(user['id']),
+                    id=str(user['_id']),
                     email=user['email'],
                     full_name=user['full_name'] or '',
                     phone=user['phone'] or '',
-                    created_at=str(user['created_at'])
+                    created_at=str(user.get('created_at', ''))
                 ),
                 building=building,
                 apartment=apartment,
@@ -268,12 +268,10 @@ class UserServicer(domunity_pb2_grpc.UserServiceServicer):
         logger.info(f"UPDATE PROFILE REQUEST for user_id: {request.user_id}")
         
         try:
-            cursor = self.db.get_cursor()
-            cursor.execute("""
-                UPDATE users 
-                SET full_name = %s, phone = %s
-                WHERE id = %s
-            """, (request.full_name, request.phone, int(request.user_id)))
+            self.db.db.users.update_one(
+                {"_id": ObjectId(request.user_id)},
+                {"$set": {"full_name": request.full_name, "phone": request.phone}}
+            )
             
             self.db.commit()
             logger.info(f"✓ Profile updated for user_id: {request.user_id}")
@@ -300,15 +298,13 @@ class BuildingServicer(domunity_pb2_grpc.BuildingServiceServicer):
         logger.info(f"GET BUILDING REQUEST for building_id: {request.building_id}")
         
         try:
-            cursor = self.db.get_cursor()
-            cursor.execute("SELECT * FROM buildings WHERE id = %s", (int(request.building_id),))
-            building = cursor.fetchone()
+            building = self.db.db.buildings.find_one({"_id": ObjectId(request.building_id)})
             
             if not building:
                 context.abort(grpc.StatusCode.NOT_FOUND, "Building not found")
             
             return domunity_pb2.Building(
-                id=str(building['id']),
+                id=str(building['_id']),
                 address=building['address'],
                 entrance=building['entrance'] or '',
                 total_apartments=building['total_apartments'],
@@ -323,16 +319,14 @@ class BuildingServicer(domunity_pb2_grpc.BuildingServiceServicer):
         logger.info(f"LIST APARTMENTS REQUEST for building_id: {request.building_id}")
         
         try:
-            cursor = self.db.get_cursor()
-            cursor.execute(
-                "SELECT * FROM apartments WHERE building_id = %s ORDER BY number",
-                (int(request.building_id),)
-            )
+            apartments_cursor = self.db.db.apartments.find(
+                {"building_id": ObjectId(request.building_id)}
+            ).sort("number", 1)
             
             apartments = []
-            for apt in cursor.fetchall():
+            for apt in apartments_cursor:
                 apartments.append(domunity_pb2.Apartment(
-                    id=str(apt['id']),
+                    id=str(apt['_id']),
                     building_id=str(apt['building_id']),
                     number=apt['number'],
                     floor=apt['floor'] or 0,
@@ -356,35 +350,48 @@ class FinancialServicer(domunity_pb2_grpc.FinancialServiceServicer):
         logger.info(f"GET FINANCIAL REPORT REQUEST for building_id: {request.building_id}")
         
         try:
-            cursor = self.db.get_cursor()
-            cursor.execute("""
-                SELECT a.*, u.full_name, f.*
-                FROM apartments a
-                LEFT JOIN users u ON a.user_id = u.id
-                LEFT JOIN financial_records f ON a.id = f.apartment_id
-                WHERE a.building_id = %s
-                ORDER BY a.number
-            """, (int(request.building_id),))
+            pipeline = [
+                {"$match": {"building_id": ObjectId(request.building_id)}},
+                {"$lookup": {
+                    "from": "users",
+                    "localField": "user_id",
+                    "foreignField": "_id",
+                    "as": "user_data"
+                }},
+                {"$unwind": {"path": "$user_data", "preserveNullAndEmptyArrays": True}},
+                {"$lookup": {
+                    "from": "financial_records",
+                    "localField": "_id",
+                    "foreignField": "apartment_id",
+                    "as": "financial_data"
+                }},
+                {"$unwind": {"path": "$financial_data", "preserveNullAndEmptyArrays": True}},
+                {"$sort": {"number": 1}}
+            ]
+            
+            cursor_results = self.db.db.apartments.aggregate(pipeline)
             
             entries = []
             total = 0.0
             
-            for row in cursor.fetchall():
-                total_due = float(row.get('total_due', 0) or 0)
+            for row in cursor_results:
+                user_data = row.get('user_data', {})
+                financial_data = row.get('financial_data', {})
+                total_due = float(financial_data.get('total_due', 0) or 0)
                 total += total_due
                 
                 entries.append(domunity_pb2.FinancialReportEntry(
                     apartment_number=row['number'],
                     type=row['type'] or 'Апартамент',
                     floor=row['floor'] or 0,
-                    client_name=row['full_name'] or 'N/A',
+                    client_name=user_data.get('full_name', 'N/A'),
                     residents=row['residents'],
-                    elevator_gtp=float(row.get('elevator_gtp', 0) or 0),
-                    elevator_electricity=float(row.get('elevator_electricity', 0) or 0),
-                    common_area_electricity=float(row.get('common_area_electricity', 0) or 0),
-                    elevator_maintenance=float(row.get('elevator_maintenance', 0) or 0),
-                    management_fee=float(row.get('management_fee', 0) or 0),
-                    repair_fund=float(row.get('repair_fund', 0) or 0),
+                    elevator_gtp=float(financial_data.get('elevator_gtp', 0) or 0),
+                    elevator_electricity=float(financial_data.get('elevator_electricity', 0) or 0),
+                    common_area_electricity=float(financial_data.get('common_area_electricity', 0) or 0),
+                    elevator_maintenance=float(financial_data.get('elevator_maintenance', 0) or 0),
+                    management_fee=float(financial_data.get('management_fee', 0) or 0),
+                    repair_fund=float(financial_data.get('repair_fund', 0) or 0),
                     total_due=total_due
                 ))
             
@@ -417,17 +424,14 @@ class EventServicer(domunity_pb2_grpc.EventServiceServicer):
             cursor = self.db.get_cursor()
             limit = request.limit if request.limit > 0 else 10
             
-            cursor.execute("""
-                SELECT * FROM events 
-                WHERE building_id = %s 
-                ORDER BY date DESC 
-                LIMIT %s
-            """, (int(request.building_id), limit))
+            events_cursor = self.db.db.events.find(
+                {"building_id": ObjectId(request.building_id)}
+            ).sort("date", -1).limit(limit)
             
             events = []
-            for event in cursor.fetchall():
+            for event in events_cursor:
                 events.append(domunity_pb2.Event(
-                    id=str(event['id']),
+                    id=str(event['_id']),
                     date=str(event['date']),
                     title=event['title'] or '',
                     description=event['description'] or '',
@@ -445,14 +449,15 @@ class EventServicer(domunity_pb2_grpc.EventServiceServicer):
         logger.info(f"CREATE EVENT REQUEST for building_id: {request.building_id}")
         
         try:
-            cursor = self.db.get_cursor()
-            cursor.execute("""
-                INSERT INTO events (building_id, date, title, description)
-                VALUES (%s, %s, %s, %s)
-                RETURNING id
-            """, (int(request.building_id), request.date, request.title, request.description))
+            result = self.db.db.events.insert_one({
+                "building_id": ObjectId(request.building_id),
+                "date": datetime.strptime(request.date, '%Y-%m-%d') if '-' in request.date else datetime.utcnow(),
+                "title": request.title,
+                "description": request.description,
+                "created_at": datetime.utcnow()
+            })
             
-            event_id = cursor.fetchone()['id']
+            event_id = result.inserted_id
             self.db.commit()
             
             logger.info(f"✓ Event created with ID: {event_id}")
@@ -480,11 +485,14 @@ class ContactServicer(domunity_pb2_grpc.ContactServiceServicer):
         logger.info(f"CONTACT FORM REQUEST from: {request.email}")
         
         try:
-            cursor = self.db.get_cursor()
-            cursor.execute("""
-                INSERT INTO contact_requests (name, phone, email, message, type)
-                VALUES (%s, %s, %s, %s, 'contact')
-            """, (request.name, request.phone, request.email, request.message))
+            self.db.db.contact_requests.insert_one({
+                "name": request.name,
+                "phone": request.phone,
+                "email": request.email,
+                "message": request.message,
+                "type": "contact",
+                "created_at": datetime.utcnow()
+            })
             
             self.db.commit()
             logger.info("✓ Contact form saved")
@@ -506,12 +514,14 @@ class ContactServicer(domunity_pb2_grpc.ContactServiceServicer):
         logger.info(f"OFFER REQUEST from: {request.email}")
         
         try:
-            cursor = self.db.get_cursor()
-            cursor.execute("""
-                INSERT INTO contact_requests (name, phone, email, message, type)
-                VALUES (%s, %s, %s, %s, 'offer')
-            """, ('', request.phone, request.email, 
-                  f"City: {request.city}, Properties: {request.num_properties}, Address: {request.address}", ))
+            self.db.db.contact_requests.insert_one({
+                "name": "",
+                "phone": request.phone,
+                "email": request.email,
+                "message": f"City: {request.city}, Properties: {request.num_properties}, Address: {request.address}",
+                "type": "offer",
+                "created_at": datetime.utcnow()
+            })
             
             self.db.commit()
             logger.info("✓ Offer request saved")
@@ -533,12 +543,14 @@ class ContactServicer(domunity_pb2_grpc.ContactServiceServicer):
         logger.info(f"PRESENTATION REQUEST from: {request.email}")
         
         try:
-            cursor = self.db.get_cursor()
-            cursor.execute("""
-                INSERT INTO contact_requests (name, phone, email, message, type)
-                VALUES (%s, %s, %s, %s, 'presentation')
-            """, ('', request.phone, request.email,
-                  f"Date: {request.date}, Type: {request.building_type}, Address: {request.address}",))
+            self.db.db.contact_requests.insert_one({
+                "name": "",
+                "phone": request.phone,
+                "email": request.email,
+                "message": f"Date: {request.date}, Type: {request.building_type}, Address: {request.address}",
+                "type": "presentation",
+                "created_at": datetime.utcnow()
+            })
             
             self.db.commit()
             logger.info("✓ Presentation request saved")
@@ -566,8 +578,7 @@ class HealthServicer(domunity_pb2_grpc.HealthServiceServicer):
         
         db_status = "healthy"
         try:
-            cursor = self.db.get_cursor()
-            cursor.execute("SELECT 1")
+            self.db.client.admin.command('ping')
         except:
             db_status = "unhealthy"
         
@@ -676,8 +687,7 @@ class APIHandler(BaseHTTPRequestHandler):
         """Health check endpoint"""
         try:
             db_status = "connected"
-            cursor = self.db.get_cursor()
-            cursor.execute("SELECT 1")
+            self.db.client.admin.command('ping')
         except Exception as e:
             logger.error(f"Health check database error: {e}")
             db_status = f"error: {str(e)}"
@@ -696,12 +706,7 @@ class APIHandler(BaseHTTPRequestHandler):
         logger.info(f"API: Login request for {data.get('email')}")
         
         try:
-            cursor = self.db.get_cursor()
-            cursor.execute(
-                "SELECT * FROM users WHERE email = %s",
-                (data.get('email'),)
-            )
-            user = cursor.fetchone()
+            user = self.db.db.users.find_one({"email": data.get('email')})
             
             if not user:
                 self._send_json_response(401, {'success': False, 'message': 'Invalid email or password'})
@@ -709,13 +714,13 @@ class APIHandler(BaseHTTPRequestHandler):
             
             if bcrypt.checkpw(data.get('password', '').encode('utf-8'), user['password_hash'].encode('utf-8')):
                 access_token = jwt.encode({
-                    'user_id': user['id'],
+                    'user_id': str(user['_id']),
                     'email': user['email'],
                     'exp': datetime.utcnow() + timedelta(hours=JWT_EXPIRATION_HOURS)
                 }, JWT_SECRET, algorithm=JWT_ALGORITHM)
                 
                 refresh_token = jwt.encode({
-                    'user_id': user['id'],
+                    'user_id': str(user['_id']),
                     'exp': datetime.utcnow() + timedelta(days=30)
                 }, JWT_SECRET, algorithm=JWT_ALGORITHM)
                 
@@ -726,7 +731,7 @@ class APIHandler(BaseHTTPRequestHandler):
                     'access_token': access_token,
                     'refresh_token': refresh_token,
                     'user': {
-                        'id': str(user['id']),
+                        'id': str(user['_id']),
                         'email': user['email'],
                         'full_name': user['full_name'] or '',
                         'phone': user['phone'] or ''
@@ -746,14 +751,17 @@ class APIHandler(BaseHTTPRequestHandler):
         try:
             password_hash = bcrypt.hashpw(data.get('password', '').encode('utf-8'), bcrypt.gensalt())
             
-            cursor = self.db.get_cursor()
-            cursor.execute("""
-                INSERT INTO users (email, password_hash, full_name, phone)
-                VALUES (%s, %s, %s, %s)
-                RETURNING id
-            """, (data.get('email'), password_hash.decode('utf-8'), data.get('full_name', ''), data.get('phone', '')))
+            result = self.db.db.users.insert_one({
+                "email": data.get('email'),
+                "password_hash": password_hash.decode('utf-8'),
+                "full_name": data.get('full_name', ''),
+                "phone": data.get('phone', ''),
+                "role": "user",
+                "is_active": True,
+                "created_at": datetime.utcnow()
+            })
             
-            user_id = cursor.fetchone()['id']
+            user_id = result.inserted_id
             self.db.commit()
             
             logger.info(f"✓ API: User registered with ID {user_id}")
@@ -796,33 +804,31 @@ class APIHandler(BaseHTTPRequestHandler):
             return
         
         try:
-            cursor = self.db.get_cursor()
-            
-            # Get user
-            cursor.execute("SELECT * FROM users WHERE id = %s", (user_id,))
-            user = cursor.fetchone()
+            user = self.db.db.users.find_one({"_id": ObjectId(user_id)})
             
             if not user:
                 self._send_json_response(404, {'error': 'User not found'})
                 return
             
             # Get apartment and building
-            cursor.execute("""
-                SELECT a.id as apartment_id, a.number, a.floor, a.type, a.residents,
-                       b.id as building_id, b.address, b.entrance, b.total_apartments, b.total_residents
-                FROM apartments a
-                JOIN buildings b ON a.building_id = b.id
-                WHERE a.user_id = %s
-            """, (user_id,))
-            apartment_building = cursor.fetchone()
+            apartment_doc = self.db.db.apartments.find_one({"user_id": ObjectId(user_id)})
+            
+            building_doc = None
+            if apartment_doc:
+                building_doc = self.db.db.buildings.find_one({"_id": apartment_doc['building_id']})
+            
+            apartment_building = None
+            if apartment_doc and building_doc:
+                apartment_building = {**apartment_doc, **building_doc}
+                apartment_building['apartment_id'] = apartment_doc['_id']
+                apartment_building['building_id'] = building_doc['_id']
             
             # Get user profile
-            cursor.execute("SELECT * FROM user_profiles WHERE user_id = %s", (user_id,))
-            profile = cursor.fetchone()
+            profile = self.db.db.user_profiles.find_one({"user_id": ObjectId(user_id)})
             
             response = {
                 'user': {
-                    'id': str(user['id']),
+                    'id': str(user['_id']),
                     'email': user['email'],
                     'full_name': user['full_name'] or '',
                     'phone': user['phone'] or ''
@@ -846,15 +852,11 @@ class APIHandler(BaseHTTPRequestHandler):
                 }
                 
                 # Get events for the building
-                cursor.execute("""
-                    SELECT date, title, description 
-                    FROM events 
-                    WHERE building_id = %s 
-                    ORDER BY date DESC 
-                    LIMIT 10
-                """, (apartment_building['building_id'],))
+                events_cursor = self.db.db.events.find(
+                    {"building_id": apartment_building['building_id']}
+                ).sort("date", -1).limit(10)
                 events = []
-                for event in cursor.fetchall():
+                for event in events_cursor:
                     events.append({
                         'date': event['date'].strftime('%d.%m.%Y') if event['date'] else '',
                         'text': event['description'] or event['title'] or ''
@@ -868,19 +870,16 @@ class APIHandler(BaseHTTPRequestHandler):
                 response['contract_end_date'] = str(profile['contract_end_date']) if profile['contract_end_date'] else ''
             
             # Get payments for user
-            cursor.execute("""
-                SELECT amount, period, status, paid_date 
-                FROM payments 
-                WHERE user_id = %s 
-                ORDER BY created_at DESC
-            """, (user_id,))
+            payments_cursor = self.db.db.payments.find(
+                {"user_id": ObjectId(user_id)}
+            ).sort("created_at", -1)
             payments = []
             total_pending = 0.0
             total_overdue = 0.0
             yearly_total = 0.0
             last_payment = None
             
-            for payment in cursor.fetchall():
+            for payment in payments_cursor:
                 amount = float(payment['amount'])
                 payments.append({
                     'period': payment['period'],
@@ -922,11 +921,14 @@ class APIHandler(BaseHTTPRequestHandler):
         logger.info(f"API: Contact form from {data.get('email')}")
         
         try:
-            cursor = self.db.get_cursor()
-            cursor.execute("""
-                INSERT INTO contact_requests (name, phone, email, message, type)
-                VALUES (%s, %s, %s, %s, 'contact')
-            """, (data.get('name'), data.get('phone'), data.get('email'), data.get('message')))
+            self.db.db.contact_requests.insert_one({
+                "name": data.get('name'),
+                "phone": data.get('phone'),
+                "email": data.get('email'),
+                "message": data.get('message'),
+                "type": "contact",
+                "created_at": datetime.utcnow()
+            })
             
             self.db.commit()
             logger.info("✓ API: Contact form saved")
@@ -942,12 +944,14 @@ class APIHandler(BaseHTTPRequestHandler):
         logger.info(f"API: Offer request from {data.get('email')}")
         
         try:
-            cursor = self.db.get_cursor()
-            cursor.execute("""
-                INSERT INTO contact_requests (name, phone, email, message, type)
-                VALUES (%s, %s, %s, %s, 'offer')
-            """, ('', data.get('phone'), data.get('email'),
-                  f"City: {data.get('city')}, Properties: {data.get('num_properties')}, Address: {data.get('address')}, Info: {data.get('additional_info', '')}"))
+            self.db.db.contact_requests.insert_one({
+                "name": "",
+                "phone": data.get('phone'),
+                "email": data.get('email'),
+                "message": f"City: {data.get('city')}, Properties: {data.get('num_properties')}, Address: {data.get('address')}, Info: {data.get('additional_info', '')}",
+                "type": "offer",
+                "created_at": datetime.utcnow()
+            })
             
             self.db.commit()
             logger.info("✓ API: Offer request saved")
@@ -963,12 +967,14 @@ class APIHandler(BaseHTTPRequestHandler):
         logger.info(f"API: Presentation request from {data.get('email')}")
         
         try:
-            cursor = self.db.get_cursor()
-            cursor.execute("""
-                INSERT INTO contact_requests (name, phone, email, message, type)
-                VALUES (%s, %s, %s, %s, 'presentation')
-            """, ('', data.get('phone'), data.get('email'),
-                  f"Date: {data.get('date')}, Type: {data.get('building_type')}, Address: {data.get('address')}, Info: {data.get('additional_info', '')}"))
+            self.db.db.contact_requests.insert_one({
+                "name": "",
+                "phone": data.get('phone'),
+                "email": data.get('email'),
+                "message": f"Date: {data.get('date')}, Type: {data.get('building_type')}, Address: {data.get('address')}, Info: {data.get('additional_info', '')}",
+                "type": "presentation",
+                "created_at": datetime.utcnow()
+            })
             
             self.db.commit()
             logger.info("✓ API: Presentation request saved")
@@ -987,44 +993,55 @@ class APIHandler(BaseHTTPRequestHandler):
             return
         
         try:
-            cursor = self.db.get_cursor()
+            pipeline = [
+                {"$lookup": {
+                    "from": "apartments",
+                    "localField": "_id",
+                    "foreignField": "user_id",
+                    "as": "apartment_data"
+                }},
+                {"$unwind": {"path": "$apartment_data", "preserveNullAndEmptyArrays": True}},
+                {"$lookup": {
+                    "from": "buildings",
+                    "localField": "apartment_data.building_id",
+                    "foreignField": "_id",
+                    "as": "building_data"
+                }},
+                {"$unwind": {"path": "$building_data", "preserveNullAndEmptyArrays": True}},
+                {"$lookup": {
+                    "from": "user_profiles",
+                    "localField": "_id",
+                    "foreignField": "user_id",
+                    "as": "profile_data"
+                }},
+                {"$unwind": {"path": "$profile_data", "preserveNullAndEmptyArrays": True}},
+                {"$sort": {"_id": 1}}
+            ]
             
-            # Get all users with their apartment/building/profile info
-            cursor.execute("""
-                SELECT u.id, u.email, u.full_name, u.phone, u.role, u.is_active,
-                       a.number as apartment_number, a.residents,
-                       b.address as building, b.entrance,
-                       up.client_number, up.balance
-                FROM users u
-                LEFT JOIN apartments a ON a.user_id = u.id
-                LEFT JOIN buildings b ON a.building_id = b.id
-                LEFT JOIN user_profiles up ON up.user_id = u.id
-                ORDER BY u.id
-            """)
+            residents_cursor = self.db.db.users.aggregate(pipeline)
             
             residents = []
-            for row in cursor.fetchall():
+            for row in residents_cursor:
                 # Calculate total debt from payments
-                cursor.execute("""
-                    SELECT COALESCE(SUM(amount), 0) as total_debt
-                    FROM payments
-                    WHERE user_id = %s AND status IN ('pending', 'overdue')
-                """, (row['id'],))
-                debt_result = cursor.fetchone()
+                debt_agg = self.db.db.payments.aggregate([
+                    {"$match": {"user_id": row['_id'], "status": {"$in": ["pending", "overdue"]}}},
+                    {"$group": {"_id": None, "total_debt": {"$sum": "$amount"}}}
+                ])
+                debt_result = next(debt_agg, {"total_debt": 0.0})
                 
                 residents.append({
-                    'id': row['id'],
-                    'name': row['full_name'] or '',
+                    'id': str(row['_id']),
+                    'name': row.get('full_name', ''),
                     'email': row['email'],
-                    'building': row['building'] or '',
-                    'entrance': row['entrance'] or '',
-                    'apartment': str(row['apartment_number']) if row['apartment_number'] else '',
-                    'clientNumber': row['client_number'] or '',
-                    'residentsCount': row['residents'] or 0,
-                    'balance': float(row['balance']) if row['balance'] else 0.0,
+                    'building': row.get('building_data', {}).get('address', ''),
+                    'entrance': row.get('building_data', {}).get('entrance', ''),
+                    'apartment': str(row.get('apartment_data', {}).get('number', '')),
+                    'clientNumber': row.get('profile_data', {}).get('client_number', ''),
+                    'residentsCount': row.get('apartment_data', {}).get('residents', 0),
+                    'balance': float(row.get('profile_data', {}).get('balance', 0.0)),
                     'totalDebt': float(debt_result['total_debt']),
-                    'role': row['role'] or 'user',
-                    'isActive': row['is_active'] if row['is_active'] is not None else True,
+                    'role': row.get('role', 'user'),
+                    'isActive': row.get('is_active', True),
                 })
             
             self._send_json_response(200, {'residents': residents})
@@ -1041,34 +1058,36 @@ class APIHandler(BaseHTTPRequestHandler):
             return
         
         try:
-            cursor = self.db.get_cursor()
-            
             # Get apartment and building info
-            cursor.execute("""
-                SELECT a.id as apartment_id, a.number, a.floor, a.type, a.residents,
-                       b.id as building_id, b.address, b.entrance,
-                       up.balance, up.client_number
-                FROM apartments a
-                JOIN buildings b ON a.building_id = b.id
-                LEFT JOIN user_profiles up ON up.user_id = a.user_id
-                WHERE a.user_id = %s
-            """, (user_id,))
-            apt_data = cursor.fetchone()
+            apt_data = self.db.db.apartments.aggregate([
+                {"$match": {"user_id": ObjectId(user_id)}},
+                {"$lookup": {
+                    "from": "buildings",
+                    "localField": "building_id",
+                    "foreignField": "_id",
+                    "as": "building"
+                }},
+                {"$unwind": "$building"},
+                {"$lookup": {
+                    "from": "user_profiles",
+                    "localField": "user_id",
+                    "foreignField": "user_id",
+                    "as": "profile"
+                }},
+                {"$unwind": {"path": "$profile", "preserveNullAndEmptyArrays": True}}
+            ]).next()
             
             if not apt_data:
                 self._send_json_response(404, {'error': 'No apartment found for user'})
                 return
             
             # Get payments for this user
-            cursor.execute("""
-                SELECT amount, period, status, paid_date, created_at
-                FROM payments
-                WHERE user_id = %s
-                ORDER BY created_at DESC
-            """, (user_id,))
+            payments_cursor = self.db.db.payments.find(
+                {"user_id": ObjectId(user_id)}
+            ).sort("created_at", -1)
             
             payments = []
-            for p in cursor.fetchall():
+            for p in payments_cursor:
                 # Parse period into month/year
                 period_parts = p['period'].split(' ') if p['period'] else ['', '']
                 payments.append({
@@ -1083,15 +1102,12 @@ class APIHandler(BaseHTTPRequestHandler):
                 })
             
             # Get maintenance records for the building
-            cursor.execute("""
-                SELECT date, description, cost, status
-                FROM maintenance_records
-                WHERE building_id = %s
-                ORDER BY date DESC
-            """, (apt_data['building_id'],))
+            maintenance_cursor = self.db.db.maintenance_records.find(
+                {"building_id": apt_data['building']['_id']}
+            ).sort("date", -1)
             
             maintenance = []
-            for m in cursor.fetchall():
+            for m in maintenance_cursor:
                 maintenance.append({
                     'date': m['date'].strftime('%d.%m.%Y') if m['date'] else '',
                     'description': m['description'] or '',
@@ -1101,12 +1117,12 @@ class APIHandler(BaseHTTPRequestHandler):
             
             response = {
                 'apartmentInfo': {
-                    'building': apt_data['address'],
-                    'entrance': apt_data['entrance'] or '',
+                    'building': apt_data['building']['address'],
+                    'entrance': apt_data['building'].get('entrance', ''),
                     'number': str(apt_data['number']),
-                    'residents': apt_data['residents'] or 0,
-                    'balance': float(apt_data['balance']) if apt_data['balance'] else 0.0,
-                    'clientNumber': apt_data['client_number'] or '',
+                    'residents': apt_data.get('residents', 0),
+                    'balance': float(apt_data.get('profile', {}).get('balance', 0.0)),
+                    'clientNumber': apt_data.get('profile', {}).get('client_number', ''),
                 },
                 'payments': payments,
                 'maintenance': maintenance,
@@ -1132,54 +1148,63 @@ class APIHandler(BaseHTTPRequestHandler):
             
             if not building_id:
                 # Get building from user's apartment
-                cursor = self.db.get_cursor()
-                cursor.execute("""
-                    SELECT b.id FROM apartments a
-                    JOIN buildings b ON a.building_id = b.id
-                    WHERE a.user_id = %s
-                """, (user_id,))
-                result = cursor.fetchone()
-                if result:
-                    building_id = result['id']
+                apt = self.db.db.apartments.find_one({"user_id": ObjectId(user_id)})
+                if apt:
+                    building_id = apt['building_id']
                 else:
                     self._send_json_response(404, {'error': 'No building found'})
                     return
-            
-            cursor = self.db.get_cursor()
+            else:
+                building_id = ObjectId(building_id)
             
             # Get building info
-            cursor.execute("SELECT address, entrance FROM buildings WHERE id = %s", (building_id,))
-            building = cursor.fetchone()
+            building = self.db.db.buildings.find_one({"_id": building_id})
             
             # Get all apartments with their payment status
-            cursor.execute("""
-                SELECT a.number, a.floor, a.residents, u.full_name,
-                       COALESCE((
-                           SELECT SUM(amount) FROM payments 
-                           WHERE apartment_id = a.id AND status IN ('pending', 'overdue')
-                       ), 0) as amount_due,
-                       CASE 
-                           WHEN EXISTS(SELECT 1 FROM payments WHERE apartment_id = a.id AND status = 'overdue') THEN 'overdue'
-                           WHEN EXISTS(SELECT 1 FROM payments WHERE apartment_id = a.id AND status = 'pending') THEN 'pending'
-                           ELSE 'paid'
-                       END as status
-                FROM apartments a
-                LEFT JOIN users u ON a.user_id = u.id
-                WHERE a.building_id = %s
-                ORDER BY a.floor DESC, a.number
-            """, (building_id,))
+            # This is complex in Mongo without subqueries, we'll use aggregation
+            pipeline = [
+                {"$match": {"building_id": building_id}},
+                {"$lookup": {
+                    "from": "users",
+                    "localField": "user_id",
+                    "foreignField": "_id",
+                    "as": "user"
+                }},
+                {"$unwind": {"path": "$user", "preserveNullAndEmptyArrays": True}},
+                {"$lookup": {
+                    "from": "payments",
+                    "localField": "_id",
+                    "foreignField": "apartment_id",
+                    "as": "payments"
+                }},
+                {"$sort": {"floor": -1, "number": 1}}
+            ]
+            
+            apt_cursor = self.db.db.apartments.aggregate(pipeline)
             
             # Group by floor
             floors_dict = {}
-            for apt in cursor.fetchall():
-                floor_num = apt['floor'] or 1
+            for apt in apt_cursor:
+                # Calculate amount_due and status from the joined payments
+                payments = apt.get('payments', [])
+                amount_due = sum(p['amount'] for p in payments if p['status'] in ['pending', 'overdue'])
+                
+                status = 'paid'
+                if any(p['status'] == 'overdue' for p in payments):
+                    status = 'overdue'
+                elif any(p['status'] == 'pending' for p in payments):
+                    status = 'pending'
+                
+                floor_num = apt.get('floor') or 1
                 if floor_num not in floors_dict:
                     floors_dict[floor_num] = []
+                
+                full_name = apt.get('user', {}).get('full_name', '')
                 floors_dict[floor_num].append({
                     'number': apt['number'],
-                    'family': apt['full_name'].split(' ')[0] + 'и' if apt['full_name'] else 'Неизвестни',
-                    'amount': float(apt['amount_due']),
-                    'status': apt['status'],
+                    'family': full_name.split(' ')[0] + 'и' if full_name else 'Неизвестни',
+                    'amount': float(amount_due),
+                    'status': status,
                 })
             
             floors = [{'floor': f, 'apartments': apts} for f, apts in sorted(floors_dict.items(), reverse=True)]
@@ -1214,16 +1239,12 @@ class APIHandler(BaseHTTPRequestHandler):
                 self._send_json_response(400, {'error': 'Building ID required'})
                 return
             
-            cursor = self.db.get_cursor()
-            cursor.execute("""
-                SELECT date, description, cost, status
-                FROM maintenance_records
-                WHERE building_id = %s
-                ORDER BY date DESC
-            """, (building_id,))
+            maintenance_cursor = self.db.db.maintenance_records.find(
+                {"building_id": ObjectId(building_id)}
+            ).sort("date", -1)
             
             maintenance = []
-            for m in cursor.fetchall():
+            for m in maintenance_cursor:
                 maintenance.append({
                     'date': m['date'].strftime('%d.%m.%Y') if m['date'] else '',
                     'description': m['description'] or '',
@@ -1274,7 +1295,7 @@ def serve():
         sys.exit(1)
     
     # Start HTTP REST API server
-    http_port = int(os.getenv('HTTP_PORT', '8080'))
+    http_port = int(os.getenv('HTTP_PORT', os.getenv('PORT', '8080')))
     http_server = start_http_api_server(http_port, db)
     
     # Create gRPC server
