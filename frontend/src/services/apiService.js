@@ -9,7 +9,7 @@ const getApiUrl = () => {
     if (process.env.NODE_ENV === 'production') {
         return host ? `https://${host}.onrender.com` : 'https://domunity-backend-python.onrender.com';
     }
-    return 'http://localhost:8080';
+    return 'https://domunity-backend-python.onrender.com';
 };
 
 const API_URL = getApiUrl();
