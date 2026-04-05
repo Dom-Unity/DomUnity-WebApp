@@ -11,9 +11,9 @@ import Signup from './pages/Signup';
 import Profile from './pages/Profile';
 import Contacts from './pages/Contacts';
 import Offer from './pages/Offer';
-
 import Entrance from './pages/Entrance';
 import Apartment from './pages/Apartment';
+import Building from './pages/Building';
 import EditProfile from './pages/EditProfile';
 import AdminResidents from "./pages/AdminResidents";
 import ForgottenPassword from "./pages/ForgottenPassword";
@@ -45,6 +45,7 @@ function App() {
                     <Route path="/offer" element={<Offer />} />
                     <Route path="/entrance" element={<Entrance />} />
                     <Route path="/apartment" element={<Apartment />} />
+                    <Route path="/building" element={<Building />} />
                     <Route path="/editprofile" element={<EditProfile />} />
                     <Route path="/residents" element={<AdminResidents />} />
                     <Route path="/forgottenpassword" element={<ForgottenPassword />} />
