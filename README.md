@@ -1,8 +1,8 @@
 # DomUnity - Property Management Platform
 
-![CI Status](https://github.com/YOUR_USERNAME/DomUnity-WebApp/workflows/CI%20-%20Backend%20Tests%20and%20Docker%20Build/badge.svg)
+![CI Status](https://github.com/Alex-Tsvetanov/DomUnity-WebApp/workflows/CI%20-%20Backend%20Tests%20and%20Docker%20Build/badge.svg)
 
-A modern property management platform for Bulgarian residential buildings, featuring a React frontend and multiple gRPC backend options (Python, Go, Node.js).
+A modern property management platform for Bulgarian residential buildings, featuring a React frontend and a backend that serves both a REST/JSON API (used by the frontend) and gRPC. Two interchangeable backend implementations are provided: Python (the deployed default) and Node.js.
 
 ## 🏗️ Architecture
 
@@ -11,22 +11,24 @@ A modern property management platform for Bulgarian residential buildings, featu
 │  React Frontend │
 │   (Static SPA)  │
 └────────┬────────┘
-         │ HTTP/gRPC-Web
+         │ HTTPS (REST / JSON)
          │
-    ┌────┴─────────────────────┐
-    │   Choose ONE Backend:    │
-    ├──────────┬───────┬───────┤
-    │  Python  │  Go   │Node.js│
-    │  gRPC    │ gRPC  │ gRPC  │
-    └────┬─────┴───┬───┴───┬───┘
-         │         │       │
-         └─────────┼───────┘
-                   │
-         ┌─────────┴─────────┐
-         │  PostgreSQL DB    │
-         │  (Render.com)     │
-         └───────────────────┘
+    ┌────┴──────────────────┐
+    │  Choose ONE Backend:  │
+    ├───────────┬───────────┤
+    │  Python   │  Node.js  │
+    │ REST+gRPC │ REST+gRPC │
+    └─────┬─────┴─────┬─────┘
+          │           │
+          └─────┬─────┘
+                │
+      ┌─────────┴─────────┐
+      │     MongoDB       │
+      │  (e.g. Atlas)     │
+      └───────────────────┘
 ```
+
+> **Note:** The React frontend talks to the backend over the **REST/JSON API** (see the endpoint list below). The backend also exposes the same operations over gRPC, but the frontend does not use gRPC-Web.
 
 ## 🚀 Features
 
@@ -39,55 +41,46 @@ A modern property management platform for Bulgarian residential buildings, featu
 - 📧 **Contact Forms**: Send inquiries, request offers/presentations
 
 ### Technical Features
-- **gRPC Services**: High-performance RPC communication
-- **HTTP Health Checks**: Standard REST endpoint for monitoring (compatible with Render.com)
-- **Multiple Backend Options**: Choose Python, Go, or Node.js based on your preferences
-- **PostgreSQL Database**: Relational data storage with automatic schema initialization
+- **REST/JSON API**: The interface the React frontend actually uses
+- **gRPC Services**: The same operations are also exposed over gRPC
+- **HTTP Health Checks**: `/health` endpoint for monitoring (compatible with Render.com)
+- **Two Backend Options**: Python (deployed default) or Node.js — pick one
+- **MongoDB Database**: Document storage with automatic index + sample-data initialization
 - **Docker Deployment**: Containerized backends for easy deployment
-- **Comprehensive Logging**: Extensive logging in all backends for debugging
+- **Comprehensive Logging**: Extensive logging in both backends for debugging
 - **Frankfurt Region**: Low-latency deployment for Bulgarian users
 
 ## 📋 Backend Comparison
 
-| Feature | Python | Go | Node.js |
-|---------|--------|-----|---------|
-| **Runtime** | Python 3.11 | Go 1.21 | Node 20 |
-| **Performance** | Good | Excellent | Very Good |
-| **Memory Usage** | Medium | Low | Medium-Low |
-| **Startup Time** | Fast | Very Fast | Fast |
-| **Dependencies** | grpcio, psycopg2, bcrypt, PyJWT | grpc, lib/pq, bcrypt, jwt | @grpc/grpc-js, pg, bcrypt, jsonwebtoken |
-| **Docker Image Size** | ~500MB | ~50MB (multi-stage) | ~200MB |
-| **Learning Curve** | Easy | Medium | Easy |
-| **Best For** | Rapid development, Python familiarity | Production performance, low resources | JavaScript/TypeScript teams |
+| Feature | Python | Node.js |
+|---------|--------|---------|
+| **Runtime** | Python 3.11 | Node 20 |
+| **Status** | Deployed default | Drop-in alternative |
+| **Dependencies** | grpcio, pymongo, bcrypt, PyJWT | @grpc/grpc-js, mongodb, bcrypt, jsonwebtoken |
+| **Docker Image Size** | ~500MB | ~200MB |
+| **Best For** | Rapid development, Python familiarity | JavaScript/TypeScript teams |
 
-**Recommendation**: 
-- **Choose Python** if: Your team knows Python, you want fast development
-- **Choose Go** if: You need maximum performance and minimal resource usage
-- **Choose Node.js** if: Your team is JavaScript-focused or wants unified JS stack
+Both backends expose an identical REST + gRPC surface over the same MongoDB
+collections, so the frontend works against either without changes.
 
-## 🗂️ Database Schema
+> A Go backend is mentioned in some historical notes but is **not** part of this
+> repository.
 
-```sql
--- Users table with authentication
-users (id, username, email, password_hash, created_at)
+## 🗂️ Database Schema (MongoDB collections)
 
--- User profile information
-user_profiles (id, user_id, full_name, phone, building_id, entrance, apartment)
+Documents use Mongo `ObjectId` (`_id`) as identifiers and reference each other by
+`ObjectId`. Indexes are created automatically on startup.
 
--- Building information
-buildings (id, name, address, city, postal_code, total_apartments, year_built)
-
--- Apartment details
-apartments (id, building_id, apartment_number, entrance, floor, area, residents_count)
-
--- Financial records
-financial_records (id, user_id, building_id, apartment_id, month, year, amount, paid, description)
-
--- Community events
-events (id, building_id, title, description, event_date, created_by, created_at)
-
--- Contact form submissions
-contact_requests (id, name, email, phone, message, request_type, created_at)
+```
+users               { _id, email (unique), password_hash, full_name, phone, role, is_active, created_at }
+user_profiles       { _id, user_id, account_manager, balance, client_number, contract_end_date }
+buildings           { _id, address, entrance, total_apartments, total_residents }
+apartments          { _id, building_id, number, floor, type, residents, user_id }   # (building_id, number) unique
+events              { _id, building_id, date, title, description, created_at }
+payments            { _id, user_id, apartment_id, amount, period, status, paid_date, created_at }
+maintenance_records { _id, building_id, date, description, cost, status }
+financial_records   { _id, apartment_id, period, elevator_gtp, elevator_electricity, ... , total_due }
+contact_requests    { _id, name, email, phone, message, type, created_at }
 ```
 
 ## 🛠️ Technology Stack
@@ -101,53 +94,45 @@ contact_requests (id, name, email, phone, message, request_type, created_at)
 ### Backend Options
 
 #### Python Backend
-- **grpcio 1.60.0**: gRPC framework
-- **psycopg2-binary 2.9.9**: PostgreSQL driver
-- **bcrypt 4.1.2**: Password hashing
-- **PyJWT 2.8.0**: JWT token generation
-
-#### Go Backend
-- **google.golang.org/grpc 1.60.1**: gRPC framework
-- **github.com/lib/pq 1.10.9**: PostgreSQL driver
-- **golang.org/x/crypto/bcrypt**: Password hashing
-- **github.com/golang-jwt/jwt/v5**: JWT tokens
+- **grpcio**: gRPC framework
+- **pymongo**: MongoDB driver
+- **bcrypt**: Password hashing
+- **PyJWT**: JWT token generation
 
 #### Node.js Backend
-- **@grpc/grpc-js 1.9.14**: gRPC framework
-- **pg 8.11.3**: PostgreSQL client
-- **bcrypt 5.1.1**: Password hashing
-- **jsonwebtoken 9.0.2**: JWT tokens
+- **@grpc/grpc-js**: gRPC framework
+- **mongodb**: MongoDB driver
+- **bcrypt**: Password hashing
+- **jsonwebtoken**: JWT tokens
 
 ## 🔗 Frontend ↔ Backend Integration
 
-The React frontend ships with a lightweight HTTP client that mirrors the gRPC service surface. In environments where grpc-web is not configured, the frontend calls REST endpoints. The supported endpoints (expected on the backend) are:
+The React frontend calls the backend's REST/JSON API (see [`frontend/src/services/apiService.js`](frontend/src/services/apiService.js)). The endpoints implemented by both backends are:
 
-- `GET /api/health` — health check
-- `POST /api/auth/login` — login (body: `{ email, password }`)
-- `POST /api/auth/register` — registration
-- `POST /api/auth/refresh` — refresh token
-- `POST /api/auth/forgot` — forgot password
-- `GET /api/user/profile` — get profile (query `user_id`)
-- `PUT /api/user/profile` — update profile
-- `GET /api/building/:id` — get building
-- `GET /api/building/:id/apartments` — list apartments
-- `GET /api/financial/report` — financial report (query params)
-- `GET /api/financial/payments` — payment history
-- `GET /api/events` — list events (query params `building_id`, `limit`)
-- `POST /api/events` — create event
-- `POST /api/contact` — send contact form
-- `POST /api/offer` — request an offer
-- `POST /api/presentation` — request a presentation
+| Method & path | Purpose | Auth |
+|---|---|---|
+| `GET /health` | Health check (DB status) | — |
+| `POST /api/auth/login` | Login (`{ email, password }`) | — |
+| `POST /api/auth/register` | Registration | — |
+| `POST /api/auth/refresh` | Refresh access token | — |
+| `POST /api/auth/forgot` | Record a password-reset request | — |
+| `POST /api/user/password` | Change password (`{ old_password, new_password }`) | Bearer |
+| `GET /api/user/profile` | Current user's profile, payments & events | Bearer |
+| `GET /api/user/apartment` | Current user's apartment, payments & maintenance | Bearer |
+| `GET /api/building/:id/apartments` | Apartments grouped by floor | Bearer |
+| `GET /api/building/:id/maintenance` | Building maintenance records | Bearer |
+| `GET /api/admin/residents` | All residents (admin role required) | Bearer (admin) |
+| `POST /api/payments/pay` | Mark a payment as paid (`{ payment_id }`) | Bearer |
+| `POST /api/contact/form` | Contact form | — |
+| `POST /api/contact/offer` | Request an offer | — |
+| `POST /api/contact/presentation` | Request a presentation | — |
 
-To point the frontend at your backend, set the environment variable `REACT_APP_API_URL` before running the app. Example:
+The `:id` path segment for building endpoints may be any value — if it is not a
+valid `ObjectId`, the backend resolves the building from the authenticated user's
+apartment.
 
-```bash
-# Windows Git Bash / bash
-export REACT_APP_API_URL="https://api.example.com"
-npm start
-```
-
-If you deploy the backend on the same origin as the frontend, leave `REACT_APP_API_URL` unset and the client will use relative paths.
+To point the frontend at your backend, set `REACT_APP_BACKEND_URL` to your
+backend's Render service name before building (see the Frontend env vars below).
 
 ## Setting Up grpc-web (optional)
 
@@ -173,49 +158,37 @@ npm run generate-proto
 Note: grpc-web requires an HTTP/1.1 compatible proxy such as Envoy or a backend that supports grpc-web.
 
 ### Database
-- **PostgreSQL 15**: Relational database on Render.com free tier
+- **MongoDB**: Document database (e.g. MongoDB Atlas free tier). Not provisioned by Render — set `MONGODB_URI` as a secret.
 
 ## 📦 Project Structure
 
 ```
-UI/
+DomUnity-WebApp/
 ├── proto/
 │   └── domunity.proto              # gRPC service definitions
-├── backend-python/
-│   ├── server.py                   # Main gRPC server
-│   ├── db.py                       # Database operations
-│   ├── Dockerfile                  # Container image
-│   ├── requirements.txt            # Python dependencies
-│   ├── generate_proto.sh           # Proto compilation script
-│   └── .env.example                # Environment template
-├── backend-go/
-│   ├── main.go                     # Entry point & auth service
-│   ├── services.go                 # Other gRPC services
-│   ├── Dockerfile                  # Multi-stage build
-│   ├── go.mod                      # Go dependencies
-│   └── .env.example                # Environment template
-├── backend-nodejs/
-│   ├── server.js                   # Main gRPC server
-│   ├── db.js                       # Database operations
-│   ├── Dockerfile                  # Container image
-│   ├── package.json                # Node dependencies
-│   └── .env.example                # Environment template
+├── backend-python/                 # Deployed default (REST + gRPC, MongoDB)
+│   ├── server.py                   # gRPC servicers + REST API handler
+│   ├── db.py                       # MongoDB connection, indexes, sample data
+│   ├── Dockerfile
+│   ├── requirements.txt
+│   ├── generate_proto.sh
+│   ├── test_unit.py / test_integration.py
+│   └── .env.example
+├── backend-nodejs/                 # Drop-in alternative (REST + gRPC, MongoDB)
+│   ├── server.js                   # gRPC servicers + REST API
+│   ├── db.js                       # MongoDB connection, indexes, sample data
+│   ├── Dockerfile
+│   ├── package.json
+│   ├── test/                       # Jest unit & integration tests
+│   └── .env.example
 ├── frontend/
 │   ├── public/
-│   │   └── index.html              # HTML template
 │   ├── src/
-│   │   ├── App.js                  # Main app & routing
-│   │   ├── components/             # Reusable components
-│   │   │   ├── Header.js           # Navigation header
-│   │   │   └── Footer.js           # Site footer
-│   │   └── pages/                  # Page components
-│   │       ├── Home.js             # Landing page
-│   │       ├── Login.js            # Login form
-│   │       ├── Signup.js           # Registration form
-│   │       ├── Profile.js          # User dashboard
-│   │       ├── Contacts.js         # Contact form
-│   │       └── Offer.js            # Offer request
-│   └── package.json                # Frontend dependencies
+│   │   ├── App.jsx                 # Main app & routing
+│   │   ├── components/             # Header, Footer
+│   │   ├── pages/                  # Home, Login, Signup, Profile, Apartment, …
+│   │   └── services/apiService.js  # REST client
+│   └── package.json
 ├── render.yaml                     # Render.com deployment config
 ├── README.md                       # This file
 ├── QUICKSTART.md                   # Fast deployment guide
@@ -224,33 +197,35 @@ UI/
 
 ## 🔧 Environment Variables
 
-### Backend Environment Variables (All backends use same variables)
+### Backend Environment Variables (both backends use the same variables)
 
 ```bash
-# Database Connection (provided by Render.com automatically)
-DATABASE_URL=postgresql://user:password@host:port/database
+# MongoDB connection string (set as a secret on Render).
+# Backends also accept DATABASE_URL if it begins with "mongodb".
+MONGODB_URI=mongodb+srv://user:password@cluster/domunity
 
 # JWT Secret (generate a random string)
 JWT_SECRET=your-secret-key-here
 
 # Server Configuration
 GRPC_PORT=50051              # gRPC server port
-HTTP_PORT=8080               # HTTP/REST port (for health checks)
+HTTP_PORT=8080               # HTTP/REST port (health checks + API)
+PORT=8080                    # Render injects PORT; used as HTTP port fallback
 ```
 
 ### Frontend Environment Variables
 
 ```bash
-# Backend URL (provided by Render.com via fromService)
-REACT_APP_BACKEND_URL=https://your-backend.onrender.com
+# Render backend service NAME (the frontend builds https://<name>.onrender.com)
+REACT_APP_BACKEND_URL=domunity-backend-python
 ```
 
 ## 🧪 Testing & Continuous Integration
 
-This project includes comprehensive CI/CD with GitHub Actions that runs:
-- ✅ **Unit Tests** for all three backends
-- ✅ **Integration Tests** with PostgreSQL
-- ✅ **Docker Build Verification** for all images
+This project includes CI/CD with GitHub Actions that runs:
+- ✅ **Unit Tests** for both backends
+- ✅ **Integration Tests** against MongoDB
+- ✅ **Docker Build Verification** for both images
 - ✅ **Frontend Build Tests**
 - ✅ **Render.yaml Configuration Validation**
 - ✅ **Security Scanning** with Trivy
@@ -261,10 +236,9 @@ This project includes comprehensive CI/CD with GitHub Actions that runs:
 # Run all tests
 ./run-tests.sh
 
-# Or test individual backends
-cd backend-python && pytest -v
-cd backend-nodejs && npm test
-cd backend-go && go test -v ./...
+# Or test individual backends (integration tests need a local MongoDB)
+cd backend-python && pytest -v        # uses TEST_MONGODB_URI (default mongodb://localhost:27017/domunity_test)
+cd backend-nodejs && npm test         # uses TEST_MONGODB_URI
 
 # Test Docker builds
 ./test-docker-builds.sh
@@ -331,42 +305,41 @@ STARTING DOMUNITY GRPC SERVER
 - **Render.com**: Available in the Logs tab of each service
 
 **Common Issues**:
-1. **Database Connection Fails**: Check `DATABASE_URL` environment variable
+1. **Database Connection Fails**: Check the `MONGODB_URI` environment variable
 2. **Frontend Can't Connect**: Verify `REACT_APP_BACKEND_URL` is set correctly
 3. **Proto Compilation Errors**: Ensure `protoc` is installed in Docker image
 
 ## ⚠️ Known Limitations
 
-1. **fromService.property.host**: Returns only the hostname (e.g., `domunity-backend-python-hegi`) without `.onrender.com`. The frontend needs to append the full domain or use Render's internal networking.
+1. **fromService.property.host**: Returns only the hostname (e.g., `domunity-backend-python-hegi`) without `.onrender.com`. The frontend appends `.onrender.com` (see `apiService.js`).
 
 2. **Free Tier Sleep**: Render.com free tier services sleep after 15 minutes of inactivity. First request after sleep takes ~30 seconds to wake up.
 
-3. **gRPC-Web**: Currently not implemented. Frontend uses HTTP/JSON endpoints that wrap gRPC calls. For native gRPC-Web, add Envoy proxy.
+3. **gRPC-Web**: Not used by the frontend. The frontend talks to the REST/JSON API; gRPC is available for other clients but has no browser gRPC-Web proxy.
 
 ## 📈 Scaling Considerations
 
-- **Horizontal Scaling**: All backends are stateless and can scale horizontally
-- **Database Connection Pooling**: Configured in all backends (max 10 connections)
+- **Horizontal Scaling**: Both backends are stateless and can scale horizontally
 - **Caching**: Consider adding Redis for session storage and caching
 - **CDN**: Frontend static assets can be served via CDN
 
 ## 🔒 Security
 
-- ✅ **Password Hashing**: bcrypt with salt rounds (12)
-- ✅ **JWT Tokens**: HS256 algorithm, 24-hour expiration
-- ✅ **SQL Injection Prevention**: Parameterized queries in all backends
+- ✅ **Password Hashing**: bcrypt
+- ✅ **JWT Tokens**: HS256 algorithm, 24-hour access tokens
+- ✅ **NoSQL Injection Prevention**: Queries use typed `ObjectId`/field filters, not string concatenation
+- ✅ **Admin Authorization**: `/api/admin/residents` requires a user whose `role` is `admin`
 - ✅ **HTTPS**: Enforced by Render.com
-- ⚠️ **CORS**: Configure based on your domain requirements
-- ⚠️ **Rate Limiting**: Not implemented (add nginx or middleware)
+- ⚠️ **CORS**: Currently open (`Access-Control-Allow-Origin: *`) — restrict to your domain for production
+- ⚠️ **Rate Limiting**: Not implemented (add a proxy or middleware)
 
 ## 🤝 Contributing
 
-1. Choose your preferred backend (Python/Go/Node.js)
-2. Make changes to the relevant backend directory
-3. Test locally with Docker
-4. Update proto file if adding new services
-5. Regenerate proto bindings: `./generate_proto.sh`
-6. Update frontend to consume new endpoints
+1. Choose your preferred backend (Python or Node.js)
+2. Make changes to the relevant backend directory — keep the REST contract in sync between both
+3. Test locally (a local MongoDB is needed for integration tests)
+4. Update `proto/domunity.proto` if adding new gRPC services
+5. Update `frontend/src/services/apiService.js` to consume new endpoints
 
 ## 📝 License
 

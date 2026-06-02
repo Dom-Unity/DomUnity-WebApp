@@ -1,5 +1,10 @@
 # GitHub CI Implementation Summary
 
+> **⚠️ Note:** Parts of this document predate the MongoDB migration and may still
+> mention PostgreSQL or a Go backend. The current pipeline (see
+> [`.github/workflows/ci.yml`](.github/workflows/ci.yml)) tests **two** backends —
+> Python and Node.js — against a **MongoDB** service. There is no Go backend.
+
 ## Overview
 
 A comprehensive GitHub Actions CI/CD pipeline has been implemented for the DomUnity-WebApp project to ensure code quality, prevent regressions, and validate Render.com deployments before merging pull requests.

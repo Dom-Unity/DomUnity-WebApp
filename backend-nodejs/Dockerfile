@@ -2,9 +2,6 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# Install system dependencies
-RUN apk add --no-cache postgresql-client
-
 # Copy package files
 COPY backend-nodejs/package*.json ./
 RUN npm install --omit=dev
@@ -24,8 +21,8 @@ RUN grpc_tools_node_protoc \
 # Copy application code
 COPY backend-nodejs/ .
 
-# Expose gRPC port
-EXPOSE 50051
+# Expose gRPC and HTTP/REST ports
+EXPOSE 50051 8080
 
 # Run the server
 CMD ["node", "server.js"]

@@ -2,7 +2,15 @@ import React, { useMemo, useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import "./AdminResidents.css";
-import { getAdminResidents, isAuthenticated } from "../services/apiService";
+import {
+  getAdminResidents,
+  getEntrances,
+  createEntrance,
+  updateEntrance,
+  createResident,
+  updateResident,
+  isAuthenticated,
+} from "../services/apiService";
 
 const AdminResidents = () => {
   const { t } = useTranslation();
@@ -39,141 +47,40 @@ const AdminResidents = () => {
     apartmentLayout: "1,2",
   });
 
+  // Load entrances (with their apartments) and residents from the backend.
+  const loadData = useCallback(async () => {
+    try {
+      const [entrancesData, residentsData] = await Promise.all([
+        getEntrances(),
+        getAdminResidents(),
+      ]);
+
+      if (residentsData && residentsData.error) {
+        setError(residentsData.error);
+      }
+      if (entrancesData && Array.isArray(entrancesData.entrances)) {
+        setEntrances(entrancesData.entrances);
+      }
+      if (residentsData && Array.isArray(residentsData.residents)) {
+        setResidents(residentsData.residents);
+      }
+    } catch (err) {
+      console.error("Failed to load admin data:", err);
+      setError(tr("adminResidents.fetchError", "Грешка при зареждане на данните"));
+    } finally {
+      setLoading(false);
+    }
+  }, [tr]);
+
   useEffect(() => {
     if (!isAuthenticated()) {
       navigate("/login");
       return;
     }
+    loadData();
+  }, [navigate, loadData]);
 
-    const fetchResidents = async () => {
-      try {
-        const data = await getAdminResidents();
-
-        if (data.error) {
-          setError(data.error);
-          return;
-        }
-
-        if (data.residents) {
-          setResidents(data.residents);
-        }
-      } catch (err) {
-        console.error("Failed to fetch residents:", err);
-        setError(tr("adminResidents.fetchError", "Грешка при зареждане на данните"));
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchResidents();
-  }, [navigate, tr]);
-
-  useEffect(() => {
-    const grouped = {};
-
-    residents.forEach((r) => {
-      const building = r.building || "";
-      const entrance = r.entrance || "";
-
-      if (!building || !entrance) return;
-
-      const key = `${building}__${entrance}`;
-
-      if (!grouped[key]) {
-        grouped[key] = {
-          id: key,
-          building,
-          address: building,
-          entrance,
-          apartmentsMap: new Map(),
-        };
-      }
-
-      const apartmentNumber = String(r.apartment || "").trim();
-
-      if (apartmentNumber) {
-        grouped[key].apartmentsMap.set(apartmentNumber, {
-          number: apartmentNumber,
-          family: r.name || tr("adminResidents.roleUser", "Потребител"),
-          amount: Number(r.totalDebt || 0),
-          status:
-            Number(r.totalDebt || 0) > 0
-              ? Number(r.balance || 0) > 0
-                ? "pending"
-                : "overdue"
-              : "paid",
-        });
-      }
-    });
-
-    const generatedEntrances = Object.values(grouped).map((group) => {
-      const apartmentNumbers = [...group.apartmentsMap.keys()]
-        .map((n) => Number(n))
-        .filter((n) => !Number.isNaN(n))
-        .sort((a, b) => a - b);
-
-      const apartmentLayout =
-        apartmentNumbers.length > 0
-          ? apartmentNumbers.slice(0, Math.min(4, apartmentNumbers.length)).join(",")
-          : "1,2";
-
-      const apartmentsPerFloor = apartmentLayout
-        .split(",")
-        .map((n) => n.trim())
-        .filter(Boolean).length || 2;
-
-      const floorsMap = new Map();
-
-      apartmentNumbers.forEach((num) => {
-        const floor = Math.ceil(num / apartmentsPerFloor);
-        if (!floorsMap.has(floor)) floorsMap.set(floor, []);
-        floorsMap.get(floor).push(
-          group.apartmentsMap.get(String(num)) || group.apartmentsMap.get(num)
-        );
-      });
-
-      const floors = [...floorsMap.entries()]
-        .sort((a, b) => b[0] - a[0])
-        .map(([floor, apartments]) => ({
-          floor,
-          apartments,
-        }));
-
-      return {
-        id: group.id,
-        building: group.building,
-        address: group.address,
-        entrance: group.entrance,
-        floorsCount: floors.length || 1,
-        apartmentsPerFloor,
-        apartmentLayout,
-        floors:
-          floors.length > 0
-            ? floors
-            : [
-                {
-                  floor: 1,
-                  apartments: [],
-                },
-              ],
-      };
-    });
-
-    setEntrances((prev) => {
-      if (prev.length === 0) return generatedEntrances;
-
-      const manualOnly = prev.filter(
-        (item) => !generatedEntrances.some((g) => g.id === item.id)
-      );
-
-      const merged = generatedEntrances.map((generated) => {
-        const existing = prev.find((p) => p.id === generated.id);
-        return existing || generated;
-      });
-
-      return [...merged, ...manualOnly];
-    });
-  }, [residents, tr]);
+  // Entrances (and their apartments) come from the backend via loadData().
 
   const buildings = useMemo(() => {
     const fromResidents = residents.map((r) => r.building).filter(Boolean);
@@ -250,7 +157,7 @@ const AdminResidents = () => {
     });
   };
 
-  const saveResident = (e) => {
+  const saveResident = async (e) => {
     e.preventDefault();
     if (!editForm) return;
 
@@ -293,9 +200,48 @@ const AdminResidents = () => {
       return;
     }
 
-    setResidents((prev) => prev.map((r) => (r.id === editForm.id ? editForm : r)));
-    closeEdit();
-    alert(tr("adminResidents.alertProfileUpdated", "Профилът е обновен успешно."));
+    const payload = {
+      name: editForm.name,
+      email: editForm.email,
+      password: editForm.password || undefined,
+      building: editForm.building,
+      entrance: editForm.entrance,
+      apartment: String(editForm.apartment),
+      residentsCount: Number(editForm.residentsCount) || 0,
+      clientNumber: editForm.clientNumber || "",
+      balance: Number(editForm.balance) || 0,
+      role: editForm.role,
+      isActive: editForm.isActive,
+    };
+
+    try {
+      const res = isCreatingResident
+        ? await createResident(payload)
+        : await updateResident(editForm.id, payload);
+
+      if (res && res.success === false) {
+        alert(res.message || tr("adminResidents.saveError", "Грешка при запазване."));
+        return;
+      }
+
+      await loadData();
+      closeEdit();
+
+      if (res && res.temp_password) {
+        alert(
+          tr(
+            "adminResidents.tempPasswordAlert",
+            "Профилът е създаден. Временна парола за {{email}}: {{password}}\nСподелете я с живущия — препоръчва се смяна при първо влизане.",
+            { email: editForm.email, password: res.temp_password }
+          )
+        );
+      } else {
+        alert(tr("adminResidents.alertProfileUpdated", "Профилът е обновен успешно."));
+      }
+    } catch (err) {
+      console.error("Save resident error:", err);
+      alert(tr("adminResidents.saveError", "Грешка при запазване."));
+    }
   };
 
   const addNewResident = () => {
@@ -313,12 +259,11 @@ const AdminResidents = () => {
     const firstApartment =
       firstEntrance?.floors?.flatMap((floor) => floor.apartments)?.[0]?.number || "";
 
-    const newId = residents.length ? Math.max(...residents.map((r) => r.id)) + 1 : 1;
-
+    // Empty form; nothing is persisted until the admin saves (POST).
     const newResident = {
-      id: newId,
-      name: tr("adminResidents.newResidentName", "Нов живущ"),
+      name: "",
       email: "",
+      password: "",
       building: firstEntrance?.building || "",
       entrance: firstEntrance?.entrance || "",
       apartment: firstApartment ? String(firstApartment) : "",
@@ -326,11 +271,10 @@ const AdminResidents = () => {
       residentsCount: 1,
       balance: 0,
       totalDebt: 0,
-      role: tr("adminResidents.roleUser", "Потребител"),
+      role: "Потребител",
       isActive: true,
     };
 
-    setResidents((prev) => [newResident, ...prev]);
     setEditForm(newResident);
     setIsEditing(true);
     setIsCreatingResident(true);
@@ -357,13 +301,17 @@ const AdminResidents = () => {
 
   const buildFloorsFromForm = (form) => {
     const floorsCount = Number(form.floorsCount) || 1;
-    const layout = parseApartmentLayout(form.apartmentLayout);
+    const perFloor =
+      parseApartmentLayout(form.apartmentLayout).length ||
+      Number(form.apartmentsPerFloor) ||
+      1;
 
     const floors = [];
 
     for (let floor = floorsCount; floor >= 1; floor -= 1) {
-      const apartments = layout.map((suffix, index) => {
-        const apartmentNumber = `${floor}${suffix}`;
+      // Sequential numbering 1..N across floors (floor 1 holds 1..perFloor, etc.)
+      const apartments = Array.from({ length: perFloor }, (_, index) => {
+        const apartmentNumber = (floor - 1) * perFloor + index + 1;
 
         return {
           number: apartmentNumber,
@@ -438,15 +386,10 @@ const AdminResidents = () => {
     });
   };
 
-  const saveEntrance = (e) => {
+  const saveEntrance = async (e) => {
     e.preventDefault();
 
-    const id =
-      selectedEntranceId ||
-      `${entranceForm.building || entranceForm.address}__${entranceForm.entrance}`;
-
-    const newEntrance = {
-      id,
+    const payload = {
       building: entranceForm.building.trim(),
       address: entranceForm.address.trim() || entranceForm.building.trim(),
       entrance: entranceForm.entrance.trim(),
@@ -454,25 +397,31 @@ const AdminResidents = () => {
       apartmentsPerFloor:
         parseApartmentLayout(entranceForm.apartmentLayout).length ||
         Number(entranceForm.apartmentsPerFloor) ||
-        2,
-      apartmentLayout: entranceForm.apartmentLayout,
-      floors: buildFloorsFromForm(entranceForm),
+        1,
     };
 
-    if (entranceEditMode) {
-      setEntrances((prev) =>
-        prev.map((item) => (item.id === selectedEntranceId ? newEntrance : item))
-      );
-    } else {
-      setEntrances((prev) => [newEntrance, ...prev]);
-    }
+    try {
+      const res = entranceEditMode
+        ? await updateEntrance(selectedEntranceId, payload)
+        : await createEntrance(payload);
 
-    closeEntranceModal();
-    alert(
-      entranceEditMode
-        ? tr("adminResidents.alertEntranceUpdated", "Входът е обновен успешно.")
-        : tr("adminResidents.alertEntranceCreated", "Входът е създаден успешно.")
-    );
+      if (res && res.success === false) {
+        alert(res.message || tr("adminResidents.saveError", "Грешка при запазване."));
+        return;
+      }
+
+      await loadData();
+      closeEntranceModal();
+      alert(
+        entranceEditMode
+          ? tr("adminResidents.alertEntranceUpdated", "Входът е обновен успешно.")
+          : tr("adminResidents.alertEntranceCreated", "Входът е създаден успешно.")
+      );
+    } catch (err) {
+      console.error("Save entrance error:", err);
+      alert(tr("adminResidents.saveError", "Грешка при запазване."));
+      return;
+    }
   };
 
   const filteredResidents = useMemo(() => {
@@ -837,6 +786,26 @@ const AdminResidents = () => {
                   />
                 </div>
               </div>
+
+              {isCreatingResident && (
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>
+                      {tr("adminResidents.labelInitialPassword", "Начална парола")}
+                    </label>
+                    <input
+                      type="text"
+                      name="password"
+                      value={editForm.password || ""}
+                      onChange={handleEditChange}
+                      placeholder={tr(
+                        "adminResidents.placeholderInitialPassword",
+                        "По избор — ако е празно, се генерира временна парола"
+                      )}
+                    />
+                  </div>
+                </div>
+              )}
 
               <div className="form-row">
                 <div className="form-group">
