@@ -2,7 +2,7 @@ import React, { useMemo, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import "./Apartment.css";
-import { getApartmentDetails, isAuthenticated } from '../services/apiService';
+import { getApartmentDetails, isAuthenticated, payInvoice } from '../services/apiService';
 
 const Apartment = () => {
     const { t } = useTranslation();
@@ -98,8 +98,23 @@ const Apartment = () => {
         setSelectedPayment(null);
     };
 
-    const confirmPayment = () => {
+    const confirmPayment = async () => {
         if (!selectedPayment) return;
+
+        // Persist to the backend when we have a real payment id
+        if (selectedPayment.id) {
+            try {
+                const result = await payInvoice(selectedPayment.id);
+                if (!result || !result.success) {
+                    alert(result?.message || t('apartment.paymentError', { defaultValue: 'Плащането не бе успешно. Опитайте отново.' }));
+                    return;
+                }
+            } catch (err) {
+                console.error('Payment failed:', err);
+                alert(t('apartment.paymentError', { defaultValue: 'Плащането не бе успешно. Опитайте отново.' }));
+                return;
+            }
+        }
 
         const updated = payments.map((p) => {
             if (p.month === selectedPayment.month && p.year === selectedPayment.year) {
@@ -345,6 +360,7 @@ const Apartment = () => {
                                                     className="pay-btn"
                                                     onClick={() =>
                                                         openPaymentModal({
+                                                            id: p.id,
                                                             month: p.month,
                                                             year: p.year,
                                                             total,

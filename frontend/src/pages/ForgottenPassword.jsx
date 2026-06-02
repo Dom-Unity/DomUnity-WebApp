@@ -3,35 +3,15 @@ import "./ForgottenPassword.css";
 import { Link } from "react-router-dom";
 import i18n from "../i18n";
 import { useTranslation } from "react-i18next";
+import { requestPasswordReset } from "../services/apiService";
 
 /**
- * Очакван backend (пример):
- * POST /api/admin/forgot-password-request
- * body: { name, email }
- *
- * Backend логика: праща имейл/нотификация до админа, който ръчно сменя парола.
+ * Backend: POST /api/auth/forgot  body: { name, email }
+ * Records a password reset request so an admin can follow up.
  */
 async function sendForgottenPasswordRequest(name, email) {
-  const res = await fetch("/api/admin/forgot-password-request", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ name, email }),
-  });
+  const data = await requestPasswordReset(name, email);
 
-  // ако backend връща JSON: { success: boolean, message?: string }
-  let data = null;
-  try {
-    data = await res.json();
-  } catch {
-    // ако не връща JSON
-  }
-
-  if (!res.ok) {
-    const msg = data?.message || i18n.t('auth.reqError');
-    throw new Error(msg);
-  }
-
-  // ако има success флаг
   if (data && data.success === false) {
     throw new Error(data.message || i18n.t('auth.reqFailed'));
   }

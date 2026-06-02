@@ -26,6 +26,11 @@ services:
     dockerContext: ./
     healthCheckPath: /health
     envVars:
+      # MongoDB connection string (e.g. MongoDB Atlas). Set as a secret in the
+      # Render dashboard — it is NOT committed here. The backend also accepts it
+      # via DATABASE_URL when the value starts with "mongodb".
+      - key: MONGODB_URI
+        sync: false
       - key: JWT_SECRET
         generateValue: true
       - key: PORT
@@ -49,16 +54,17 @@ services:
   #   plan: free
   #   autoDeploy: true
   #   dockerfilePath: ./backend-nodejs/Dockerfile
-  #   dockerContext: ./backend-nodejs
+  #   dockerContext: ./
   #   healthCheckPath: /health
   #   envVars:
-  #     - key: DATABASE_URL
-  #       fromDatabase:
-  #         name: domunity-db
-  #         property: connectionString
+  #     # MongoDB connection string (set as a secret in the Render dashboard)
+  #     - key: MONGODB_URI
+  #       sync: false
   #     - key: JWT_SECRET
   #       generateValue: true
   #     - key: PORT
+  #       value: 8080
+  #     - key: GRPC_PORT
   #       value: 50051
   #     - key: HTTP_PORT
   #       value: 8080
@@ -66,30 +72,10 @@ services:
   #       value: production
 
   # ========================================
-  # OPTION 3: Go Backend
+  # OPTION 3: Go Backend (NOT INCLUDED)
   # ========================================
-  # Uncomment the section below to use Go backend
-
-  # - type: web
-  #   name: domunity-backend-go
-  #   runtime: docker
-  #   region: frankfurt  # Closest to Bulgaria for low latency
-  #   plan: free
-  #   autoDeploy: true
-  #   dockerfilePath: ./backend-go/Dockerfile
-  #   dockerContext: ./backend-go
-  #   healthCheckPath: /health
-  #   envVars:
-  #     - key: DATABASE_URL
-  #       fromDatabase:
-  #         name: domunity-db
-  #         property: connectionString
-  #     - key: JWT_SECRET
-  #       generateValue: true
-  #     - key: PORT
-  #       value: 50051
-  #     - key: HTTP_PORT
-  #       value: 8080
+  # A Go backend is referenced in some docs but is not part of this repository
+  # (there is no ./backend-go directory). Use the Python or Node.js backend.
 
   # ========================================
   # Frontend - React Application
@@ -114,34 +100,23 @@ services:
       #     type: web
       #     name: domunity-backend-nodejs
       #     property: host
-      # If using Go backend (comment out Python line above, uncomment below):
-      # - key: REACT_APP_BACKEND_URL
-      #   fromService:
-      #     type: web
-      #     name: domunity-backend-go
-      #     property: host
 
 # ========================================
-# Database - PostgreSQL
+# Database - MongoDB
 # ========================================
-# databases:
-#   - name: domunity-db
-#     databaseName: domunity
-#     user: domunity_user
-#     region: frankfurt # Same region as services for best performance
-#     plan: free
-#     ipAllowList:
-#       - source: 0.0.0.0/0
-#         description: "Allow all connections (publicly accessible)"
-#     # Note: Free tier databases sleep after inactivity. First request may be slower.
+# This project uses MongoDB (e.g. MongoDB Atlas), which is NOT provisioned by
+# Render. Create a database (Atlas free tier works well) and set its connection
+# string as the MONGODB_URI secret on the backend service in the Render
+# dashboard. Render does not offer a managed MongoDB, so there is no
+# `databases:` block here.
 # ========================================
 # DEPLOYMENT NOTES
 # ========================================
 #
 # 1. BACKEND SELECTION:
-#    - Choose ONE backend by uncommenting its service definition
+#    - Choose ONE backend by uncommenting its service definition (Python or Node.js)
 #    - Make sure to update REACT_APP_BACKEND_URL in frontend envVars
-#    - Comment out the other two backend options
+#    - Comment out the other backend option
 #
 # 2. REGION SELECTION:
 #    - All services use 'frankfurt' region (closest to Bulgaria)
@@ -149,9 +124,9 @@ services:
 #    - Can be changed to other regions if needed
 #
 # 3. DATABASE CONNECTION:
-#    - DATABASE_URL is automatically populated from domunity-db
-#    - Connection string format: postgresql://user:password@host:port/database
-#    - Each backend handles SSL connections appropriately
+#    - Set MONGODB_URI as a secret on the chosen backend service
+#    - Connection string format: mongodb+srv://user:password@cluster/database
+#    - Backends also accept DATABASE_URL if it carries a "mongodb" scheme
 #
 # 4. LOGGING:
 #    - All backends have extensive logging enabled
@@ -172,7 +147,6 @@ services:
 # 7. FREE TIER LIMITATIONS:
 #    - Services sleep after 15 minutes of inactivity
 #    - First request after sleep takes 30-60 seconds
-#    - Database sleeps after 90 days of no connections
 #    - 750 hours/month of runtime per service
 #
 # 8. PROTO FILES:
@@ -187,7 +161,7 @@ services:
 #
 # 10. TROUBLESHOOTING:
 #     - Check Render logs for detailed error messages
-#     - Verify DATABASE_URL is set correctly
+#     - Verify MONGODB_URI is set correctly
 #     - Ensure chosen backend is uncommented
 #     - Confirm frontend points to correct backend
 #     - Test database connectivity separately

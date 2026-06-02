@@ -1,0 +1,253 @@
+.issues-page {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 2rem 1rem 4rem;
+}
+
+.issues-header h1 {
+  margin: 0 0 0.25rem;
+  color: #2f5233;
+}
+.issues-header p {
+  margin: 0 0 1.5rem;
+  color: #666;
+}
+
+.issues-state,
+.issues-empty {
+  text-align: center;
+  color: #777;
+  padding: 1rem;
+}
+
+.issues-card {
+  background: #fff;
+  border: 1px solid #e6e6e6;
+  border-radius: 12px;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+}
+.issues-card h2 {
+  margin: 0 0 1rem;
+  font-size: 1.15rem;
+  color: #2f5233;
+}
+
+.issues-alert {
+  background: #e8f5e9;
+  color: #2f5233;
+  padding: 0.6rem 0.9rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}
+.issues-alert--error {
+  background: #ffebee;
+  color: #c62828;
+}
+
+.issues-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+.issues-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-weight: 600;
+  color: #444;
+  font-size: 0.92rem;
+}
+.issues-form input,
+.issues-form select,
+.issues-form textarea,
+.issue-reply-box textarea {
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 0.55rem 0.7rem;
+  font-size: 0.95rem;
+  font-family: inherit;
+}
+.issues-form-row {
+  display: flex;
+  gap: 0.9rem;
+}
+.issues-form-row > label {
+  flex: 1;
+}
+.issues-form-row .issues-form-category {
+  flex: 0 0 220px;
+}
+
+.issues-btn {
+  align-self: flex-start;
+  background: #2f5233;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 0.6rem 1.4rem;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+.issues-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.issues-btn--small {
+  padding: 0.45rem 1rem;
+  font-size: 0.88rem;
+}
+
+.issues-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.issue-item {
+  border: 1px solid #ececec;
+  border-radius: 10px;
+  margin-bottom: 0.75rem;
+  overflow: hidden;
+}
+.issue-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.85rem 1rem;
+  cursor: pointer;
+  gap: 1rem;
+}
+.issue-row:hover {
+  background: #fafafa;
+}
+.issue-main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+.issue-title {
+  font-weight: 600;
+  color: #333;
+}
+.issue-meta {
+  font-size: 0.8rem;
+  color: #999;
+}
+
+.issue-status {
+  flex: 0 0 auto;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.issue-status--new {
+  background: #eceff1;
+  color: #546e7a;
+}
+.issue-status--under_review {
+  background: #fff3e0;
+  color: #ef6c00;
+}
+.issue-status--in_progress {
+  background: #e3f2fd;
+  color: #1565c0;
+}
+.issue-status--completed {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.issue-detail {
+  border-top: 1px solid #ececec;
+  padding: 1rem;
+  background: #fcfcfc;
+}
+.issue-desc {
+  margin: 0 0 1rem;
+  color: #555;
+}
+
+.issue-replies {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-bottom: 0.9rem;
+}
+.issue-reply {
+  background: #fff;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  padding: 0.55rem 0.75rem;
+}
+.issue-reply--staff {
+  background: #f1f8e9;
+  border-color: #dcedc8;
+}
+.issue-reply-author {
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: #2f5233;
+}
+.issue-reply p {
+  margin: 0.25rem 0;
+  color: #444;
+}
+.issue-reply-date {
+  font-size: 0.75rem;
+  color: #aaa;
+}
+
+.issue-reply-box {
+  display: flex;
+  gap: 0.6rem;
+  align-items: flex-start;
+}
+.issue-reply-box textarea {
+  flex: 1;
+  resize: vertical;
+}
+
+.issues-filter {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+}
+.issues-filter label {
+  font-weight: 600;
+  color: #444;
+  font-size: 0.92rem;
+}
+.issues-filter select,
+.issue-status-control select {
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 0.45rem 0.7rem;
+  font-size: 0.92rem;
+  font-family: inherit;
+}
+
+.issue-status-control {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+}
+.issue-status-control label {
+  font-weight: 600;
+  color: #444;
+  font-size: 0.9rem;
+}
+
+@media (max-width: 640px) {
+  .issues-form-row {
+    flex-direction: column;
+  }
+  .issues-form-row .issues-form-category {
+    flex: 1;
+  }
+}
