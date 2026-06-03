@@ -101,8 +101,15 @@ class Database:
             
             # Apartments indexes
             self.db.apartments.create_index([("building_id", ASCENDING)])
+            self.db.apartments.create_index([("entrance_id", ASCENDING)])
             self.db.apartments.create_index([("user_id", ASCENDING)])
-            self.db.apartments.create_index([("building_id", ASCENDING), ("number", ASCENDING)])
+            # Apartment numbers are unique within an entrance
+            self.db.apartments.create_index(
+                [("entrance_id", ASCENDING), ("number", ASCENDING)], unique=True
+            )
+
+            # Entrances belong to a building
+            self.db.entrances.create_index([("building_id", ASCENDING)])
             
             # Events indexes
             self.db.events.create_index([("building_id", ASCENDING), ("date", DESCENDING)])
@@ -119,7 +126,12 @@ class Database:
             
             # Maintenance records indexes
             self.db.maintenance_records.create_index([("building_id", ASCENDING), ("date", DESCENDING)])
-            
+
+            # Resident-submitted issues / maintenance reports
+            self.db.issues.create_index([("user_id", ASCENDING), ("created_at", DESCENDING)])
+            self.db.issues.create_index([("status", ASCENDING)])
+            self.db.issues.create_index([("building_id", ASCENDING), ("created_at", DESCENDING)])
+
             logger.info("✓ Database indexes initialized successfully")
             
             # Insert sample data if collections are empty
@@ -140,9 +152,19 @@ class Database:
                     "address": "ж.к. Младост 3, бл. 325",
                     "entrance": "Б",
                     "total_apartments": 24,
-                    "total_residents": 38
+                    "total_residents": 38,
+                    "created_at": datetime.utcnow()
                 }
                 building_id = self.db.buildings.insert_one(building).inserted_id
+
+                # Entrance "Б" of the sample building (2 floors x 3 apartments)
+                entrance_id = self.db.entrances.insert_one({
+                    "building_id": building_id,
+                    "label": "Б",
+                    "floors_count": 2,
+                    "apartments_per_floor": 3,
+                    "created_at": datetime.utcnow()
+                }).inserted_id
                 
                 # Insert sample test users
                 users_data = [
@@ -167,24 +189,26 @@ class Database:
                     u_id = self.db.users.insert_one(user).inserted_id
                     user_ids.append(u_id)
                 
-                # Insert apartments
+                # Insert apartments (sequential numbering 1..6 within the entrance; 3 per floor)
                 apartments_data = [
-                    (25, 5, 3, user_ids[0]), # Ivan
-                    (26, 5, 2, user_ids[1]), # Maria
-                    (27, 5, 4, user_ids[2]), # Petar
-                    (22, 4, 2, None),
-                    (23, 4, 3, None),
-                    (24, 4, 2, None),
+                    (1, 1, 3, user_ids[0], 'Иван Иванов'),
+                    (2, 1, 2, user_ids[1], 'Мария Георгиева'),
+                    (3, 1, 4, user_ids[2], 'Петър Петров'),
+                    (4, 2, 2, None, ''),
+                    (5, 2, 3, None, ''),
+                    (6, 2, 2, None, ''),
                 ]
-                
+
                 apartment_ids = []
-                for number, floor, residents, uid in apartments_data:
+                for number, floor, residents, uid, owner_name in apartments_data:
                     apt = {
                         "building_id": building_id,
+                        "entrance_id": entrance_id,
                         "number": number,
                         "floor": floor,
                         "type": "Апартамент",
                         "residents": residents,
+                        "owner_name": owner_name,
                         "user_id": uid
                     }
                     a_id = self.db.apartments.insert_one(apt).inserted_id
@@ -243,7 +267,22 @@ class Database:
                     {"building_id": building_id, "date": datetime(2025, 1, 15), "description": "Смяна на осветление в стълбището", "cost": 35.00, "status": "completed"}
                 ]
                 self.db.maintenance_records.insert_many(maintenance)
-                
+
+                # A sample resident-submitted issue (from Ivan)
+                self.db.issues.insert_one({
+                    "user_id": user_ids[0],
+                    "building_id": building_id,
+                    "entrance_id": entrance_id,
+                    "apartment_id": apartment_ids[0],
+                    "title": "Не работи осветлението на стълбището",
+                    "description": "Лампата между 1-ви и 2-ри етаж е изгоряла от няколко дни.",
+                    "category": "common_area",
+                    "status": "new",
+                    "replies": [],
+                    "created_at": datetime.utcnow(),
+                    "updated_at": datetime.utcnow()
+                })
+
                 logger.info("✓ Sample data inserted successfully into MongoDB")
                 
         except Exception as e:

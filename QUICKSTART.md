@@ -6,6 +6,7 @@ Deploy your DomUnity platform to Render.com in under 10 minutes.
 
 - GitHub account
 - Render.com account (free tier is fine)
+- A MongoDB database (e.g. a free [MongoDB Atlas](https://www.mongodb.com/atlas) cluster) and its connection string
 - This repository pushed to GitHub
 
 ## 🚀 5-Minute Deployment
@@ -19,16 +20,10 @@ Open `render.yaml` and decide which backend to use:
 # Already uncommented - just use as-is
 ```
 
-**Option B: Go** (best performance)
+**Option B: Node.js** (JavaScript ecosystem)
 ```yaml
-# Comment out Python backend section (lines ~20-65)
-# Uncomment Go backend section (lines ~70-115)
-```
-
-**Option C: Node.js** (JavaScript ecosystem)
-```yaml
-# Comment out Python backend section (lines ~20-65)
-# Uncomment Node.js backend section (lines ~120-165)
+# Comment out the Python backend section
+# Uncomment the Node.js backend section
 ```
 
 ### Step 2: Update Frontend Backend Reference
@@ -41,15 +36,6 @@ In `render.yaml`, find the frontend section (~line 195) and update the `REACT_AP
   fromService:
     type: web
     name: domunity-backend-python  # ✅ Using Python
-    property: host
-```
-
-**For Go:**
-```yaml
-- key: REACT_APP_BACKEND_URL
-  fromService:
-    type: web
-    name: domunity-backend-go      # Using Go
     property: host
 ```
 
@@ -98,22 +84,23 @@ git push origin main
    - Choose the `UI` repository
    - Click "Connect"
 
-4. **Set Environment Variable**:
+4. **Set Environment Variables**:
    - Render will detect `render.yaml`
    - Click on **"Environment"** tab
-   - Find the `JWT_SECRET` variable
-   - Paste the secret you generated in Step 3
+   - Find the `JWT_SECRET` variable and paste the secret you generated in Step 3
+   - Set `MONGODB_URI` to your MongoDB connection string (e.g. a free
+     [MongoDB Atlas](https://www.mongodb.com/atlas) cluster). Render does not
+     provide a managed MongoDB, so create the database there first.
    - Click "Apply"
 
 5. **Deploy**:
    - Click **"Create Resources"**
    - Render will create:
-     - PostgreSQL database (Frankfurt region)
-     - Backend service (Python/Go/Node.js)
+     - Backend service (Python or Node.js)
      - Frontend service (React static site)
+   - (Your MongoDB lives in Atlas, not Render.)
 
 6. **Wait for Deployment** (~5-10 minutes):
-   - Database: ~2 minutes
    - Backend: ~3-5 minutes (building Docker image)
    - Frontend: ~2-3 minutes (npm build)
 
@@ -255,7 +242,7 @@ curl https://your-backend.onrender.com/health
 
 **Note**: Each backend runs two servers:
 - **gRPC Server** (port 50051): Application traffic
-- **HTTP Server** (port 8080): Health checks only (for Render.com compatibility)
+- **HTTP Server** (port 8080): REST API + `/health` health checks
 
 **Watch Logs**:
 ```
@@ -264,12 +251,12 @@ Dashboard → Service → Logs
 Look for:
 ```
 ================================================================================
-STARTING DOMUNITY GRPC SERVER
+DOMUNITY gRPC + REST API SERVER
 ================================================================================
-Database connection established: postgresql://...
-Schema initialized successfully
-Sample data inserted
-gRPC server started on port 50051
+✓ Database connection established successfully to: domunity
+✓ Database indexes initialized successfully
+✓ Sample data inserted successfully into MongoDB
+✓ SERVERS STARTED SUCCESSFULLY
 ================================================================================
 ```
 

@@ -5,10 +5,19 @@
 
 // Determine API URL based on environment
 const getApiUrl = () => {
-    const host = process.env.REACT_APP_BACKEND_URL;
-    if (process.env.NODE_ENV === 'production') {
-        return host ? `https://${host}.onrender.com` : 'https://domunity-backend-python.onrender.com';
+    // Explicit override wins everywhere (use this for local dev, e.g.
+    // REACT_APP_API_URL=http://localhost:8080). Trailing slash trimmed.
+    const explicit = process.env.REACT_APP_API_URL;
+    if (explicit) {
+        return explicit.replace(/\/+$/, '');
     }
+
+    const host = process.env.REACT_APP_BACKEND_URL;
+    if (host) {
+        // Render passes the bare service name; build the full onrender.com URL.
+        return host.startsWith('http') ? host : `https://${host}.onrender.com`;
+    }
+
     return 'https://domunity-backend-python.onrender.com';
 };
 
@@ -116,6 +125,26 @@ export const logout = () => {
     clearTokens();
 };
 
+// Request a password reset (recorded for an admin to action)
+export const requestPasswordReset = async (name, email) => {
+    const { data } = await apiRequest('/api/auth/forgot', {
+        method: 'POST',
+        body: JSON.stringify({ name, email }),
+    });
+
+    return data;
+};
+
+// Change the authenticated user's password
+export const changePassword = async (oldPassword, newPassword) => {
+    const { data } = await apiRequest('/api/user/password', {
+        method: 'POST',
+        body: JSON.stringify({ old_password: oldPassword, new_password: newPassword }),
+    });
+
+    return data;
+};
+
 // User API
 export const getProfile = async () => {
     const { data } = await apiRequest('/api/user/profile', {
@@ -187,6 +216,45 @@ export const getAdminResidents = async () => {
     return data;
 };
 
+export const getEntrances = async () => {
+    const { data } = await apiRequest('/api/admin/entrances', {
+        method: 'GET',
+    });
+    return data;
+};
+
+export const createEntrance = async (payload) => {
+    const { data } = await apiRequest('/api/admin/entrances', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+    });
+    return data;
+};
+
+export const updateEntrance = async (id, payload) => {
+    const { data } = await apiRequest(`/api/admin/entrances/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(payload),
+    });
+    return data;
+};
+
+export const createResident = async (payload) => {
+    const { data } = await apiRequest('/api/admin/residents', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+    });
+    return data;
+};
+
+export const updateResident = async (id, payload) => {
+    const { data } = await apiRequest(`/api/admin/residents/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(payload),
+    });
+    return data;
+};
+
 // Apartment API
 export const getApartmentDetails = async () => {
     const { data } = await apiRequest('/api/user/apartment', {
@@ -210,11 +278,58 @@ export const getMaintenanceRecords = async (buildingId = 1) => {
     return data;
 };
 
+// Issues / maintenance reports API
+export const getMyIssues = async () => {
+    const { data } = await apiRequest('/api/issues', { method: 'GET' });
+    return data;
+};
+
+export const createIssue = async (payload) => {
+    const { data } = await apiRequest('/api/issues', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+    });
+    return data;
+};
+
+export const replyIssue = async (issueId, message) => {
+    const { data } = await apiRequest(`/api/issues/${issueId}/reply`, {
+        method: 'POST',
+        body: JSON.stringify({ message }),
+    });
+    return data;
+};
+
+export const getAdminIssues = async (status) => {
+    const qs = status && status !== 'all' ? `?status=${encodeURIComponent(status)}` : '';
+    const { data } = await apiRequest(`/api/admin/issues${qs}`, { method: 'GET' });
+    return data;
+};
+
+export const updateIssueStatus = async (issueId, status) => {
+    const { data } = await apiRequest(`/api/admin/issues/${issueId}/status`, {
+        method: 'PUT',
+        body: JSON.stringify({ status }),
+    });
+    return data;
+};
+
+// Payments API
+export const payInvoice = async (paymentId) => {
+    const { data } = await apiRequest('/api/payments/pay', {
+        method: 'POST',
+        body: JSON.stringify({ payment_id: paymentId }),
+    });
+    return data;
+};
+
 const apiService = {
     login,
     register,
     refreshToken,
     logout,
+    requestPasswordReset,
+    changePassword,
     getProfile,
     sendContactForm,
     requestOffer,
@@ -224,9 +339,20 @@ const apiService = {
     getAccessToken,
     healthCheck,
     getAdminResidents,
+    getEntrances,
+    createEntrance,
+    updateEntrance,
+    createResident,
+    updateResident,
     getApartmentDetails,
     getBuildingApartments,
     getMaintenanceRecords,
+    payInvoice,
+    getMyIssues,
+    createIssue,
+    replyIssue,
+    getAdminIssues,
+    updateIssueStatus,
 };
 
 export default apiService;
