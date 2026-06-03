@@ -96,7 +96,9 @@ function Header() {
             )}
           </div>
 
+          <Link to="/issues">{t("header.issues", { defaultValue: "Сигнали" })}</Link>
           <Link to="/residents">{t("header.admin")}</Link>
+          <Link to="/admin/issues">{t("header.adminIssues", { defaultValue: "Сигнали (админ)" })}</Link>
         </nav>
 
         <div className="header__right">
@@ -216,8 +218,16 @@ function Header() {
             )}
           </div>
 
+          <Link to="/issues" onClick={closeMobileMenu}>
+            {t("header.issues", { defaultValue: "Сигнали" })}
+          </Link>
+
           <Link to="/residents" onClick={closeMobileMenu}>
             {t("header.admin")}
+          </Link>
+
+          <Link to="/admin/issues" onClick={closeMobileMenu}>
+            {t("header.adminIssues", { defaultValue: "Сигнали (админ)" })}
           </Link>
 
           <div className="mobile-dropdown" ref={mobileLangRef}>

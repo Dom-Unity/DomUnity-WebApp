@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import "./EditProfile.css";
-import { getProfile, isAuthenticated } from "../services/apiService";
+import { getProfile, isAuthenticated, changePassword } from "../services/apiService";
 
 const EditProfile = () => {
   const { t } = useTranslation();
@@ -124,12 +124,14 @@ const EditProfile = () => {
 
     setPasswordLoading(true);
     try {
-      // ТУК: при реална система -> извикай backend:
-      // await changePassword(oldP, newP);
-      console.log("Change password:", { oldPassword: oldP, newPassword: newP });
+      const result = await changePassword(oldP, newP);
 
-      setPasswordSuccess(t('editProfile.passwordSuccess'));
-      setPasswordForm({ oldPassword: "", newPassword: "", confirmNewPassword: "" });
+      if (result && result.success) {
+        setPasswordSuccess(t('editProfile.passwordSuccess'));
+        setPasswordForm({ oldPassword: "", newPassword: "", confirmNewPassword: "" });
+      } else {
+        setPasswordError(result?.message || t('editProfile.passwordError'));
+      }
     } catch (err) {
       console.error("Change password error:", err);
       setPasswordError(t('editProfile.passwordError'));

@@ -31,8 +31,13 @@ Comprehensive deployment guide for the DomUnity property management platform on 
 - Basic understanding of:
   - Git and GitHub
   - Environment variables
-  - gRPC concepts (helpful but not required)
-  - PostgreSQL basics
+  - gRPC / REST concepts (helpful but not required)
+  - MongoDB basics
+
+### Database
+- A **MongoDB** database and its connection string. Render does not offer a
+  managed MongoDB, so create one (a free [MongoDB Atlas](https://www.mongodb.com/atlas)
+  cluster works well) before deploying.
 
 ---
 
@@ -50,44 +55,42 @@ Comprehensive deployment guide for the DomUnity property management platform on 
 │  │  • Auto-rebuild on push                     │  │
 │  └───────────────┬──────────────────────────────┘  │
 │                  │                                  │
-│                  │ HTTPS/gRPC-Web                   │
+│                  │ HTTPS (REST / JSON)              │
 │                  ▼                                  │
 │  ┌──────────────────────────────────────────────┐  │
 │  │  Backend (Docker Container)                  │  │
 │  │  Choose ONE:                                 │  │
-│  │  ┌────────────┬────────────┬──────────────┐ │  │
-│  │  │  Python    │    Go      │   Node.js    │ │  │
-│  │  │  (50051)   │  (50051)   │   (50051)    │ │  │
-│  │  └────────────┴────────────┴──────────────┘ │  │
-│  │  • gRPC server                              │  │
+│  │  ┌──────────────┬──────────────────────────┐ │  │
+│  │  │   Python     │        Node.js           │ │  │
+│  │  │ REST + gRPC  │      REST + gRPC         │ │  │
+│  │  └──────────────┴──────────────────────────┘ │  │
+│  │  • REST API (8080) + gRPC (50051)           │  │
 │  │  • Auto-restart on crash                    │  │
 │  │  • Health check: /health                    │  │
 │  └───────────────┬──────────────────────────────┘  │
 │                  │                                  │
-│                  │ PostgreSQL protocol              │
-│                  ▼                                  │
-│  ┌──────────────────────────────────────────────┐  │
-│  │  PostgreSQL Database                         │  │
-│  │  • Managed by Render                        │  │
-│  │  • Auto-backups (paid plans)                │  │
-│  │  • Connection pooling                       │  │
-│  │  • Schema auto-init                         │  │
-│  └──────────────────────────────────────────────┘  │
-│                                                     │
-└─────────────────────────────────────────────────────┘
+└──────────────────┼──────────────────────────────────┘
+                   │ MongoDB wire protocol (TLS)
+                   ▼
+        ┌──────────────────────────┐
+        │  MongoDB (e.g. Atlas)    │
+        │  • External to Render    │
+        │  • Indexes auto-created  │
+        │  • Sample data seeded    │
+        └──────────────────────────┘
 ```
 
 ### Service Dependencies
-1. **Database** (must start first)
-   - Creates PostgreSQL instance
-   - Provides `DATABASE_URL` to backend
-   
+1. **Database** (external, created first)
+   - A MongoDB cluster (e.g. Atlas) you provision yourself
+   - Its connection string is set as `MONGODB_URI` on the backend
+
 2. **Backend** (depends on database)
-   - Connects to database on startup
-   - Initializes schema if not exists
-   - Inserts sample data
-   - Exposes gRPC endpoints
-   
+   - Connects to MongoDB on startup
+   - Creates indexes if missing
+   - Inserts sample data on an empty database
+   - Exposes REST + gRPC endpoints
+
 3. **Frontend** (depends on backend)
    - Receives `REACT_APP_BACKEND_URL` from backend service
    - Builds static site with backend URL embedded
@@ -97,71 +100,46 @@ Comprehensive deployment guide for the DomUnity property management platform on 
 
 ## Backend Selection
 
-You must choose **ONE** backend implementation. Each has identical functionality but different characteristics.
+You must choose **ONE** backend implementation. Both expose an identical
+REST + gRPC surface over the same MongoDB collections.
 
 ### Decision Matrix
 
-| Criteria | Python | Go | Node.js |
-|----------|--------|-----|---------|
-| **Cold Start** | ~3s | ~1s | ~2s |
-| **Memory (Idle)** | ~100MB | ~20MB | ~80MB |
-| **Memory (Load)** | ~200MB | ~50MB | ~150MB |
-| **Docker Build** | 3-4 min | 5-6 min | 3-4 min |
-| **Image Size** | ~500MB | ~50MB | ~200MB |
-| **RPS (Requests/sec)** | ~500 | ~2000 | ~800 |
-| **Latency (p95)** | ~50ms | ~20ms | ~30ms |
-| **Community** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ |
-| **Learning Curve** | Easy | Medium | Easy |
-| **Free Tier Fit** | Good | Excellent | Good |
+| Criteria | Python | Node.js |
+|----------|--------|---------|
+| **Image Size** | ~500MB | ~200MB |
+| **Learning Curve** | Easy | Easy |
+| **Status** | Deployed default | Drop-in alternative |
 
 ### Recommendations
 
 **Choose Python if:**
 - ✅ Your team knows Python
 - ✅ You want quick iteration/debugging
-- ✅ You have existing Python infrastructure
 - ✅ Code readability is priority
-- ⚠️ You're okay with higher memory usage
-
-**Choose Go if:**
-- ✅ You need maximum performance
-- ✅ You have limited resources (free tier)
-- ✅ You want lowest operational costs
-- ✅ You prefer compiled languages
-- ⚠️ Your team can learn Go syntax
 
 **Choose Node.js if:**
 - ✅ Your frontend team is JavaScript-focused
-- ✅ You want unified JS/TS stack
+- ✅ You want a unified JS/TS stack
 - ✅ You have Node.js expertise
-- ✅ You need npm ecosystem access
-- ⚠️ You're okay with callback/async patterns
 
 ### How to Switch Backends
 
-1. **Edit `render.yaml`**:
-   ```yaml
-   # Comment out the current backend (e.g., Python)
-   # backend-python/...
-   #   ...
-   
-   # Uncomment your chosen backend (e.g., Go)
-   backend-go/
-     ...
-   ```
+1. **Edit `render.yaml`**: comment out the Python backend service and uncomment
+   the Node.js backend service.
 
 2. **Update Frontend Environment Variable**:
    ```yaml
-   # In frontend section, change fromService name
+   # In the frontend section, change fromService name
    - key: REACT_APP_BACKEND_URL
      fromService:
-       name: domunity-backend-go  # Match your backend
+       name: domunity-backend-nodejs  # Match your backend
    ```
 
 3. **Commit and Push**:
    ```bash
    git add render.yaml
-   git commit -m "Switch to Go backend"
+   git commit -m "Switch to Node.js backend"
    git push
    ```
 
@@ -171,83 +149,61 @@ Render will automatically redeploy with the new backend.
 
 ## Database Setup
 
-### Render.com Managed PostgreSQL
+### MongoDB (external — e.g. MongoDB Atlas)
 
-The `render.yaml` automatically creates a PostgreSQL database with:
+Render does not provide a managed MongoDB, so create a database yourself:
 
-```yaml
-databases:
-  - name: domunity-db
-    databaseName: domunity
-    region: frankfurt  # Low latency for Bulgaria
-    plan: free
+1. Create a free cluster at [MongoDB Atlas](https://www.mongodb.com/atlas).
+2. Create a database user and allow network access (`0.0.0.0/0` for a quick start, or Render's egress IPs).
+3. Copy the connection string and set it as the `MONGODB_URI` secret on the backend service.
+
+```
+mongodb+srv://<user>:<password>@<cluster>/domunity
 ```
 
-### Database Specifications
+> Backends also accept `DATABASE_URL` if its value begins with `mongodb`.
 
-**Free Tier:**
-- 🗄️ **Storage**: 1GB
-- 🔗 **Connections**: Up to 97 concurrent
-- ⏱️ **Uptime**: 90 days (then expires)
-- 💾 **Backups**: None
-- 📊 **Version**: PostgreSQL 15
+### Index & Sample-Data Initialization
 
-**Starter Plan ($7/month):**
-- 🗄️ **Storage**: 10GB
-- 🔗 **Connections**: 200 concurrent
-- ⏱️ **Uptime**: Unlimited
-- 💾 **Backups**: Daily automatic
-- 📊 **Version**: PostgreSQL 15
+On startup each backend creates indexes and, if the database is empty, seeds
+sample data.
 
-### Schema Initialization
-
-All backends automatically initialize the schema on first connection:
-
-**Tables Created:**
-1. `users` - Authentication credentials
+**Collections:**
+1. `users` - Authentication credentials + `role`
 2. `user_profiles` - Extended user information
 3. `buildings` - Property details
-4. `apartments` - Unit information
-5. `financial_records` - Billing and payments
-6. `events` - Community announcements
-7. `contact_requests` - Form submissions
+4. `apartments` - Unit information (`(building_id, number)` unique)
+5. `payments` - Per-period charges and status
+6. `maintenance_records` - Building maintenance log
+7. `financial_records` - Detailed billing breakdown
+8. `events` - Community announcements
+9. `contact_requests` - Form & password-reset submissions
 
-**Sample Data:**
-- 3 sample users (passwords: `password123`)
-- 1 sample building in Sofia
-- 2 sample apartments
-- Sample financial records
-- Sample events
+**Sample Data (seeded on an empty DB):**
+- 4 sample users (password: `test123`), one with `role: admin` (`admin@domunity.bg`)
+- 1 sample building in Sofia with apartments
+- Sample payments, events, and maintenance records
 
 ### Manual Database Access
 
-**Get Connection String:**
+**Connect with mongosh:**
 ```bash
-# From Render Dashboard
-Database → domunity-db → Info tab → Internal Database URL
-```
-
-**Connect with psql:**
-```bash
-psql "postgresql://user:pass@host:port/domunity"
+mongosh "mongodb+srv://<user>:<password>@<cluster>/domunity"
 ```
 
 **Common Queries:**
-```sql
--- List all users
-SELECT id, username, email FROM users;
+```js
+// List all users
+db.users.find({}, { email: 1, full_name: 1, role: 1 })
 
--- Check building data
-SELECT * FROM buildings;
+// Check building data
+db.buildings.find({})
 
--- View financial summary
-SELECT 
-  u.username, 
-  SUM(f.amount) as total, 
-  SUM(CASE WHEN f.paid THEN f.amount ELSE 0 END) as paid
-FROM users u
-JOIN financial_records f ON u.id = f.user_id
-GROUP BY u.username;
+// Outstanding debt per user
+db.payments.aggregate([
+  { $match: { status: { $in: ["pending", "overdue"] } } },
+  { $group: { _id: "$user_id", debt: { $sum: "$amount" } } }
+])
 ```
 
 ---
@@ -297,80 +253,15 @@ CMD ["python", "server.py"]
 
 **Dependencies (requirements.txt):**
 ```
-grpcio==1.60.0
-grpcio-tools==1.60.0
-psycopg2-binary==2.9.9
-bcrypt==4.1.2
-PyJWT==2.8.0
+grpcio
+grpcio-tools
+pymongo
+bcrypt
+PyJWT
 ```
 
 **Build Time**: ~3-4 minutes  
-**Image Size**: ~500MB  
-**Memory Usage**: ~100-200MB
-
----
-
-### Go Backend
-
-**File Structure:**
-```
-backend-go/
-├── main.go            # Entry point & auth service
-├── services.go        # Other gRPC services
-├── Dockerfile         # Multi-stage build
-├── go.mod             # Go dependencies
-├── go.sum             # Dependency checksums
-└── .env.example       # Environment template
-```
-
-**Dockerfile Details (Multi-stage):**
-```dockerfile
-# Stage 1: Build
-FROM golang:1.21 AS builder
-WORKDIR /app
-
-# Install protoc
-RUN apt-get update && apt-get install -y protobuf-compiler
-
-# Install Go proto plugins
-RUN go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
-RUN go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
-
-# Generate proto bindings
-COPY proto/ proto/
-RUN protoc --go_out=. --go-grpc_out=. proto/domunity.proto
-
-# Build application
-COPY backend-go/ .
-RUN go mod download
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o server .
-
-# Stage 2: Runtime
-FROM alpine:latest
-RUN apk --no-cache add ca-certificates
-WORKDIR /root/
-COPY --from=builder /app/server .
-CMD ["./server"]
-```
-
-**Dependencies (go.mod):**
-```go
-module github.com/yourusername/domunity-backend-go
-
-go 1.21
-
-require (
-    github.com/golang-jwt/jwt/v5 v5.2.0
-    github.com/lib/pq v1.10.9
-    golang.org/x/crypto v0.18.0
-    google.golang.org/grpc v1.60.1
-    google.golang.org/protobuf v1.32.0
-)
-```
-
-**Build Time**: ~5-6 minutes (includes proto compilation)  
-**Image Size**: ~50MB (Alpine-based)  
-**Memory Usage**: ~20-50MB
+**Image Size**: ~500MB
 
 ---
 
@@ -419,19 +310,20 @@ CMD ["node", "server.js"]
   "dependencies": {
     "@grpc/grpc-js": "^1.9.14",
     "@grpc/proto-loader": "^0.7.10",
-    "pg": "^8.11.3",
+    "mongodb": "^6.3.0",
     "bcrypt": "^5.1.1",
-    "jsonwebtoken": "^9.0.2"
+    "jsonwebtoken": "^9.0.2",
+    "dotenv": "^16.3.1"
   },
   "devDependencies": {
-    "grpc-tools": "^1.12.4"
+    "grpc-tools": "^1.12.4",
+    "jest": "^29.7.0"
   }
 }
 ```
 
 **Build Time**: ~3-4 minutes  
-**Image Size**: ~200MB (Alpine Node)  
-**Memory Usage**: ~80-150MB
+**Image Size**: ~200MB (Alpine Node)
 
 ---
 
@@ -513,10 +405,11 @@ Render automatically serves static sites via CDN:
 
 **Required:**
 ```bash
-DATABASE_URL=postgresql://user:pass@host:port/domunity
+MONGODB_URI=mongodb+srv://user:pass@cluster/domunity
 JWT_SECRET=<your-32-char-random-string>
 GRPC_PORT=50051
-HTTP_PORT=8080  # For HTTP/1.1 health checks
+HTTP_PORT=8080  # REST API + health checks
+PORT=8080       # Render injects PORT; used as HTTP port fallback
 ```
 
 **How to Set:**
@@ -536,13 +429,11 @@ HTTP_PORT=8080  # For HTTP/1.1 health checks
        value: your-secret-here  # Manual value
    ```
 
-3. **From Database** (DATABASE_URL automatic):
+3. **MongoDB connection** (set as a secret, never committed):
    ```yaml
    envVars:
-     - key: DATABASE_URL
-       fromDatabase:
-         name: domunity-db
-         property: connectionString
+     - key: MONGODB_URI
+       sync: false  # Prompted/edited in the Render dashboard
    ```
 
 ### Frontend Variables
@@ -593,30 +484,26 @@ All backends use structured logging:
 
 ```
 ================================================================================
-STARTING DOMUNITY GRPC SERVER
+DOMUNITY gRPC + REST API SERVER
 ================================================================================
-[2024-01-15 10:30:45] Connecting to database: postgresql://user:***@host:5432/domunity
-[2024-01-15 10:30:46] Database connection established
-[2024-01-15 10:30:46] Initializing database schema...
-[2024-01-15 10:30:47] Schema initialized successfully
-[2024-01-15 10:30:47] Inserting sample data...
-[2024-01-15 10:30:48] Sample data inserted successfully
+MongoDB URI (obscured): mongodb+srv://user:****@cluster/domunity
+✓ Database connection established successfully to: domunity
+✓ Database indexes initialized successfully
+✓ Sample data inserted successfully into MongoDB
 ================================================================================
-gRPC Server Configuration
+✓ SERVERS STARTED SUCCESSFULLY
 ================================================================================
-Port: 50051
-Health Check: http://0.0.0.0:8080/health
-Services:
-  - AuthService
-  - UserService
-  - BuildingService
-  - FinancialService
-  - EventService
-  - ContactService
-  - HealthService
-================================================================================
-[2024-01-15 10:30:48] gRPC server started successfully
-[2024-01-15 10:30:48] Listening on 0.0.0.0:50051
+gRPC Server: 0.0.0.0:50051
+HTTP REST API: 0.0.0.0:8080/api/*
+Health Check: 0.0.0.0:8080/health
+Registered gRPC Services:
+  • domunity.AuthService
+  • domunity.UserService
+  • domunity.BuildingService
+  • domunity.FinancialService
+  • domunity.EventService
+  • domunity.ContactService
+  • domunity.HealthService
 ================================================================================
 ```
 
@@ -679,28 +566,21 @@ Service → Metrics tab
 
 **Symptom:**
 ```
-Error: Could not connect to database
-FATAL: password authentication failed
+✗ MONGODB_URI environment variable not set!
+# or
+MongoServerError: bad auth : authentication failed
 ```
 
 **Solutions:**
-1. **Check DATABASE_URL**:
-   ```bash
-   # In Render Dashboard → Backend Service → Environment
-   echo $DATABASE_URL
-   ```
-   Should look like: `postgresql://user:pass@host.oregon-postgres.render.com:5432/dbname`
+1. **Check MONGODB_URI**: In Render Dashboard → Backend Service → Environment,
+   confirm it is set and looks like
+   `mongodb+srv://user:pass@cluster.mongodb.net/domunity`.
 
-2. **Verify Database is Running**:
-   ```
-   Dashboard → domunity-db → Should show "Available"
-   ```
+2. **Verify Atlas network access**: the cluster's IP Access List must allow
+   Render's egress (use `0.0.0.0/0` for a quick test).
 
-3. **Check Connection Limits**:
-   ```sql
-   SELECT count(*) FROM pg_stat_activity;
-   -- Free tier max: 97 connections
-   ```
+3. **Verify the database user** exists and the password in the URI is correct
+   (URL-encode special characters).
 
 4. **Restart Backend**:
    ```
@@ -718,16 +598,6 @@ Error: protoc: command not found
 **Fix**: Ensure Dockerfile installs `protobuf-compiler`:
 ```dockerfile
 RUN apt-get update && apt-get install -y protobuf-compiler
-```
-
-**Go: Proto Generation Failed**
-```
-Error: protoc-gen-go: program not found
-```
-**Fix**: Install Go plugins in Dockerfile:
-```dockerfile
-RUN go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
-RUN go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
 ```
 
 **Node.js: Module Not Found**
@@ -793,15 +663,17 @@ Error: Token has expired
 ```
 **Fix**: Call `RefreshToken` service to get new token. Tokens expire after 24 hours.
 
-**SQL Query Failed**
+**Database operation failed**
 ```
-Error: relation "users" does not exist
+Error: <operation> error: <details>
 ```
-**Fix**: Schema not initialized. Check backend logs:
+**Fix**: Confirm the backend connected to MongoDB and seeded indexes/sample data.
+Check logs for:
 ```
-[ERROR] Failed to initialize schema: <error details>
+✗ Index initialization failed: <error details>
 ```
-Restart backend to retry schema creation.
+Restart the backend to retry. On an empty database, sample data is seeded on
+first start.
 
 ---
 
@@ -817,7 +689,8 @@ Restart backend to retry schema creation.
 - [ ] Set up custom domain with SSL
 - [ ] Implement rate limiting (nginx/middleware)
 - [ ] Rotate JWT secrets periodically
-- [ ] Use PostgreSQL SSL connections
+- [ ] Use a MongoDB connection string with TLS (Atlas `mongodb+srv://` enables it)
+- [ ] Restrict the MongoDB IP access list to known egress IPs
 
 **CORS Configuration:**
 ```python
@@ -831,18 +704,9 @@ def some_endpoint():
 ### Performance
 
 **Database Optimization:**
-```sql
--- Add indexes for common queries
-CREATE INDEX idx_users_email ON users(email);
-CREATE INDEX idx_financial_user_month ON financial_records(user_id, month, year);
-CREATE INDEX idx_events_building_date ON events(building_id, event_date DESC);
-```
-
-**Connection Pooling:**
-All backends already configured:
-- Python: `psycopg2.pool.SimpleConnectionPool(minconn=1, maxconn=10)`
-- Go: `db.SetMaxOpenConns(10)`
-- Node.js: `pg.Pool({ max: 10 })`
+Indexes are created automatically on startup (see each backend's DB module),
+including a unique index on `users.email` and a unique `(building_id, number)`
+index on `apartments`. MongoDB drivers pool connections by default.
 
 **Caching:**
 Consider adding Redis for:
@@ -864,30 +728,24 @@ services:
 ```
 
 **Database Scaling:**
-- Free tier: 1GB storage, 97 connections
-- Starter: 10GB, 200 connections
-- Standard: 50GB, 400 connections
-- Pro: 500GB, 500 connections
+Scale the MongoDB tier in your provider (e.g. MongoDB Atlas M0 free → M10+
+dedicated) independently of Render.
 
 **Frontend CDN:**
 Already optimized with Render's global CDN. No action needed.
 
 ### Backups
 
-**Free Tier**: ❌ No backups
+Backups are managed by your MongoDB provider. MongoDB Atlas offers automated
+backups on dedicated tiers; the free M0 tier does not.
 
-**Starter Plan ($7/month)**: 
-- ✅ Daily automatic backups (7-day retention)
-- ✅ Point-in-time recovery
-- ✅ Manual backup on-demand
-
-**Manual Backup (Free Tier):**
+**Manual Backup:**
 ```bash
 # Export database
-pg_dump "$(echo $DATABASE_URL)" > backup-$(date +%Y%m%d).sql
+mongodump --uri "$MONGODB_URI" --out backup-$(date +%Y%m%d)
 
 # Restore
-psql "$(echo $DATABASE_URL)" < backup-20240115.sql
+mongorestore --uri "$MONGODB_URI" backup-20240115
 ```
 
 ### Monitoring
@@ -918,30 +776,30 @@ sentry_sdk.init(
 
 **Estimated Monthly Cost (Starter Plan):**
 - Backend: $7/month (always-on)
-- Database: $7/month (10GB)
 - Frontend: $0 (static sites are free)
-- **Total**: ~$14/month
+- Database: separate (MongoDB Atlas free M0, or paid dedicated tier)
+- **Total**: ~$7/month + your MongoDB plan
 
 **Cost-Saving Tips:**
-1. Use only one backend (not all three)
+1. Use only one backend (Python or Node.js)
 2. Optimize Docker images (use Alpine)
 3. Enable gzip compression
 4. Use Render's free static sites for frontend
-5. Monitor database storage usage
+5. Monitor MongoDB storage usage
 
 ---
 
 ## Post-Deployment Checklist
 
 - [ ] All services show "Live" status (green)
-- [ ] Database shows "Available"
+- [ ] MongoDB cluster reachable from the backend (check logs)
 - [ ] Frontend loads at `https://domunity-frontend.onrender.com`
-- [ ] Can log in with sample credentials
+- [ ] Can log in with sample credentials (`admin@domunity.bg` / `test123`)
 - [ ] Health endpoint returns 200: `curl https://backend.onrender.com/health`
 - [ ] Logs show no errors
-- [ ] Sample data visible in database
+- [ ] Sample data visible in the database
 - [ ] JWT tokens work (login/refresh)
-- [ ] CORS configured for your domain
+- [ ] CORS restricted to your domain
 - [ ] Sample passwords changed
 - [ ] Custom domain configured (optional)
 - [ ] Monitoring/alerts set up (optional)
@@ -957,7 +815,7 @@ sentry_sdk.init(
 - 🐛 [GitHub Issues](https://github.com/yourusername/domunity/issues)
 
 **Common Support Topics:**
-1. Database connection issues → Check DATABASE_URL and database status
+1. Database connection issues → Check `MONGODB_URI` and the MongoDB IP access list
 2. Build failures → Review build logs for specific errors
 3. Service sleeping → Upgrade to paid plan or use cron-job to keep warm
 4. CORS errors → Configure Access-Control headers in backend

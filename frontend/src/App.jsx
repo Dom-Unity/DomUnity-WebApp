@@ -16,6 +16,8 @@ import Apartment from './pages/Apartment';
 import Building from './pages/Building';
 import EditProfile from './pages/EditProfile';
 import AdminResidents from "./pages/AdminResidents";
+import Issues from "./pages/Issues";
+import AdminIssues from "./pages/AdminIssues";
 import ForgottenPassword from "./pages/ForgottenPassword";
 import Services from "./pages/Services";   
 import Terms from  "./pages/Terms";
@@ -48,6 +50,8 @@ function App() {
                     <Route path="/building" element={<Building />} />
                     <Route path="/editprofile" element={<EditProfile />} />
                     <Route path="/residents" element={<AdminResidents />} />
+                    <Route path="/issues" element={<Issues />} />
+                    <Route path="/admin/issues" element={<AdminIssues />} />
                     <Route path="/forgottenpassword" element={<ForgottenPassword />} />
                     <Route path="/services" element={<Services />} />
                     <Route path="/terms" element={<Terms />} />

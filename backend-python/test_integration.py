@@ -27,11 +27,10 @@ class TestDatabaseIntegration(unittest.TestCase):
     def setUpClass(cls):
         """Set up test database connection"""
         cls.mongodb_uri = os.getenv('TEST_MONGODB_URI', 'mongodb://localhost:27017/domunity_test')
-        cls.db_manager = Database()
-        cls.client = cls.db_manager.client
-        cls.db = cls.db_manager.db
-        
         try:
+            cls.db_manager = Database()
+            cls.client = cls.db_manager.client
+            cls.db = cls.db_manager.db
             cls.client.admin.command('ping')
         except Exception:
             raise unittest.SkipTest("Test database (MongoDB) not available")
@@ -43,14 +42,11 @@ class TestDatabaseIntegration(unittest.TestCase):
             cls.client.close()
     
     def setUp(self):
-        """Clean collections and re-initialize before each test"""
+        """Clean collections before each test (indexes persist for the connection)"""
         # Clear all collection data
         for collection in self.db.list_collection_names():
             if collection != 'system.indexes':
                self.db[collection].delete_many({})
-        
-        # Re-initialize indexes
-        self.db_manager._initialize_indexes()
     
     def test_create_user(self):
         """Test creating a new user"""
@@ -132,24 +128,30 @@ class TestDatabaseIntegration(unittest.TestCase):
         self.assertEqual(owner['email'], "owner@example.com")
     
     def test_unique_constraint_apartment_number(self):
-        """Test that apartment numbers must be unique per building index"""
-        # Create building
+        """Test that apartment numbers must be unique per entrance index"""
+        # Create building + entrance
         result_building = self.db.buildings.insert_one({
             "address": "789 Elm St"
         })
         building_id = result_building.inserted_id
-        
+        entrance_id = self.db.entrances.insert_one({
+            "building_id": building_id,
+            "label": "A"
+        }).inserted_id
+
         # Create first apartment
         self.db.apartments.insert_one({
             "building_id": building_id,
-            "number": "201"
+            "entrance_id": entrance_id,
+            "number": 201
         })
-        
-        # Try to create duplicate apartment number in same building
+
+        # Try to create duplicate apartment number in same entrance
         with self.assertRaises(pymongo.errors.DuplicateKeyError):
             self.db.apartments.insert_one({
                 "building_id": building_id,
-                "number": "201"
+                "entrance_id": entrance_id,
+                "number": 201
             })
 
 if __name__ == '__main__':

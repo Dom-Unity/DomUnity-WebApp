@@ -1,5 +1,11 @@
 # Continuous Integration (CI) Setup
 
+> **⚠️ Note:** Parts of this document predate the MongoDB migration and may still
+> mention PostgreSQL or a Go backend. The current pipeline (see
+> [`.github/workflows/ci.yml`](.github/workflows/ci.yml)) tests **two** backends —
+> Python and Node.js — against a **MongoDB** service (`mongo:7`, port 27017).
+> There is no Go backend and no PostgreSQL service.
+
 This document describes the CI/CD pipeline for the DomUnity-WebApp project.
 
 ## Overview

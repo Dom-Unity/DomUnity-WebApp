@@ -1,5 +1,10 @@
 # CI Quick Reference Guide
 
+> **⚠️ Note:** Parts of this document predate the MongoDB migration and may still
+> mention PostgreSQL or a Go backend. The current pipeline (see
+> [`.github/workflows/ci.yml`](.github/workflows/ci.yml)) tests **two** backends —
+> Python and Node.js — against a **MongoDB** service. There is no Go backend.
+
 ## 🚀 Quick Commands
 
 ### Run All Tests Locally

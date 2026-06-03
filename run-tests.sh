@@ -16,11 +16,12 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
-# Check if test database is required
-TEST_DB=${TEST_DATABASE_URL:-"postgresql://postgres:postgres@localhost:5432/domunity_test"}
+# Check if test database is required (integration tests use MongoDB)
+TEST_DB=${TEST_MONGODB_URI:-"mongodb://localhost:27017/domunity_test"}
+export TEST_MONGODB_URI="$TEST_DB"
 
 echo "📋 Test Configuration:"
-echo "  Test Database: $TEST_DB"
+echo "  Test Database (MongoDB): $TEST_DB"
 echo ""
 
 # Function to run tests for a backend
@@ -54,7 +55,6 @@ run_backend_tests() {
 # Track results
 PYTHON_RESULT=0
 NODEJS_RESULT=0
-GO_RESULT=0
 FRONTEND_RESULT=0
 
 # Test Python Backend
@@ -71,15 +71,6 @@ if [ -d "backend-nodejs" ]; then
     run_backend_tests "backend-nodejs" "npm install --silent && npm test" || NODEJS_RESULT=$?
 else
     echo -e "${YELLOW}⊘ Skipping Node.js backend (not found)${NC}"
-fi
-
-echo ""
-
-# Test Go Backend
-if [ -d "backend-go" ]; then
-    run_backend_tests "backend-go" "go test -v ./..." || GO_RESULT=$?
-else
-    echo -e "${YELLOW}⊘ Skipping Go backend (not found)${NC}"
 fi
 
 echo ""
@@ -119,12 +110,6 @@ else
     echo -e "${RED}✗ Node.js Backend${NC}"
 fi
 
-if [ $GO_RESULT -eq 0 ]; then
-    echo -e "${GREEN}✓ Go Backend${NC}"
-else
-    echo -e "${RED}✗ Go Backend${NC}"
-fi
-
 if [ $FRONTEND_RESULT -eq 0 ]; then
     echo -e "${GREEN}✓ Frontend Build${NC}"
 else
@@ -134,7 +119,7 @@ fi
 echo "=================================================="
 
 # Exit with error if any test failed
-TOTAL_FAILURES=$((PYTHON_RESULT + NODEJS_RESULT + GO_RESULT + FRONTEND_RESULT))
+TOTAL_FAILURES=$((PYTHON_RESULT + NODEJS_RESULT + FRONTEND_RESULT))
 
 if [ $TOTAL_FAILURES -eq 0 ]; then
     echo -e "${GREEN}🎉 All tests passed!${NC}"

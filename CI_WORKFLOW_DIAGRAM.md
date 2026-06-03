@@ -1,5 +1,10 @@
 # GitHub CI Workflow Diagram
 
+> **⚠️ Note:** This diagram predates the MongoDB migration and may still show
+> PostgreSQL or a Go backend. The current pipeline (see
+> [`.github/workflows/ci.yml`](.github/workflows/ci.yml)) tests **two** backends —
+> Python and Node.js — against a **MongoDB** service. There is no Go backend.
+
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
 │                         Pull Request Created                         │
