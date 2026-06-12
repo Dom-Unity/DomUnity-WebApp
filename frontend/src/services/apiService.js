@@ -24,31 +24,47 @@ const getApiUrl = () => {
 const API_URL = getApiUrl();
 
 // Token management
+//
+// "Remember me" decides where the session is stored:
+//   - remember = true  -> localStorage  (persists across browser restarts)
+//   - remember = false -> sessionStorage (cleared when the tab/browser closes)
+// Getters read from sessionStorage first, then localStorage, so either works.
 const TOKEN_KEY = 'domunity_access_token';
 const REFRESH_TOKEN_KEY = 'domunity_refresh_token';
 const USER_KEY = 'domunity_user';
 
-export const setTokens = (accessToken, refreshToken) => {
-    localStorage.setItem(TOKEN_KEY, accessToken);
-    localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
+const pickStorage = (remember) => (remember ? window.localStorage : window.sessionStorage);
+const readBoth = (key) => window.sessionStorage.getItem(key) ?? window.localStorage.getItem(key);
+const clearBoth = (key) => {
+    window.localStorage.removeItem(key);
+    window.sessionStorage.removeItem(key);
 };
 
-export const getAccessToken = () => localStorage.getItem(TOKEN_KEY);
-export const getRefreshToken = () => localStorage.getItem(REFRESH_TOKEN_KEY);
+export const setTokens = (accessToken, refreshToken, remember = true) => {
+    const store = pickStorage(remember);
+    clearBoth(TOKEN_KEY);
+    clearBoth(REFRESH_TOKEN_KEY);
+    store.setItem(TOKEN_KEY, accessToken);
+    store.setItem(REFRESH_TOKEN_KEY, refreshToken);
+};
 
-export const setUser = (user) => {
-    localStorage.setItem(USER_KEY, JSON.stringify(user));
+export const getAccessToken = () => readBoth(TOKEN_KEY);
+export const getRefreshToken = () => readBoth(REFRESH_TOKEN_KEY);
+
+export const setUser = (user, remember = true) => {
+    clearBoth(USER_KEY);
+    pickStorage(remember).setItem(USER_KEY, JSON.stringify(user));
 };
 
 export const getUser = () => {
-    const user = localStorage.getItem(USER_KEY);
+    const user = readBoth(USER_KEY);
     return user ? JSON.parse(user) : null;
 };
 
 export const clearTokens = () => {
-    localStorage.removeItem(TOKEN_KEY);
-    localStorage.removeItem(REFRESH_TOKEN_KEY);
-    localStorage.removeItem(USER_KEY);
+    clearBoth(TOKEN_KEY);
+    clearBoth(REFRESH_TOKEN_KEY);
+    clearBoth(USER_KEY);
 };
 
 export const isAuthenticated = () => !!getAccessToken();
@@ -77,15 +93,15 @@ const apiRequest = async (endpoint, options = {}) => {
 };
 
 // Auth API
-export const login = async (email, password) => {
+export const login = async (email, password, remember = true) => {
     const { data } = await apiRequest('/api/auth/login', {
         method: 'POST',
         body: JSON.stringify({ email, password }),
     });
 
     if (data.success) {
-        setTokens(data.access_token, data.refresh_token);
-        setUser(data.user);
+        setTokens(data.access_token, data.refresh_token, remember);
+        setUser(data.user, remember);
     }
 
     return data;
@@ -115,7 +131,12 @@ export const refreshToken = async () => {
     });
 
     if (data.success) {
-        localStorage.setItem(TOKEN_KEY, data.access_token);
+        // Update the access token in whichever storage already holds the session.
+        if (window.sessionStorage.getItem(TOKEN_KEY) !== null) {
+            window.sessionStorage.setItem(TOKEN_KEY, data.access_token);
+        } else {
+            window.localStorage.setItem(TOKEN_KEY, data.access_token);
+        }
     }
 
     return data;

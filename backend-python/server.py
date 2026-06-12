@@ -1326,8 +1326,16 @@ class APIHandler(BaseHTTPRequestHandler):
         return self.db.db.apartments.find_one({"entrance_id": entrance['_id'], "number": number})
 
     def _map_role(self, role):
-        r = str(role or '').lower()
-        return 'admin' if r in ('admin', 'админ') else 'user'
+        """Map a UI role label to an internal role; None when not provided
+        (callers preserve the existing role in that case)."""
+        if role in (None, ''):
+            return None
+        r = str(role).lower()
+        if r in ('admin', 'админ'):
+            return 'admin'
+        if r in ('manager', 'домоуправител'):
+            return 'manager'
+        return 'user'
 
     def _handle_get_entrances(self):
         if not self._require_admin():
@@ -1461,7 +1469,7 @@ class APIHandler(BaseHTTPRequestHandler):
                     user_id = existing['_id']
                     self.db.db.users.update_one({"_id": user_id}, {"$set": {
                         "full_name": data.get('name') or existing.get('full_name', ''),
-                        "role": self._map_role(data.get('role')),
+                        "role": self._map_role(data.get('role')) or existing.get('role', 'user'),
                         "is_active": bool(data.get('isActive', True)),
                     }})
                 else:
@@ -1475,7 +1483,7 @@ class APIHandler(BaseHTTPRequestHandler):
                         "password_hash": password_hash,
                         "full_name": data.get('name') or '',
                         "phone": data.get('phone') or '',
-                        "role": self._map_role(data.get('role')),
+                        "role": self._map_role(data.get('role')) or 'user',
                         "is_active": bool(data.get('isActive', True)),
                         "created_at": datetime.utcnow()
                     }).inserted_id
@@ -1534,7 +1542,7 @@ class APIHandler(BaseHTTPRequestHandler):
 
             self.db.db.users.update_one({"_id": user_id}, {"$set": {
                 "full_name": data.get('name') if data.get('name') is not None else user.get('full_name'),
-                "role": self._map_role(data.get('role')),
+                "role": self._map_role(data.get('role')) or user.get('role', 'user'),
                 "is_active": bool(data.get('isActive', user.get('is_active', True))),
             }})
 
@@ -1759,8 +1767,8 @@ class APIHandler(BaseHTTPRequestHandler):
             return
         
         try:
-            # Get apartment and building info
-            apt_data = self.db.db.apartments.aggregate([
+            # Get apartment and building info (None when the user has no apartment)
+            apt_data = next(self.db.db.apartments.aggregate([
                 {"$match": {"user_id": ObjectId(user_id)}},
                 {"$lookup": {
                     "from": "buildings",
@@ -1776,8 +1784,8 @@ class APIHandler(BaseHTTPRequestHandler):
                     "as": "profile"
                 }},
                 {"$unwind": {"path": "$profile", "preserveNullAndEmptyArrays": True}}
-            ]).next()
-            
+            ]), None)
+
             if not apt_data:
                 self._send_json_response(404, {'error': 'No apartment found for user'})
                 return

@@ -63,6 +63,13 @@ jobs:
                   TEST_MONGODB_URI: mongodb://localhost:27017/domunity_test
                   JWT_SECRET: test-secret-key
 
+            - name: Run REST API tests
+              working-directory: backend-python
+              run: |
+                  pytest test_api.py -v --cov=. --cov-report=xml --cov-report=term --cov-append
+              env:
+                  TEST_API_MONGODB_URI: mongodb://localhost:27017/domunity_pyapi_test
+
             - name: Upload coverage reports
               uses: codecov/codecov-action@v4
               with:
@@ -212,6 +219,12 @@ jobs:
             - name: Install dependencies
               working-directory: frontend
               run: npm install
+
+            - name: Run frontend tests
+              working-directory: frontend
+              run: npx react-scripts test --watchAll=false
+              env:
+                  CI: true
 
             - name: Build proto dependencies
               working-directory: frontend

@@ -75,17 +75,17 @@ fi
 
 echo ""
 
-# Test Frontend Build
+# Test Frontend (unit tests + production build)
 echo "=================================================="
-echo "Testing: Frontend Build"
+echo "Testing: Frontend (tests + build)"
 echo "=================================================="
 if [ -d "frontend" ]; then
     cd frontend
-    if npm install --silent && npm run build > /dev/null 2>&1; then
-        echo -e "${GREEN}✓ Frontend build successful${NC}"
+    if npm install --silent && CI=true npx react-scripts test --watchAll=false && npm run build > /dev/null 2>&1; then
+        echo -e "${GREEN}✓ Frontend tests + build successful${NC}"
         FRONTEND_RESULT=0
     else
-        echo -e "${RED}✗ Frontend build failed${NC}"
+        echo -e "${RED}✗ Frontend tests or build failed${NC}"
         FRONTEND_RESULT=1
     fi
     cd ..
