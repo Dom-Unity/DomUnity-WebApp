@@ -13,6 +13,7 @@ function Login() {
     });
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+    const [rememberMe, setRememberMe] = useState(true);
 
     const handleChange = (e) => {
         setFormData({
@@ -27,7 +28,7 @@ function Login() {
         setLoading(true);
 
         try {
-            const result = await login(formData.email, formData.password);
+            const result = await login(formData.email, formData.password, rememberMe);
 
             if (result.success) {
                 navigate('/profile');
@@ -87,7 +88,16 @@ function Login() {
                         />
                     </div>
 
-                    <div className="login-links">
+                    <div className="login-options">
+                        <label className="remember-me">
+                            <input
+                                type="checkbox"
+                                checked={rememberMe}
+                                onChange={(e) => setRememberMe(e.target.checked)}
+                                disabled={loading}
+                            />
+                            <span>{t('auth.rememberMe', { defaultValue: 'Запомни ме' })}</span>
+                        </label>
                         <Link to="/forgottenpassword" style={{ color: '#2f5233', fontWeight: 'bold' }}>{t('auth.forgottenPasswordLink')}</Link>
                     </div>
 

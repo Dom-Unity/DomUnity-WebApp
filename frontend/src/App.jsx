@@ -18,6 +18,9 @@ import EditProfile from './pages/EditProfile';
 import AdminResidents from "./pages/AdminResidents";
 import Issues from "./pages/Issues";
 import AdminIssues from "./pages/AdminIssues";
+import Reports from "./pages/Reports";
+import Events from "./pages/Events";
+import Messages from "./pages/Messages";
 import ForgottenPassword from "./pages/ForgottenPassword";
 import Services from "./pages/Services";   
 import Terms from  "./pages/Terms";
@@ -52,6 +55,9 @@ function App() {
                     <Route path="/residents" element={<AdminResidents />} />
                     <Route path="/issues" element={<Issues />} />
                     <Route path="/admin/issues" element={<AdminIssues />} />
+                    <Route path="/reports" element={<Reports />} />
+                    <Route path="/events" element={<Events />} />
+                    <Route path="/messages" element={<Messages />} />
                     <Route path="/forgottenpassword" element={<ForgottenPassword />} />
                     <Route path="/services" element={<Services />} />
                     <Route path="/terms" element={<Terms />} />

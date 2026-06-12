@@ -1298,10 +1298,14 @@ async function handleUpdateEntrance(req, res, urlPath) {
     }
 }
 
+// Map a UI role label to an internal role; null when not provided
+// (callers preserve the existing role in that case).
 function mapRole(role) {
-    if (!role) return 'user';
+    if (role === undefined || role === null || role === '') return null;
     const r = String(role).toLowerCase();
-    return (r === 'admin' || r === 'админ') ? 'admin' : 'user';
+    if (r === 'admin' || r === 'админ') return 'admin';
+    if (r === 'manager' || r === 'домоуправител') return 'manager';
+    return 'user';
 }
 
 async function handleCreateResident(req, res) {
@@ -1325,7 +1329,7 @@ async function handleCreateResident(req, res) {
                 await col('users').updateOne({ _id: userId }, {
                     $set: {
                         full_name: data.name || existing.full_name || '',
-                        role: mapRole(data.role),
+                        role: mapRole(data.role) ?? existing.role ?? 'user',
                         is_active: data.isActive !== undefined ? !!data.isActive : true
                     }
                 });
@@ -1337,7 +1341,7 @@ async function handleCreateResident(req, res) {
                     password_hash: passwordHash,
                     full_name: data.name || '',
                     phone: data.phone || '',
-                    role: mapRole(data.role),
+                    role: mapRole(data.role) ?? 'user',
                     is_active: data.isActive !== undefined ? !!data.isActive : true,
                     created_at: new Date()
                 });
@@ -1402,7 +1406,7 @@ async function handleUpdateResident(req, res, urlPath) {
         await col('users').updateOne({ _id: userId }, {
             $set: {
                 full_name: data.name !== undefined ? data.name : user.full_name,
-                role: mapRole(data.role),
+                role: mapRole(data.role) ?? user.role ?? 'user',
                 is_active: data.isActive !== undefined ? !!data.isActive : user.is_active
             }
         });
