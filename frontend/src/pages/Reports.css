@@ -1,0 +1,144 @@
+.reports-page {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 2rem 1rem 4rem;
+}
+
+.reports-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+.reports-header h1 {
+  margin: 0 0 0.25rem;
+  color: #2f5233;
+}
+.reports-sub {
+  margin: 0;
+  color: #777;
+  font-size: 0.9rem;
+}
+
+.reports-pdf-btn {
+  background: #2f5233;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 0.6rem 1.3rem;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+.reports-pdf-btn:hover {
+  background: #264326;
+}
+
+.reports-state {
+  text-align: center;
+  color: #777;
+  padding: 1rem;
+}
+.reports-alert {
+  background: #ffebee;
+  color: #c62828;
+  padding: 0.7rem 1rem;
+  border-radius: 8px;
+}
+
+.reports-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+.reports-card {
+  background: #fff;
+  border: 1px solid #e6e6e6;
+  border-radius: 12px;
+  padding: 1rem 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+}
+.reports-card-label {
+  font-size: 0.82rem;
+  color: #888;
+}
+.reports-card-value {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #2f5233;
+}
+.reports-card-value--warn {
+  color: #c62828;
+}
+
+.reports-table-section h2 {
+  color: #2f5233;
+  font-size: 1.15rem;
+  margin-bottom: 0.75rem;
+}
+.reports-table-wrapper {
+  overflow-x: auto;
+  background: #fff;
+  border: 1px solid #e6e6e6;
+  border-radius: 12px;
+}
+.reports-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+}
+.reports-table th,
+.reports-table td {
+  padding: 0.65rem 0.85rem;
+  text-align: left;
+  border-bottom: 1px solid #f0f0f0;
+  white-space: nowrap;
+}
+.reports-table thead th {
+  background: #f7f9f7;
+  color: #555;
+  font-weight: 600;
+}
+.reports-table tfoot td {
+  background: #fafafa;
+  font-weight: 600;
+  border-top: 2px solid #e6e6e6;
+}
+
+.reports-status {
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+}
+.reports-status--paid {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+.reports-status--pending {
+  background: #fff3e0;
+  color: #ef6c00;
+}
+.reports-status--overdue {
+  background: #ffebee;
+  color: #c62828;
+}
+
+/* Print / "Download PDF" view */
+@media print {
+  .reports-pdf-btn {
+    display: none;
+  }
+  .reports-page {
+    padding: 0;
+  }
+  .reports-card,
+  .reports-table-wrapper {
+    box-shadow: none;
+  }
+}
