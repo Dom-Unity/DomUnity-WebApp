@@ -108,7 +108,7 @@ const Profile = () => {
       desc: t("profile.quickLinks.apartmentDesc"),
     },
     {
-      to: "/balance",
+      to: "/reports",
       label: t("profile.quickLinks.balanceLabel"),
       desc: t("profile.quickLinks.balanceDesc"),
     },
@@ -271,7 +271,7 @@ const Profile = () => {
             <div className="card-header-row">
               <h2>{t("profile.sectionFinance")}</h2>
 
-              <Link to="/apartment" className="link-text">
+              <Link to="/reports" className="link-text">
                 {t("profile.linkDetailReport")}
               </Link>
             </div>
