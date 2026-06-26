@@ -210,6 +210,73 @@ export const getMaintenanceRecords = async (buildingId = 1) => {
     return data;
 };
 
+<<<<<<< Updated upstream
+=======
+// Issues / maintenance reports API
+export const getMyIssues = async () => {
+    const { data } = await apiRequest('/api/issues', { method: 'GET' });
+    return data;
+};
+
+export const createIssue = async (payload) => {
+    const { data } = await apiRequest('/api/issues', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+    });
+    return data;
+};
+
+export const replyIssue = async (issueId, message) => {
+    const { data } = await apiRequest(`/api/issues/${issueId}/reply`, {
+        method: 'POST',
+        body: JSON.stringify({ message }),
+    });
+    return data;
+};
+
+export const getAdminIssues = async (status) => {
+    const qs = status && status !== 'all' ? `?status=${encodeURIComponent(status)}` : '';
+    const { data } = await apiRequest(`/api/admin/issues${qs}`, { method: 'GET' });
+    return data;
+};
+
+export const updateIssueStatus = async (issueId, status) => {
+    const { data } = await apiRequest(`/api/admin/issues/${issueId}/status`, {
+        method: 'PUT',
+        body: JSON.stringify({ status }),
+    });
+    return data;
+};
+
+// Meetings & online sessions API
+export const getMeetings = async () => {
+    const { data } = await apiRequest('/api/meetings', { method: 'GET' });
+    return data;
+};
+
+export const createMeeting = async (payload) => {
+    const { data } = await apiRequest('/api/admin/meetings', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+    });
+    return data;
+};
+
+export const deleteMeeting = async (id) => {
+    const { data } = await apiRequest(`/api/admin/meetings/${id}`, { method: 'DELETE' });
+    return data;
+};
+
+// Payments API
+export const payInvoice = async (paymentId) => {
+    const { data } = await apiRequest('/api/payments/pay', {
+        method: 'POST',
+        body: JSON.stringify({ payment_id: paymentId }),
+    });
+    return data;
+};
+
+>>>>>>> Stashed changes
 const apiService = {
     login,
     register,
@@ -227,6 +294,18 @@ const apiService = {
     getApartmentDetails,
     getBuildingApartments,
     getMaintenanceRecords,
+<<<<<<< Updated upstream
+=======
+    payInvoice,
+    getMyIssues,
+    createIssue,
+    replyIssue,
+    getAdminIssues,
+    updateIssueStatus,
+    getMeetings,
+    createMeeting,
+    deleteMeeting,
+>>>>>>> Stashed changes
 };
 
 export default apiService;

@@ -2,6 +2,13 @@ import os
 import psycopg2
 from psycopg2.extras import RealDictCursor
 import logging
+<<<<<<< Updated upstream
+=======
+from pymongo import MongoClient, ASCENDING, DESCENDING
+from bson import ObjectId
+from datetime import datetime, timedelta
+import bcrypt
+>>>>>>> Stashed changes
 
 logger = logging.getLogger(__name__)
 
@@ -149,6 +156,7 @@ class Database:
                 )
             """)
             
+<<<<<<< Updated upstream
             # Contact requests table
             logger.info("Creating contact_requests table...")
             cursor.execute("""
@@ -162,6 +170,20 @@ class Database:
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
             """)
+=======
+            # Maintenance records indexes
+            self.db.maintenance_records.create_index([("building_id", ASCENDING), ("date", DESCENDING)])
+
+            # Resident-submitted issues / maintenance reports
+            self.db.issues.create_index([("user_id", ASCENDING), ("created_at", DESCENDING)])
+            self.db.issues.create_index([("status", ASCENDING)])
+            self.db.issues.create_index([("building_id", ASCENDING), ("created_at", DESCENDING)])
+
+            # Meetings (incl. online sessions)
+            self.db.meetings.create_index([("date", DESCENDING)])
+
+            logger.info("✓ Database indexes initialized successfully")
+>>>>>>> Stashed changes
             
             # User profiles table
             logger.info("Creating user_profiles table...")
@@ -314,6 +336,7 @@ class Database:
                         (%s, '2025-10-28', 'Напомняне за такса', 'Изпратено напомняне за месечна такса за поддръжка.')
                 """, (building_id, building_id, building_id))
                 
+<<<<<<< Updated upstream
                 # Insert sample maintenance records
                 cursor.execute("""
                     INSERT INTO maintenance_records (building_id, date, description, cost, status)
@@ -325,6 +348,46 @@ class Database:
                 
                 self.conn.commit()
                 logger.info("✓ Sample data inserted successfully")
+=======
+                # Insert maintenance records
+                maintenance = [
+                    {"building_id": building_id, "date": datetime(2025, 2, 5), "description": "Почистване и дезинфекция на входа", "cost": 20.00, "status": "completed"},
+                    {"building_id": building_id, "date": datetime(2025, 3, 18), "description": "Профилактика на асансьора", "cost": 60.00, "status": "planned"},
+                    {"building_id": building_id, "date": datetime(2025, 1, 15), "description": "Смяна на осветление в стълбището", "cost": 35.00, "status": "completed"}
+                ]
+                self.db.maintenance_records.insert_many(maintenance)
+
+                # A sample upcoming online meeting (general assembly with a built-in room)
+                self.db.meetings.insert_one({
+                    "building_id": building_id,
+                    "entrance_id": entrance_id,
+                    "title": "Общо събрание на вход Б",
+                    "description": "Редовно общо събрание. Който не може да присъства на място, може да се включи онлайн.",
+                    "agenda": "1. Отчет за разходите\n2. Избор на фирма за ремонт\n3. Други",
+                    "date": datetime.utcnow() + timedelta(days=7),
+                    "location": "Входно фоайе, вход Б",
+                    "online_provider": "jitsi",
+                    "online_url": "https://meet.jit.si/DomUnity-Mladost325-B",
+                    "created_at": datetime.utcnow()
+                })
+
+                # A sample resident-submitted issue (from Ivan)
+                self.db.issues.insert_one({
+                    "user_id": user_ids[0],
+                    "building_id": building_id,
+                    "entrance_id": entrance_id,
+                    "apartment_id": apartment_ids[0],
+                    "title": "Не работи осветлението на стълбището",
+                    "description": "Лампата между 1-ви и 2-ри етаж е изгоряла от няколко дни.",
+                    "category": "common_area",
+                    "status": "new",
+                    "replies": [],
+                    "created_at": datetime.utcnow(),
+                    "updated_at": datetime.utcnow()
+                })
+
+                logger.info("✓ Sample data inserted successfully into MongoDB")
+>>>>>>> Stashed changes
                 
         except Exception as e:
             self.conn.rollback()

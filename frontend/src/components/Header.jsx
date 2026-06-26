@@ -128,6 +128,7 @@ function Header() {
                     <span className="fi fi-bg"></span> BG
                   </button>
 
+<<<<<<< Updated upstream
                   <button
                     onClick={() => {
                       i18n.changeLanguage("en");
@@ -138,6 +139,21 @@ function Header() {
                   >
                     <span className="fi fi-gb"></span> EN
                   </button>
+=======
+                  {userMenuOpen && (
+                    <div className="nav-dropdown__menu user-menu__dropdown">
+                      <Link to="/profile" onClick={() => setUserMenuOpen(false)}>
+                        {t("header.myProfile", { defaultValue: "Моят профил" })}
+                      </Link>
+                      <Link to="/editprofile" onClick={() => setUserMenuOpen(false)}>
+                        {t("header.editProfile", { defaultValue: "Редактирай профил" })}
+                      </Link>
+                      <button type="button" className="user-menu__logout" onClick={handleLogout}>
+                        {t("header.logout", { defaultValue: "Изход" })}
+                      </button>
+                    </div>
+                  )}
+>>>>>>> Stashed changes
                 </div>
               )}
             </div>
