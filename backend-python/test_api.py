@@ -371,6 +371,45 @@ class TestRestApi(unittest.TestCase):
         self.assertEqual(len(issue['replies']), 2)
         self.assertEqual(issue['replies'][0]['author_role'], 'admin')
 
+    # ---- Meetings ----
+
+    def test_35_meetings(self):
+        _, _, ivan = login('ivan.ivanov@example.com', 'test123')
+        _, _, admin = login('admin@domunity.bg', 'test123')
+
+        # Auth required; seeded built-in meeting present
+        self.assertEqual(req('GET', '/api/meetings')[0], 401)
+        status, data = req('GET', '/api/meetings', token=ivan)
+        self.assertEqual(status, 200)
+        seeded = next(m for m in data['meetings'] if m['online_provider'] == 'jitsi')
+        self.assertTrue(seeded['online_url'].startswith('https://meet.jit.si/'))
+
+        # Non-staff cannot create
+        self.assertEqual(req('POST', '/api/admin/meetings', {'title': 'nope'}, ivan)[0], 403)
+
+        # Built-in meeting auto-generates a Jitsi room
+        status, created = req('POST', '/api/admin/meetings',
+                              {'title': 'Extraordinary assembly', 'online_provider': 'jitsi',
+                               'date': '2026-07-01T18:00:00+00:00'}, admin)
+        self.assertEqual(status, 201)
+        self.assertTrue(created['meeting']['online_url'].startswith('https://meet.jit.si/DomUnity-'))
+
+        # External provider link stored verbatim and visible to residents
+        status, zoom = req('POST', '/api/admin/meetings',
+                           {'title': 'Zoom call', 'online_provider': 'zoom',
+                            'online_url': 'https://zoom.us/j/123'}, admin)
+        self.assertEqual(status, 201)
+        self.assertEqual(zoom['meeting']['online_url'], 'https://zoom.us/j/123')
+
+        _, listing = req('GET', '/api/meetings', token=ivan)
+        self.assertIn(zoom['id'], [m['id'] for m in listing['meetings']])
+
+        # Delete: residents blocked, staff allowed
+        self.assertEqual(req('DELETE', f"/api/admin/meetings/{zoom['id']}", token=ivan)[0], 403)
+        self.assertEqual(req('DELETE', f"/api/admin/meetings/{zoom['id']}", token=admin)[0], 200)
+        _, after = req('GET', '/api/meetings', token=ivan)
+        self.assertNotIn(zoom['id'], [m['id'] for m in after['meetings']])
+
     # ---- Payments ----
 
     def test_40_pay_own_invoice_only(self):

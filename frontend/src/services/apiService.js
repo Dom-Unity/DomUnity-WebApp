@@ -335,6 +335,25 @@ export const updateIssueStatus = async (issueId, status) => {
     return data;
 };
 
+// Meetings & online sessions API
+export const getMeetings = async () => {
+    const { data } = await apiRequest('/api/meetings', { method: 'GET' });
+    return data;
+};
+
+export const createMeeting = async (payload) => {
+    const { data } = await apiRequest('/api/admin/meetings', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+    });
+    return data;
+};
+
+export const deleteMeeting = async (id) => {
+    const { data } = await apiRequest(`/api/admin/meetings/${id}`, { method: 'DELETE' });
+    return data;
+};
+
 // Payments API
 export const payInvoice = async (paymentId) => {
     const { data } = await apiRequest('/api/payments/pay', {
@@ -369,6 +388,9 @@ const apiService = {
     getBuildingApartments,
     getMaintenanceRecords,
     payInvoice,
+    getMeetings,
+    createMeeting,
+    deleteMeeting,
     getMyIssues,
     createIssue,
     replyIssue,

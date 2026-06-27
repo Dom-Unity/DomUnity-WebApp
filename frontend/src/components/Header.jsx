@@ -165,9 +165,6 @@ function Header() {
                       <Link to="/editprofile" onClick={() => setUserMenuOpen(false)}>
                         {t("header.editProfile", { defaultValue: "Редактирай профил" })}
                       </Link>
-                      <Link to="/editprofile" onClick={() => setUserMenuOpen(false)}>
-                        {t("header.changePassword", { defaultValue: "Смяна на парола" })}
-                      </Link>
                       <button type="button" className="user-menu__logout" onClick={handleLogout}>
                         {t("header.logout", { defaultValue: "Изход" })}
                       </button>

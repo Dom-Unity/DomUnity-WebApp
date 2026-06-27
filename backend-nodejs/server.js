@@ -1594,6 +1594,94 @@ async function handleUpdateIssueStatus(req, res, urlPath) {
     }
 }
 
+// ---- Meetings & online sessions ----
+
+const MEETING_PROVIDERS = ['jitsi', 'zoom', 'meet', 'teams', 'other'];
+
+function meetingView(m) {
+    return {
+        id: m._id.toString(),
+        title: m.title || '',
+        description: m.description || '',
+        agenda: m.agenda || '',
+        date: m.date ? new Date(m.date).toISOString() : '',
+        location: m.location || '',
+        online_provider: m.online_provider || '',
+        online_url: m.online_url || '',
+        created_at: m.created_at ? new Date(m.created_at).toISOString() : ''
+    };
+}
+
+async function handleGetMeetings(req, res) {
+    const userId = getUserIdFromToken(req);
+    if (!userId) return sendJson(res, 401, { error: 'Unauthorized' });
+    try {
+        const docs = await col('meetings').find({}).sort({ date: -1 }).toArray();
+        sendJson(res, 200, { meetings: docs.map(meetingView) });
+    } catch (error) {
+        console.error(`API GetMeetings error: ${error.message}`, error);
+        sendJson(res, 500, { error: error.message });
+    }
+}
+
+async function handleCreateMeeting(req, res) {
+    const staff = await requireStaff(req, res);
+    if (!staff) return;
+
+    const data = await readJsonBody(req);
+    const title = (data.title || '').trim();
+    if (!title) return sendJson(res, 400, { success: false, message: 'Title is required' });
+
+    const provider = MEETING_PROVIDERS.includes(data.online_provider) ? data.online_provider : 'other';
+    let url = (data.online_url || '').trim();
+    // Built-in room: generate a unique Jitsi room when no URL is supplied.
+    if (provider === 'jitsi' && !url) {
+        url = `https://meet.jit.si/DomUnity-${crypto.randomBytes(6).toString('hex')}`;
+    }
+
+    let date = null;
+    if (data.date) {
+        const d = new Date(data.date);
+        if (!Number.isNaN(d.getTime())) date = d;
+    }
+
+    try {
+        const apt = await col('apartments').findOne({ user_id: toObjectId(staff._id.toString()) });
+        const result = await col('meetings').insertOne({
+            building_id: apt ? apt.building_id : null,
+            entrance_id: apt ? apt.entrance_id : null,
+            title,
+            description: data.description || '',
+            agenda: data.agenda || '',
+            date,
+            location: data.location || '',
+            online_provider: provider,
+            online_url: url,
+            created_at: new Date()
+        });
+        const created = await col('meetings').findOne({ _id: result.insertedId });
+        sendJson(res, 201, { success: true, id: result.insertedId.toString(), meeting: meetingView(created) });
+    } catch (error) {
+        console.error(`API CreateMeeting error: ${error.message}`, error);
+        sendJson(res, 500, { success: false, message: error.message });
+    }
+}
+
+async function handleDeleteMeeting(req, res, urlPath) {
+    if (!(await requireStaff(req, res))) return;
+    const parts = urlPath.split('/');  // /api/admin/meetings/:id
+    let id;
+    try { id = toObjectId(parts[4]); } catch { return sendJson(res, 400, { success: false, message: 'Invalid meeting id' }); }
+    try {
+        const result = await col('meetings').deleteOne({ _id: id });
+        if (result.deletedCount === 0) return sendJson(res, 404, { success: false, message: 'Meeting not found' });
+        sendJson(res, 200, { success: true, message: 'Meeting deleted' });
+    } catch (error) {
+        console.error(`API DeleteMeeting error: ${error.message}`, error);
+        sendJson(res, 500, { success: false, message: error.message });
+    }
+}
+
 // Format a Date as DD.MM.YYYY (matches the Bulgarian UI formatting)
 function formatDate(d) {
     const day = String(d.getUTCDate()).padStart(2, '0');
@@ -1617,6 +1705,7 @@ function startHTTPServer(port) {
                 if (urlPath === '/api/user/profile') return handleGetProfile(req, res);
                 if (urlPath === '/api/user/apartment') return handleGetApartment(req, res);
                 if (urlPath === '/api/issues') return handleGetMyIssues(req, res);
+                if (urlPath === '/api/meetings') return handleGetMeetings(req, res);
                 if (urlPath === '/api/admin/issues') return handleGetAdminIssues(req, res);
                 if (urlPath === '/api/admin/residents') return handleGetResidents(req, res);
                 if (urlPath === '/api/admin/entrances') return handleGetEntrances(req, res);
@@ -1638,6 +1727,7 @@ function startHTTPServer(port) {
                 if (urlPath === '/api/payments/pay') return handlePay(req, res);
                 if (urlPath === '/api/issues') return handleCreateIssue(req, res);
                 if (urlPath.startsWith('/api/issues/') && urlPath.endsWith('/reply')) return handleReplyIssue(req, res, urlPath);
+                if (urlPath === '/api/admin/meetings') return handleCreateMeeting(req, res);
                 if (urlPath === '/api/admin/entrances') return handleCreateEntrance(req, res);
                 if (urlPath === '/api/admin/residents') return handleCreateResident(req, res);
                 if (urlPath === '/api/contact/form') return handleContactForm(req, res);
@@ -1650,6 +1740,11 @@ function startHTTPServer(port) {
                 if (urlPath.startsWith('/api/admin/issues/') && urlPath.endsWith('/status')) return handleUpdateIssueStatus(req, res, urlPath);
                 if (urlPath.startsWith('/api/admin/entrances/')) return handleUpdateEntrance(req, res, urlPath);
                 if (urlPath.startsWith('/api/admin/residents/')) return handleUpdateResident(req, res, urlPath);
+                return sendJson(res, 404, { error: 'Not found' });
+            }
+
+            if (req.method === 'DELETE') {
+                if (urlPath.startsWith('/api/admin/meetings/')) return handleDeleteMeeting(req, res, urlPath);
                 return sendJson(res, 404, { error: 'Not found' });
             }
 

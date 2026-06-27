@@ -104,6 +104,8 @@ class Database {
             await this.db.collection('issues').createIndex({ user_id: 1, created_at: -1 });
             await this.db.collection('issues').createIndex({ status: 1 });
             await this.db.collection('issues').createIndex({ building_id: 1, created_at: -1 });
+            // Meetings (incl. online sessions)
+            await this.db.collection('meetings').createIndex({ date: -1 });
 
             console.log('✓ Database indexes initialized successfully');
 
@@ -242,6 +244,20 @@ class Database {
                 { building_id: buildingId, date: new Date(Date.UTC(2025, 2, 18)), description: 'Профилактика на асансьора', cost: 60.00, status: 'planned' },
                 { building_id: buildingId, date: new Date(Date.UTC(2025, 0, 15)), description: 'Смяна на осветление в стълбището', cost: 35.00, status: 'completed' }
             ]);
+
+            // A sample upcoming online meeting (general assembly with a built-in room)
+            await this.db.collection('meetings').insertOne({
+                building_id: buildingId,
+                entrance_id: entranceId,
+                title: 'Общо събрание на вход Б',
+                description: 'Редовно общо събрание. Който не може да присъства на място, може да се включи онлайн.',
+                agenda: '1. Отчет за разходите\n2. Избор на фирма за ремонт\n3. Други',
+                date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+                location: 'Входно фоайе, вход Б',
+                online_provider: 'jitsi',
+                online_url: 'https://meet.jit.si/DomUnity-Mladost325-B',
+                created_at: new Date()
+            });
 
             // A sample resident-submitted issue (from Ivan)
             await this.db.collection('issues').insertOne({

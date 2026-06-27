@@ -2,7 +2,7 @@ import os
 import logging
 from pymongo import MongoClient, ASCENDING, DESCENDING
 from bson import ObjectId
-from datetime import datetime
+from datetime import datetime, timedelta
 import bcrypt
 
 logger = logging.getLogger(__name__)
@@ -131,6 +131,9 @@ class Database:
             self.db.issues.create_index([("user_id", ASCENDING), ("created_at", DESCENDING)])
             self.db.issues.create_index([("status", ASCENDING)])
             self.db.issues.create_index([("building_id", ASCENDING), ("created_at", DESCENDING)])
+
+            # Meetings (incl. online sessions)
+            self.db.meetings.create_index([("date", DESCENDING)])
 
             logger.info("✓ Database indexes initialized successfully")
             
@@ -267,6 +270,20 @@ class Database:
                     {"building_id": building_id, "date": datetime(2025, 1, 15), "description": "Смяна на осветление в стълбището", "cost": 35.00, "status": "completed"}
                 ]
                 self.db.maintenance_records.insert_many(maintenance)
+
+                # A sample upcoming online meeting (general assembly with a built-in room)
+                self.db.meetings.insert_one({
+                    "building_id": building_id,
+                    "entrance_id": entrance_id,
+                    "title": "Общо събрание на вход Б",
+                    "description": "Редовно общо събрание. Който не може да присъства на място, може да се включи онлайн.",
+                    "agenda": "1. Отчет за разходите\n2. Избор на фирма за ремонт\n3. Други",
+                    "date": datetime.utcnow() + timedelta(days=7),
+                    "location": "Входно фоайе, вход Б",
+                    "online_provider": "jitsi",
+                    "online_url": "https://meet.jit.si/DomUnity-Mladost325-B",
+                    "created_at": datetime.utcnow()
+                })
 
                 # A sample resident-submitted issue (from Ivan)
                 self.db.issues.insert_one({

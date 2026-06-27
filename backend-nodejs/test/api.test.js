@@ -475,6 +475,74 @@ describe('Issues', () => {
     });
 });
 
+describe('Meetings', () => {
+    let ivanToken;
+    let adminToken;
+
+    beforeAll(async () => {
+        if (!available) return;
+        ivanToken = (await loginAs('ivan.ivanov@example.com', 'test123')).token;
+        adminToken = (await loginAs('admin@domunity.bg', 'test123')).token;
+    });
+
+    it('lists the seeded online meeting and requires auth', async () => {
+        if (skip()) return;
+        expect((await api('GET', '/api/meetings')).status).toBe(401);
+
+        const { status, data } = await api('GET', '/api/meetings', { token: ivanToken });
+        expect(status).toBe(200);
+        const seeded = data.meetings.find((m) => m.online_provider === 'jitsi');
+        expect(seeded).toBeTruthy();
+        expect(seeded.online_url).toMatch(/^https:\/\/meet\.jit\.si\//);
+    });
+
+    it('blocks non-staff from creating meetings', async () => {
+        if (skip()) return;
+        const res = await api('POST', '/api/admin/meetings', {
+            token: ivanToken, body: { title: 'nope' }
+        });
+        expect(res.status).toBe(403);
+    });
+
+    it('auto-generates a Jitsi room for built-in meetings', async () => {
+        if (skip()) return;
+        const { status, data } = await api('POST', '/api/admin/meetings', {
+            token: adminToken,
+            body: { title: 'Extraordinary assembly', online_provider: 'jitsi', date: '2026-07-01T18:00:00.000Z' }
+        });
+        expect(status).toBe(201);
+        expect(data.meeting.online_url).toMatch(/^https:\/\/meet\.jit\.si\/DomUnity-/);
+    });
+
+    it('stores an external provider link as given, and residents see it', async () => {
+        if (skip()) return;
+        const created = await api('POST', '/api/admin/meetings', {
+            token: adminToken,
+            body: { title: 'Zoom call', online_provider: 'zoom', online_url: 'https://zoom.us/j/123' }
+        });
+        expect(created.status).toBe(201);
+        expect(created.data.meeting.online_provider).toBe('zoom');
+        expect(created.data.meeting.online_url).toBe('https://zoom.us/j/123');
+
+        const list = await api('GET', '/api/meetings', { token: ivanToken });
+        expect(list.data.meetings.some((m) => m.id === created.data.id)).toBe(true);
+    });
+
+    it('lets staff delete a meeting but blocks residents', async () => {
+        if (skip()) return;
+        const created = await api('POST', '/api/admin/meetings', {
+            token: adminToken, body: { title: 'To delete', online_provider: 'other', online_url: 'https://x.test' }
+        });
+        const id = created.data.id;
+
+        expect((await api('DELETE', `/api/admin/meetings/${id}`, { token: ivanToken })).status).toBe(403);
+        expect((await api('DELETE', `/api/admin/meetings/${id}`, { token: adminToken })).status).toBe(200);
+
+        const list = await api('GET', '/api/meetings', { token: ivanToken });
+        expect(list.data.meetings.some((m) => m.id === id)).toBe(false);
+    });
+});
+
 describe('Payments', () => {
     it('marks own pending payment as paid; rejects paying others', async () => {
         if (skip()) return;

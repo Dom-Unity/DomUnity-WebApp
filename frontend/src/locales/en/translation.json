@@ -197,6 +197,8 @@
         "userDataDefault": "User",
         "profileError": "Error loading profile",
         "quickLinks": {
+            "buildingLabel": "My building",
+            "buildingDesc": "Building information",
             "entranceLabel": "My entrance",
             "entranceDesc": "Status of all apartments",
             "apartmentLabel": "My apartment",

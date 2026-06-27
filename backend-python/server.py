@@ -47,6 +47,9 @@ JWT_EXPIRATION_HOURS = 24
 # Issue / maintenance report statuses
 ISSUE_STATUSES = ['new', 'under_review', 'in_progress', 'completed']
 
+# Online meeting providers
+MEETING_PROVIDERS = ['jitsi', 'zoom', 'meet', 'teams', 'other']
+
 # Allowed CORS origin (default '*' for development)
 CORS_ORIGIN = os.getenv('CORS_ORIGIN', '*')
 
@@ -706,6 +709,8 @@ class APIHandler(BaseHTTPRequestHandler):
             self._handle_get_apartment()
         elif self.path == '/api/issues':
             self._handle_get_my_issues()
+        elif self.path == '/api/meetings':
+            self._handle_get_meetings()
         elif self.path.split('?')[0] == '/api/admin/issues':
             self._handle_get_admin_issues()
         elif self.path == '/api/admin/residents':
@@ -738,6 +743,8 @@ class APIHandler(BaseHTTPRequestHandler):
                 self._handle_create_issue()
             elif self.path.startswith('/api/issues/') and self.path.endswith('/reply'):
                 self._handle_reply_issue()
+            elif self.path == '/api/admin/meetings':
+                self._handle_create_meeting()
             elif self.path == '/api/admin/entrances':
                 self._handle_create_entrance()
             elif self.path == '/api/admin/residents':
@@ -768,7 +775,18 @@ class APIHandler(BaseHTTPRequestHandler):
         except Exception as e:
             logger.error(f"API error: {e}", exc_info=True)
             self._send_json_response(500, {'error': str(e)})
-    
+
+    def do_DELETE(self):
+        """Handle DELETE requests"""
+        try:
+            if self.path.startswith('/api/admin/meetings/'):
+                self._handle_delete_meeting()
+            else:
+                self._send_json_response(404, {'error': 'Not found'})
+        except Exception as e:
+            logger.error(f"API error: {e}", exc_info=True)
+            self._send_json_response(500, {'error': str(e)})
+
     def _handle_health(self):
         """Health check endpoint"""
         try:
@@ -1756,6 +1774,99 @@ class APIHandler(BaseHTTPRequestHandler):
             self._send_json_response(200, {'success': True, 'message': 'Status updated'})
         except Exception as e:
             logger.error(f"API UpdateIssueStatus error: {e}", exc_info=True)
+            self._send_json_response(500, {'success': False, 'message': str(e)})
+
+    # ---- Meetings & online sessions ----
+
+    def _meeting_view(self, m):
+        return {
+            'id': str(m['_id']),
+            'title': m.get('title', ''),
+            'description': m.get('description', ''),
+            'agenda': m.get('agenda', ''),
+            'date': m['date'].isoformat() if m.get('date') else '',
+            'location': m.get('location', ''),
+            'online_provider': m.get('online_provider', ''),
+            'online_url': m.get('online_url', ''),
+            'created_at': m['created_at'].isoformat() if m.get('created_at') else '',
+        }
+
+    def _handle_get_meetings(self):
+        user_id = self._get_user_id_from_token()
+        if not user_id:
+            self._send_json_response(401, {'error': 'Unauthorized'})
+            return
+        try:
+            docs = self.db.db.meetings.find({}).sort("date", -1)
+            self._send_json_response(200, {'meetings': [self._meeting_view(m) for m in docs]})
+        except Exception as e:
+            logger.error(f"API GetMeetings error: {e}", exc_info=True)
+            self._send_json_response(500, {'error': str(e)})
+
+    def _handle_create_meeting(self):
+        staff = self._require_staff()
+        if not staff:
+            return
+
+        data = self._read_json_body()
+        title = (data.get('title') or '').strip()
+        if not title:
+            self._send_json_response(400, {'success': False, 'message': 'Title is required'})
+            return
+
+        provider = data.get('online_provider') if data.get('online_provider') in MEETING_PROVIDERS else 'other'
+        url = (data.get('online_url') or '').strip()
+        if provider == 'jitsi' and not url:
+            url = f"https://meet.jit.si/DomUnity-{secrets.token_hex(6)}"
+
+        date = None
+        if data.get('date'):
+            try:
+                date = datetime.fromisoformat(str(data['date']).replace('Z', '+00:00'))
+            except (ValueError, TypeError):
+                date = None
+
+        try:
+            apt = self.db.db.apartments.find_one({"user_id": staff['_id']})
+            result = self.db.db.meetings.insert_one({
+                "building_id": apt.get('building_id') if apt else None,
+                "entrance_id": apt.get('entrance_id') if apt else None,
+                "title": title,
+                "description": data.get('description') or '',
+                "agenda": data.get('agenda') or '',
+                "date": date,
+                "location": data.get('location') or '',
+                "online_provider": provider,
+                "online_url": url,
+                "created_at": datetime.utcnow()
+            })
+            created = self.db.db.meetings.find_one({"_id": result.inserted_id})
+            self._send_json_response(201, {
+                'success': True,
+                'id': str(result.inserted_id),
+                'meeting': self._meeting_view(created)
+            })
+        except Exception as e:
+            logger.error(f"API CreateMeeting error: {e}", exc_info=True)
+            self._send_json_response(500, {'success': False, 'message': str(e)})
+
+    def _handle_delete_meeting(self):
+        if not self._require_staff():
+            return
+        parts = self.path.split('?')[0].split('/')  # /api/admin/meetings/:id
+        try:
+            meeting_id = ObjectId(parts[4])
+        except Exception:
+            self._send_json_response(400, {'success': False, 'message': 'Invalid meeting id'})
+            return
+        try:
+            result = self.db.db.meetings.delete_one({"_id": meeting_id})
+            if result.deleted_count == 0:
+                self._send_json_response(404, {'success': False, 'message': 'Meeting not found'})
+                return
+            self._send_json_response(200, {'success': True, 'message': 'Meeting deleted'})
+        except Exception as e:
+            logger.error(f"API DeleteMeeting error: {e}", exc_info=True)
             self._send_json_response(500, {'success': False, 'message': str(e)})
 
     def _handle_get_apartment(self):
